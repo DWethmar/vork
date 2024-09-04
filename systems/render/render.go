@@ -23,6 +23,7 @@ func NewSystem(logger *slog.Logger, cs *entity.ComponentStore) *System {
 	}
 }
 
+// Draw draws the shapes.
 func (s *System) Draw(screen *ebiten.Image) error {
 	for _, c := range s.cs.List(shape.Type) {
 		var X, Y int64

@@ -4,9 +4,11 @@ import (
 	"log/slog"
 
 	"github.com/dwethmar/vork/entity"
+	"github.com/dwethmar/vork/entity/controllable"
 	"github.com/dwethmar/vork/entity/position"
 	"github.com/dwethmar/vork/entity/shape"
 	"github.com/dwethmar/vork/systems"
+	"github.com/dwethmar/vork/systems/controller"
 	"github.com/dwethmar/vork/systems/render"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -31,8 +33,13 @@ func New() *Game {
 		Y: 100,
 	})
 
+	cs.Add(&controllable.Controllable{
+		E: 1,
+	})
+
 	return &Game{
 		systems: []systems.System{
+			controller.NewSystem(cs),
 			render.NewSystem(l, cs),
 		},
 	}

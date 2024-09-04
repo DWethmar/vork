@@ -17,7 +17,7 @@ func main() {
 		g: game.New(),
 	}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Animation (Ebitengine Demo)")
+	ebiten.SetWindowTitle("vorK")
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}
