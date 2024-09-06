@@ -3,10 +3,10 @@ package game
 import (
 	"log/slog"
 
-	"github.com/dwethmar/vork/entity"
-	"github.com/dwethmar/vork/entity/controllable"
-	"github.com/dwethmar/vork/entity/position"
-	"github.com/dwethmar/vork/entity/shape"
+	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/component/position"
+	"github.com/dwethmar/vork/component/shape"
+	"github.com/dwethmar/vork/scene/memory"
 	"github.com/dwethmar/vork/systems"
 	"github.com/dwethmar/vork/systems/controller"
 	"github.com/dwethmar/vork/systems/render"
@@ -19,28 +19,17 @@ type Game struct {
 
 func New() *Game {
 	l := slog.Default()
-	cs := entity.NewComponentStore(0)
+	scene := memory.New()
 
-	cs.Add(&shape.Rectangle{
-		E:      1,
-		Width:  32,
-		Height: 32,
-	})
-
-	cs.Add(&position.Position{
-		E: 1,
-		X: 100,
-		Y: 100,
-	})
-
-	cs.Add(&controllable.Controllable{
-		E: 1,
-	})
+	e := scene.CreateEntity()
+	scene.AddComponent(shape.NewRectangle(e, 10, 10))
+	scene.AddComponent(position.New(e, 100, 100))
+	scene.AddComponent(controllable.New(e))
 
 	return &Game{
 		systems: []systems.System{
-			controller.NewSystem(cs),
-			render.NewSystem(l, cs),
+			controller.NewSystem(scene),
+			render.NewSystem(l, scene),
 		},
 	}
 }

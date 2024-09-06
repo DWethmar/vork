@@ -4,32 +4,33 @@ import (
 	"image/color"
 	"log/slog"
 
-	"github.com/dwethmar/vork/entity"
-	"github.com/dwethmar/vork/entity/position"
-	"github.com/dwethmar/vork/entity/shape"
+	"github.com/dwethmar/vork/component/position"
+	"github.com/dwethmar/vork/component/shape"
+	"github.com/dwethmar/vork/scene"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type System struct {
 	logger *slog.Logger
-	cs     *entity.ComponentStore
+	scene  scene.Scene
 }
 
-func NewSystem(logger *slog.Logger, cs *entity.ComponentStore) *System {
+func NewSystem(logger *slog.Logger, scene scene.Scene) *System {
 	return &System{
 		logger: logger,
-		cs:     cs,
+		scene:  scene,
 	}
 }
 
 // Draw draws the shapes.
 func (s *System) Draw(screen *ebiten.Image) error {
-	for _, c := range s.cs.List(shape.Type) {
+	for _, c := range s.scene.ComponentsByType(shape.Type) {
 		var X, Y int64
-		if p := s.cs.Get(c.Entity(), position.Type); p != nil {
-			p := p.(*position.Position)
-			X, Y = p.X, p.Y
+		if c, ok := s.scene.Component(c.Entity(), position.Type); ok {
+			if p, ok := c.(*position.Position); ok {
+				X, Y = p.X, p.Y
+			}
 		}
 		switch t := c.(type) {
 		case *shape.Rectangle:

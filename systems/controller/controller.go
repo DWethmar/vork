@@ -1,29 +1,30 @@
 package controller
 
 import (
-	"github.com/dwethmar/vork/entity"
-	"github.com/dwethmar/vork/entity/controllable"
-	"github.com/dwethmar/vork/entity/position"
+	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/component/position"
+	"github.com/dwethmar/vork/scene"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type System struct {
-	cs *entity.ComponentStore
+	scene scene.Scene
 }
 
-func NewSystem(cs *entity.ComponentStore) *System {
+func NewSystem(scene scene.Scene) *System {
 	return &System{
-		cs: cs,
+		scene: scene,
 	}
 }
 
 func (s *System) Update() error {
 	x, y := direction()
-	for _, c := range s.cs.List(controllable.Type) {
-		p := s.cs.Get(c.Entity(), position.Type)
-		if p, ok := p.(*position.Position); ok {
-			p.X += int64(x)
-			p.Y += int64(y)
+	for _, c := range s.scene.ComponentsByType(controllable.Type) {
+		if p, ok := s.scene.Component(c.Entity(), position.Type); ok {
+			if p, ok := p.(*position.Position); ok {
+				p.X += int64(x)
+				p.Y += int64(y)
+			}
 		}
 	}
 	return nil
