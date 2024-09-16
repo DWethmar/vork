@@ -14,9 +14,9 @@ type Component interface {
 
 // BaseComponent is a base struct that all components should embed.
 type BaseComponent struct {
-	I uint32
-	E entity.Entity
-	T ComponentType
+	I uint32        // ID
+	E entity.Entity // Entity
+	T ComponentType // Type
 }
 
 func (c *BaseComponent) ID() uint32            { return c.I }

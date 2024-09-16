@@ -5,6 +5,7 @@ import (
 	"github.com/dwethmar/vork/entity"
 )
 
+// Scene is a collection of entities and components.
 type Scene interface {
 	// CreateEntity creates a new entity and returns it.
 	CreateEntity() entity.Entity
