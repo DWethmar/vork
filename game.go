@@ -5,20 +5,21 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Game struct {
+// EbitenGame is the game struct for ebiten.
+type EbitenGame struct {
 	g *game.Game
 }
 
-func (g *Game) Update() error {
-	return g.g.Update()
+func (e *EbitenGame) Update() error {
+	return e.g.Update()
 }
 
-func (g *Game) Draw(screen *ebiten.Image) {
-	if err := g.g.Draw(screen); err != nil {
+func (e *EbitenGame) Draw(screen *ebiten.Image) {
+	if err := e.g.Draw(screen); err != nil {
 		panic(err)
 	}
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (e *EbitenGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return 320, 240
 }

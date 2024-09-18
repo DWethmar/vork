@@ -13,12 +13,16 @@ const (
 )
 
 func main() {
-	game := &Game{
-		g: game.New(),
+	g, err := game.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	e := &EbitenGame{
+		g: g,
 	}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("vorK")
-	if err := ebiten.RunGame(game); err != nil {
+	if err := ebiten.RunGame(e); err != nil {
 		log.Fatal(err)
 	}
 }
