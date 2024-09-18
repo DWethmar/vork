@@ -1,4 +1,4 @@
-package scene
+package game
 
 import (
 	"errors"
@@ -189,7 +189,7 @@ func TestNew(t *testing.T) {
 		system2 := &mockSystem{}
 
 		// Create a scene using the New function
-		s := New([]systems.System{system1, system2})
+		s := NewScene([]systems.System{system1, system2})
 
 		// Assertions
 		if s == nil {
@@ -207,7 +207,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("Create new scene with no systems", func(t *testing.T) {
-		s := New([]systems.System{})
+		s := NewScene([]systems.System{})
 
 		if s == nil {
 			t.Fatal("Expected Scene to be non-nil")

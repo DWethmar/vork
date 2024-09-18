@@ -1,4 +1,4 @@
-package scene
+package game
 
 import (
 	"github.com/dwethmar/vork/systems"
@@ -30,7 +30,7 @@ func (s *Scene) Update() error {
 	return nil
 }
 
-func New(s []systems.System) *Scene {
+func NewScene(s []systems.System) *Scene {
 	return &Scene{
 		systems: s,
 	}

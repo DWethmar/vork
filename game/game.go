@@ -8,7 +8,6 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/component/store/memory"
-	"github.com/dwethmar/vork/scene"
 	"github.com/dwethmar/vork/spritesheet"
 	"github.com/dwethmar/vork/systems"
 	"github.com/dwethmar/vork/systems/controller"
@@ -18,7 +17,7 @@ import (
 
 // Game updates and draws the game.
 type Game struct {
-	scene *scene.Scene
+	scene *Scene
 }
 
 // New creates a new game.
@@ -45,7 +44,7 @@ func New() (*Game, error) {
 	addEnemy(ecs, 100, 100)
 
 	return &Game{
-		scene: scene.New([]systems.System{
+		scene: NewScene([]systems.System{
 			controller.New(l, ecs),
 			render.New(l, sprites, ecs),
 		}),
