@@ -3,7 +3,12 @@ package game
 import (
 	"log/slog"
 
-	"github.com/dwethmar/vork/scene/memory"
+	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/component/position"
+	"github.com/dwethmar/vork/component/shape"
+	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/component/store/memory"
+	"github.com/dwethmar/vork/scene"
 	"github.com/dwethmar/vork/spritesheet"
 	"github.com/dwethmar/vork/systems"
 	"github.com/dwethmar/vork/systems/controller"
@@ -13,43 +18,46 @@ import (
 
 // Game updates and draws the game.
 type Game struct {
-	systems []systems.System
+	scene *scene.Scene
 }
 
 // New creates a new game.
 func New() (*Game, error) {
 	l := slog.Default()
-	scene := memory.New()
-	addPlayer(scene, 10, 10)
-	addEnemy(scene, 100, 100)
 	sprites, err := spritesheet.New()
 	if err != nil {
 		return nil, err
 	}
+
+	positionStore := memory.New[position.Position](true)
+	controllableStore := memory.New[controllable.Controllable](true)
+	rectangleStore := memory.New[shape.Rectangle](true)
+	spriteStore := memory.New[sprite.Sprite](false)
+
+	ecs := systems.NewECS(
+		positionStore,
+		controllableStore,
+		rectangleStore,
+		spriteStore,
+	)
+
+	addPlayer(ecs, 10, 10)
+	addEnemy(ecs, 100, 100)
+
 	return &Game{
-		systems: []systems.System{
-			controller.NewSystem(scene),
-			render.New(l, scene, sprites),
-		},
+		scene: scene.New([]systems.System{
+			controller.New(l, ecs),
+			render.New(l, sprites, ecs),
+		}),
 	}, nil
 }
 
 // Draw draws the game.
 func (g *Game) Draw(screen *ebiten.Image) error {
-	for _, s := range g.systems {
-		if err := s.Draw(screen); err != nil {
-			return err
-		}
-	}
-	return nil
+	return g.scene.Draw(screen)
 }
 
 // Update updates the game.
 func (g *Game) Update() error {
-	for _, s := range g.systems {
-		if err := s.Update(); err != nil {
-			return err
-		}
-	}
-	return nil
+	return g.scene.Update()
 }

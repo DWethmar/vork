@@ -5,19 +5,20 @@ import (
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/sprite"
-	"github.com/dwethmar/vork/scene"
+	"github.com/dwethmar/vork/systems"
 )
 
-func addPlayer(s scene.Scene, x, y int64) {
-	e := s.CreateEntity()
-	s.AddComponent(shape.NewRectangle(e, 10, 10))
-	s.AddComponent(position.New(e, x, y))
-	s.AddComponent(controllable.New(e))
-	s.AddComponent(sprite.New(e, "player"))
+func addPlayer(ecs *systems.ECS, x, y int64) {
+	e := ecs.CreateEntity()
+	ecs.AddRectangle(*shape.NewRectangle(e, 10, 10))
+	ecs.AddPosition(*position.New(e, x, y))
+	ecs.AddControllable(*controllable.New(e))
+	ecs.AddSprite(*sprite.New(e, "player"))
 }
 
-func addEnemy(s scene.Scene, x, y int64) {
-	e := s.CreateEntity()
-	s.AddComponent(shape.NewRectangle(e, 10, 10))
-	s.AddComponent(position.New(e, x, y))
+func addEnemy(ecs *systems.ECS, x, y int64) {
+	e := ecs.CreateEntity()
+	ecs.AddRectangle(*shape.NewRectangle(e, 10, 10))
+	ecs.AddPosition(*position.New(e, x, y))
+	ecs.AddSprite(*sprite.New(e, "enemy"))
 }

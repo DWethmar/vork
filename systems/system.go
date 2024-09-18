@@ -1,6 +1,8 @@
 package systems
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type System interface {
 	Draw(screen *ebiten.Image) error
