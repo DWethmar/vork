@@ -6,8 +6,11 @@ import (
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
+	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/component/store/memory"
+	"github.com/dwethmar/vork/ecsys"
+	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/spritesheet"
 	"github.com/dwethmar/vork/systems"
 	"github.com/dwethmar/vork/systems/controller"
@@ -32,22 +35,29 @@ func New() (*Game, error) {
 	controllableStore := memory.New[controllable.Controllable](true)
 	rectangleStore := memory.New[shape.Rectangle](true)
 	spriteStore := memory.New[sprite.Sprite](false)
+	skeletonStore := memory.New[skeleton.Skeleton](true)
 
-	ecs := systems.NewECS(
+	eventBus := event.NewBus()
+
+	ecs := ecsys.New(
+		eventBus,
 		positionStore,
 		controllableStore,
 		rectangleStore,
 		spriteStore,
+		skeletonStore,
 	)
+
+	systems := []systems.System{
+		controller.New(l, ecs),
+		render.New(l, Sprites(spritesheet), ecs),
+	}
 
 	addPlayer(ecs, 10, 10)
 	addEnemy(ecs, 100, 100)
 
 	return &Game{
-		scene: NewScene([]systems.System{
-			controller.New(l, ecs),
-			render.New(l, Sprites(spritesheet), ecs),
-		}),
+		scene: NewScene(systems),
 	}, nil
 }
 

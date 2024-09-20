@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/dwethmar/vork/component/sprite"
-	"github.com/dwethmar/vork/systems"
+	"github.com/dwethmar/vork/ecsys"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -22,13 +22,13 @@ type Sprite struct {
 type System struct {
 	logger  *slog.Logger
 	sprites map[sprite.Graphic]*Sprite
-	ecs     *systems.ECS
+	ecs     *ecsys.ECS
 }
 
 func New(
 	logger *slog.Logger,
 	sprites []Sprite,
-	ecs *systems.ECS,
+	ecs *ecsys.ECS,
 ) *System {
 	spriteMap := make(map[sprite.Graphic]*Sprite)
 	for _, s := range sprites {

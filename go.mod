@@ -2,10 +2,7 @@ module github.com/dwethmar/vork
 
 go 1.23.0
 
-require (
-	github.com/google/go-cmp v0.6.0
-	github.com/hajimehoshi/ebiten/v2 v2.7.8
-)
+require github.com/hajimehoshi/ebiten/v2 v2.7.8
 
 require (
 	github.com/ebitengine/gomobile v0.0.0-20240518074828-e86332849895 // indirect

@@ -3,16 +3,16 @@ package controller
 import (
 	"log/slog"
 
-	"github.com/dwethmar/vork/systems"
+	"github.com/dwethmar/vork/ecsys"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type System struct {
 	logger *slog.Logger
-	ecs    *systems.ECS
+	ecs    *ecsys.ECS
 }
 
-func New(logger *slog.Logger, ecs *systems.ECS) *System {
+func New(logger *slog.Logger, ecs *ecsys.ECS) *System {
 	return &System{
 		logger: logger,
 		ecs:    ecs,
