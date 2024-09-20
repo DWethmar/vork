@@ -17,8 +17,8 @@ const (
 //go:embed images
 var imagesFS embed.FS
 
-// Sprites is a collection of sprites.
-type Sprites struct {
+// Spritesheet is a collection of sprites.
+type Spritesheet struct {
 	SkeletonDeath1 *ebiten.Image
 	SkeletonDeath2 *ebiten.Image
 	SkeletonDeath3 *ebiten.Image
@@ -67,7 +67,7 @@ type Sprites struct {
 	SkeletonMoveRight9 *ebiten.Image
 }
 
-func loadSkeletonDeath(s *Sprites) error {
+func loadSkeletonDeath(s *Spritesheet) error {
 	img, err := loadPng(imagesFS, "images/skeleton_death.png")
 	if err != nil {
 		return fmt.Errorf("failed to load images/skeleton_death.png: %w", err)
@@ -83,7 +83,7 @@ func loadSkeletonDeath(s *Sprites) error {
 	return nil
 }
 
-func loadSkeletonMove(s *Sprites) error {
+func loadSkeletonMove(s *Spritesheet) error {
 	img, err := loadPng(imagesFS, "images/skeleton_move.png")
 	if err != nil {
 		return fmt.Errorf("failed to load images/skeleton_move.png: %w", err)
@@ -133,8 +133,8 @@ func loadSkeletonMove(s *Sprites) error {
 	return nil
 }
 
-func New() (*Sprites, error) {
-	s := &Sprites{}
+func New() (*Spritesheet, error) {
+	s := &Spritesheet{}
 	if err := loadSkeletonDeath(s); err != nil {
 		return nil, fmt.Errorf("failed to skeleton death sprites: %w", err)
 	}

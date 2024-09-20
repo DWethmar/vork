@@ -1,6 +1,8 @@
 package shape
 
 import (
+	"image/color"
+
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
 )
@@ -11,9 +13,10 @@ const Type = component.ComponentType("shape")
 type Rectangle struct {
 	*component.BaseComponent
 	Width, Height int64
+	Color         color.RGBA
 }
 
-func NewRectangle(e entity.Entity, width, height int64) *Rectangle {
+func NewRectangle(e entity.Entity, width, height int64, color color.RGBA) *Rectangle {
 	return &Rectangle{
 		BaseComponent: &component.BaseComponent{
 			E: e,
@@ -21,5 +24,6 @@ func NewRectangle(e entity.Entity, width, height int64) *Rectangle {
 		},
 		Width:  width,
 		Height: height,
+		Color:  color,
 	}
 }

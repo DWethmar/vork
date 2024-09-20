@@ -3,6 +3,7 @@ package memory
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/dwethmar/vork/component"
@@ -20,8 +21,8 @@ var (
 // It is generic over type C, which must implement the Component interface.
 type Store[C component.Component] struct {
 	mu              sync.RWMutex
-	components      map[uint32]C               // Maps Component ID to Component
-	entityIndex     map[entity.Entity][]uint32 // Maps Entity ID to Component IDs
+	components      []*C
+	entityIndex     map[entity.Entity][]*C // Maps Entity ID to Components
 	nextID          uint32
 	uniquePerEntity bool // Flag to enforce uniqueness per entity
 }
@@ -31,8 +32,8 @@ type Store[C component.Component] struct {
 // per entity can be added.
 func New[C component.Component](uniquePerEntity bool) *Store[C] {
 	return &Store[C]{
-		components:      make(map[uint32]C),
-		entityIndex:     make(map[entity.Entity][]uint32),
+		components:      []*C{},
+		entityIndex:     make(map[entity.Entity][]*C),
 		nextID:          1,
 		uniquePerEntity: uniquePerEntity,
 	}
@@ -48,8 +49,8 @@ func (s *Store[C]) Add(c C) error {
 	entityID := c.Entity()
 
 	if s.uniquePerEntity {
-		if compIDs, exists := s.entityIndex[entityID]; exists && len(compIDs) > 0 {
-			return fmt.Errorf("component for entity ID %d already exists with component ID %d", entityID, compIDs[0])
+		if comps, exists := s.entityIndex[entityID]; exists && len(comps) > 0 {
+			return fmt.Errorf("component for entity ID %d already exists with component ID %d", entityID, (*comps[0]).ID())
 		}
 	}
 
@@ -57,62 +58,71 @@ func (s *Store[C]) Add(c C) error {
 		c.SetID(s.nextID)
 		s.nextID++
 	} else {
-		if _, exists := s.components[c.ID()]; exists {
+		// Check if a component with this ID already exists using binary search
+		index := s.searchComponentIndex(c.ID())
+		if index < len(s.components) && (*s.components[index]).ID() == c.ID() {
 			return fmt.Errorf("component with ID %d already exists", c.ID())
 		}
 	}
 
-	s.components[c.ID()] = c
+	// Insert the component into the sorted slice
+	s.insertComponentSorted(&c)
 
-	// Add component ID to entityIndex
-	s.entityIndex[entityID] = append(s.entityIndex[entityID], c.ID())
+	// Add component to entityIndex
+	s.entityIndex[entityID] = append(s.entityIndex[entityID], &c)
 
 	return nil
 }
 
-// Get retrieves a component by its ID.
+// Get retrieves a component by its ID using binary search.
 func (s *Store[C]) Get(id uint32) (C, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	c, exists := s.components[id]
-	if !exists {
-		var zero C
-		return zero, ErrComponentNotFound
+	index := s.searchComponentIndex(id)
+	if index < len(s.components) && (*s.components[index]).ID() == id {
+		return *s.components[index], nil
 	}
-	return c, nil
+	var zero C
+	return zero, ErrComponentNotFound
 }
 
-// Update modifies an existing component in the store.
+// Update modifies an existing component in the store using binary search.
 func (s *Store[C]) Update(c C) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, exists := s.components[c.ID()]; !exists {
-		return fmt.Errorf("component with ID %d not found", c.ID())
+	index := s.searchComponentIndex(c.ID())
+	if index < len(s.components) && (*s.components[index]).ID() == c.ID() {
+		// Update the component in the components slice
+		*s.components[index] = c
+		return nil
 	}
-	s.components[c.ID()] = c
-	return nil
+	return fmt.Errorf("component with ID %d not found", c.ID())
 }
 
+// Delete removes a component by its ID using binary search.
 func (s *Store[C]) Delete(id uint32) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	c, exists := s.components[id]
-	if !exists {
+	index := s.searchComponentIndex(id)
+	if index >= len(s.components) || (*s.components[index]).ID() != id {
 		return ErrComponentNotFound
 	}
-	delete(s.components, id)
 
-	entityID := c.Entity()
+	c := s.components[index]
+	entityID := (*c).Entity()
 
-	// Remove component ID from entityIndex
-	compIDs := s.entityIndex[entityID]
-	for i, compID := range compIDs {
-		if compID == id {
-			// Remove the component ID from the slice
-			s.entityIndex[entityID] = append(compIDs[:i], compIDs[i+1:]...)
+	// Remove the component from the components slice
+	s.components = append(s.components[:index], s.components[index+1:]...)
+
+	// Remove component from entityIndex
+	comps := s.entityIndex[entityID]
+	for i, comp := range comps {
+		if (*comp).ID() == id {
+			// Remove the component from the slice
+			s.entityIndex[entityID] = append(comps[:i], comps[i+1:]...)
 			break
 		}
 	}
@@ -129,72 +139,82 @@ func (s *Store[C]) List() []C {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	components := make([]C, 0, len(s.components))
-	for _, c := range s.components {
-		components = append(components, c)
+	components := make([]C, len(s.components))
+	for i, compPtr := range s.components {
+		components[i] = *compPtr
 	}
 	return components
 }
 
-// FirstByEntity retrieves a component by its associated entity.
-// If multiple components are associated with the entity, it returns the first one.
+// FirstByEntity retrieves the first component associated with an entity.
 func (s *Store[C]) FirstByEntity(e entity.Entity) (C, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	compIDs, exists := s.entityIndex[e]
-	if !exists || len(compIDs) == 0 {
+	comps, exists := s.entityIndex[e]
+	if !exists || len(comps) == 0 {
 		var zero C
 		return zero, ErrEntityNotFound
 	}
 
-	// Return the first component associated with the entity
-	c, exists := s.components[compIDs[0]]
-	if !exists {
-		var zero C
-		return zero, fmt.Errorf("existing entity ID %d with missing component ID %d", e, compIDs[0])
-	}
-	return c, nil
+	return *comps[0], nil
 }
 
 // ListByEntity retrieves all components associated with an entity.
-// If no components are associated with the entity, it returns an empty slice.
 func (s *Store[C]) ListByEntity(e entity.Entity) ([]C, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	compIDs, exists := s.entityIndex[e]
-	if !exists || len(compIDs) == 0 {
+	comps, exists := s.entityIndex[e]
+	if !exists || len(comps) == 0 {
 		return nil, ErrEntityNotFound
 	}
 
-	components := make([]C, 0, len(compIDs))
-	for _, compID := range compIDs {
-		if c, exists := s.components[compID]; exists {
-			components = append(components, c)
-		} else {
-			return nil, fmt.Errorf("existing entity ID %d with missing component ID %d", e, compID)
-		}
+	components := make([]C, len(comps))
+	for i, compPtr := range comps {
+		components[i] = *compPtr
 	}
 	return components, nil
 }
 
+// DeleteByEntity removes all components associated with an entity.
 func (s *Store[C]) DeleteByEntity(e entity.Entity) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	compIDs, exists := s.entityIndex[e]
+	comps, exists := s.entityIndex[e]
 	if !exists {
 		return ErrEntityNotFound // No components to delete for this entity
 	}
 
 	// Delete each component associated with the entity
-	for _, compID := range compIDs {
-		delete(s.components, compID)
+	for _, compPtr := range comps {
+		id := (*compPtr).ID()
+		index := s.searchComponentIndex(id)
+		if index < len(s.components) && (*s.components[index]).ID() == id {
+			// Remove the component from the slice
+			s.components = append(s.components[:index], s.components[index+1:]...)
+		}
 	}
 
 	// Remove the entity from the index
 	delete(s.entityIndex, e)
 
 	return nil
+}
+
+// searchComponentIndex performs a binary search to find the index of a component with the given ID.
+func (s *Store[C]) searchComponentIndex(id uint32) int {
+	return sort.Search(len(s.components), func(i int) bool {
+		return (*s.components[i]).ID() >= id
+	})
+}
+
+// insertComponentSorted inserts a component into the sorted slice.
+func (s *Store[C]) insertComponentSorted(c *C) {
+	index := s.searchComponentIndex((*c).ID())
+	// Insert the component at the correct position
+	s.components = append(s.components, c) // Append to increase the slice size
+	copy(s.components[index+1:], s.components[index:])
+	s.components[index] = c
 }

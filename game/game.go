@@ -23,7 +23,7 @@ type Game struct {
 // New creates a new game.
 func New() (*Game, error) {
 	l := slog.Default()
-	sprites, err := spritesheet.New()
+	spritesheet, err := spritesheet.New()
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func New() (*Game, error) {
 	return &Game{
 		scene: NewScene([]systems.System{
 			controller.New(l, ecs),
-			render.New(l, sprites, ecs),
+			render.New(l, Sprites(spritesheet), ecs),
 		}),
 	}, nil
 }

@@ -56,10 +56,10 @@ type ECS struct {
 	mu           sync.RWMutex
 	lastEntityID entity.Entity
 	// component stores
-	positions     PositionStore
-	controllables ControllableStore
-	rectangles    RectanglesStore
-	sprites       SpriteStore
+	pos     PositionStore
+	contr   ControllableStore
+	rect    RectanglesStore
+	sprites SpriteStore
 }
 
 func (s *ECS) CreateEntity() entity.Entity {
@@ -76,40 +76,34 @@ func NewECS(
 	sprites SpriteStore,
 ) *ECS {
 	return &ECS{
-		lastEntityID:  0,
-		positions:     positions,
-		controllables: controllables,
-		rectangles:    rectangles,
-		sprites:       sprites,
+		lastEntityID: 0,
+		pos:          positions,
+		contr:        controllables,
+		rect:         rectangles,
+		sprites:      sprites,
 	}
 }
 
-func (s *ECS) Position(e entity.Entity) (position.Position, error) {
-	return s.positions.FirstByEntity(e)
-}
-func (s *ECS) UpdatePosition(p position.Position) error { return s.positions.Update(p) }
-func (s *ECS) AddPosition(p position.Position) error    { return s.positions.Add(p) }
-func (s *ECS) DeletePosition(id uint32) error           { return s.positions.Delete(id) }
+func (s *ECS) Position(e entity.Entity) (position.Position, error) { return s.pos.FirstByEntity(e) }
+func (s *ECS) UpdatePosition(p position.Position) error            { return s.pos.Update(p) }
+func (s *ECS) AddPosition(p position.Position) error               { return s.pos.Add(p) }
+func (s *ECS) DeletePosition(id uint32) error                      { return s.pos.Delete(id) }
 
 func (s *ECS) Controllable(e entity.Entity) (controllable.Controllable, error) {
-	return s.controllables.FirstByEntity(e)
+	return s.contr.FirstByEntity(e)
 }
-func (s *ECS) Controllables() []controllable.Controllable           { return s.controllables.List() }
-func (s *ECS) UpdateControllable(c controllable.Controllable) error { return s.controllables.Update(c) }
-func (s *ECS) AddControllable(c controllable.Controllable) error    { return s.controllables.Add(c) }
-func (s *ECS) DeleteControllable(id uint32) error                   { return s.controllables.Delete(id) }
+func (s *ECS) Controllables() []controllable.Controllable           { return s.contr.List() }
+func (s *ECS) UpdateControllable(c controllable.Controllable) error { return s.contr.Update(c) }
+func (s *ECS) AddControllable(c controllable.Controllable) error    { return s.contr.Add(c) }
+func (s *ECS) DeleteControllable(id uint32) error                   { return s.contr.Delete(id) }
 
-func (s *ECS) Rectangle(e entity.Entity) (shape.Rectangle, error) {
-	return s.rectangles.FirstByEntity(e)
-}
-func (s *ECS) Rectangles() []shape.Rectangle           { return s.rectangles.List() }
-func (s *ECS) UpdateRectangle(r shape.Rectangle) error { return s.rectangles.Update(r) }
-func (s *ECS) AddRectangle(r shape.Rectangle) error    { return s.rectangles.Add(r) }
-func (s *ECS) DeleteRectangle(id uint32) error         { return s.rectangles.Delete(id) }
+func (s *ECS) Rectangle(e entity.Entity) (shape.Rectangle, error) { return s.rect.FirstByEntity(e) }
+func (s *ECS) Rectangles() []shape.Rectangle                      { return s.rect.List() }
+func (s *ECS) UpdateRectangle(r shape.Rectangle) error            { return s.rect.Update(r) }
+func (s *ECS) AddRectangle(r shape.Rectangle) error               { return s.rect.Add(r) }
+func (s *ECS) DeleteRectangle(id uint32) error                    { return s.rect.Delete(id) }
 
-func (s *ECS) Sprites(e entity.Entity) ([]sprite.Sprite, error) {
-	return s.sprites.ListByEntity(e)
-}
+func (s *ECS) Sprites() []sprite.Sprite            { return s.sprites.List() }
 func (s *ECS) UpdateSprite(sp sprite.Sprite) error { return s.sprites.Update(sp) }
 func (s *ECS) AddSprite(sp sprite.Sprite) error    { return s.sprites.Add(sp) }
 func (s *ECS) DeleteSprite(id uint32) error        { return s.sprites.Delete(id) }
