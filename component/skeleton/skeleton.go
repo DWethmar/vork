@@ -1,6 +1,8 @@
 package skeleton
 
 import (
+	"encoding/gob"
+
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
 )
@@ -20,4 +22,8 @@ func New(e entity.Entity) *Skeleton {
 			T: Type,
 		},
 	}
+}
+
+func init() {
+	gob.Register(Skeleton{})
 }

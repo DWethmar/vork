@@ -19,8 +19,8 @@ type Rectangle struct {
 func NewRectangle(e entity.Entity, width, height int64, color color.RGBA) *Rectangle {
 	return &Rectangle{
 		BaseComponent: &component.BaseComponent{
+			I: 0,
 			E: e,
-			T: Type,
 		},
 		Width:  width,
 		Height: height,

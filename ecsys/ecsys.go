@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
@@ -22,7 +23,7 @@ var (
 // BaseComponentStore defines a generic interface for managing any component type.
 // T is the component type, such as position, sprite, etc.
 type BaseComponentStore[T any] interface {
-	Add(T) error                        // Add a new component to the store.
+	Add(T) (uint32, error)              // Add a new component to the store.
 	Get(uint32) (T, error)              // Get a component by its ID.
 	Update(T) error                     // Update an existing component.
 	List() []T                          // List all components in the store.
@@ -91,21 +92,14 @@ func (s *ECS) CreateEntity() entity.Entity {
 
 // New creates a new ECS system, initializing it with the provided component stores and event bus.
 // This function ensures that the ECS is ready to manage entities and components from the start.
-func New(
-	eventBus *event.Bus,
-	positions PositionStore,
-	controllables ControllableStore,
-	rectangles RectanglesStore,
-	sprites SpriteStore,
-	sklt SkeletonStore,
-) *ECS {
+func New(eventBus *event.Bus) *ECS {
 	return &ECS{
 		lastEntityID: 0,
 		eventBus:     eventBus,
-		pos:          positions,
-		contr:        controllables,
-		rect:         rectangles,
-		sprites:      sprites,
-		sklt:         sklt,
+		pos:          component.NewStore[position.Position](true),
+		contr:        component.NewStore[controllable.Controllable](true),
+		rect:         component.NewStore[shape.Rectangle](true),
+		sprites:      component.NewStore[sprite.Sprite](false),
+		sklt:         component.NewStore[skeleton.Skeleton](true),
 	}
 }

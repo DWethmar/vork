@@ -2,11 +2,13 @@ package persistence
 
 import "github.com/dwethmar/vork/component"
 
-type Repository interface {
-	// Save saves the given entity.
-	Save(c component.Component) error
+type Repository[T component.Component] interface {
+	// Get returns an component by its ID.
+	Get(id uint32) (T, error)
+	// Save saves the given component.
+	Save(c T) error
 	// Delete removes an component by its ID.
-	Delete(t component.ComponentType, id uint32) error
-	// List returns all entities of the given type.
-	List(t string) []component.Component
+	Delete(id uint32) error
+	// List returns all components.
+	List() ([]T, error)
 }

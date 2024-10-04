@@ -3,12 +3,6 @@ package game
 import (
 	"log/slog"
 
-	"github.com/dwethmar/vork/component"
-	"github.com/dwethmar/vork/component/controllable"
-	"github.com/dwethmar/vork/component/position"
-	"github.com/dwethmar/vork/component/shape"
-	"github.com/dwethmar/vork/component/skeleton"
-	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/spritesheet"
@@ -32,22 +26,8 @@ func New() (*Game, error) {
 		return nil, err
 	}
 
-	positionStore := component.NewStore[position.Position](true)
-	controllableStore := component.NewStore[controllable.Controllable](true)
-	rectangleStore := component.NewStore[shape.Rectangle](true)
-	spriteStore := component.NewStore[sprite.Sprite](false)
-	skeletonStore := component.NewStore[skeleton.Skeleton](true)
-
 	eventBus := event.NewBus()
-
-	ecs := ecsys.New(
-		eventBus,
-		positionStore,
-		controllableStore,
-		rectangleStore,
-		spriteStore,
-		skeletonStore,
-	)
+	ecs := ecsys.New(eventBus)
 
 	systems := []systems.System{
 		controller.New(l, ecs),

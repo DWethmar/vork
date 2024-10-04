@@ -19,7 +19,6 @@ func New(e entity.Entity, graphic Graphic) *Sprite {
 	return &Sprite{
 		BaseComponent: &component.BaseComponent{
 			E: e,
-			T: Type,
 		},
 		Graphic: graphic,
 	}

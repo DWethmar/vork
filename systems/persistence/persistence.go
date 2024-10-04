@@ -5,21 +5,34 @@ import (
 	"slices"
 
 	"github.com/dwethmar/vork/component"
+	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/component/position"
+	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/event"
+	"github.com/dwethmar/vork/systems"
+	"github.com/hajimehoshi/ebiten/v2"
 )
+
+var _ systems.System = &System{}
+
+type Repositories struct {
+	ControllableRepo Repository[*controllable.Controllable]
+	PositionRepo     Repository[*position.Position]
+	SkeletonRepo     Repository[*skeleton.Skeleton]
+}
 
 // Repository is a interface that defines the methods that a persistence repository should implement.
 type System struct {
 	eventBus          *event.Bus
-	r                 Repository
+	repos             Repositories
 	changedComponents map[component.ComponentType]component.Component // map of components that have changed by type
 	deleteComponents  map[component.ComponentType]component.Component // map of components that have been deleted by type
 }
 
-func New(eventBus *event.Bus, r Repository) *System {
+func New(eventBus *event.Bus, r Repositories) *System {
 	s := &System{
 		eventBus:          eventBus,
-		r:                 r,
+		repos:             r,
 		changedComponents: make(map[component.ComponentType]component.Component),
 		deleteComponents:  make(map[component.ComponentType]component.Component),
 	}
@@ -66,16 +79,43 @@ func (s *System) componentDeleteHandler(e event.Event) error {
 }
 
 func (s *System) Save() error {
+	fmt.Printf("number of changed components: %d\n", len(s.changedComponents))
 	for _, c := range s.changedComponents {
-		if err := s.r.Save(c); err != nil {
-			return fmt.Errorf("failed to save component: %w", err)
+		switch t := c.(type) {
+		case controllable.Controllable:
+			if err := s.repos.ControllableRepo.Save(&t); err != nil {
+				return fmt.Errorf("failed to save controllable component: %w", err)
+			}
+		case position.Position:
+			if err := s.repos.PositionRepo.Save(&t); err != nil {
+				return fmt.Errorf("failed to save position component: %w", err)
+			}
+		case skeleton.Skeleton:
+			if err := s.repos.SkeletonRepo.Save(&t); err != nil {
+				return fmt.Errorf("failed to save skeleton component: %w", err)
+			}
+		default:
+			return fmt.Errorf("unknown component type: %T", c)
 		}
 	}
 	s.changedComponents = make(map[component.ComponentType]component.Component)
 
 	for _, c := range s.deleteComponents {
-		if err := s.r.Delete(c.Type(), c.ID()); err != nil {
-			return fmt.Errorf("failed to delete component: %w", err)
+		switch t := c.(type) {
+		case controllable.Controllable:
+			if err := s.repos.ControllableRepo.Delete(t.ID()); err != nil {
+				return fmt.Errorf("failed to delete controllable component: %w", err)
+			}
+		case position.Position:
+			if err := s.repos.PositionRepo.Delete(t.ID()); err != nil {
+				return fmt.Errorf("failed to delete position component: %w", err)
+			}
+		case skeleton.Skeleton:
+			if err := s.repos.SkeletonRepo.Delete(t.ID()); err != nil {
+				return fmt.Errorf("failed to delete skeleton component: %w", err)
+			}
+		default:
+			return fmt.Errorf("unknown component type: %T", c)
 		}
 	}
 	s.deleteComponents = make(map[component.ComponentType]component.Component)
@@ -83,5 +123,13 @@ func (s *System) Save() error {
 }
 
 func (s *System) Load() error {
+	return nil
+}
+
+func (s *System) Update() error {
+	return nil
+}
+
+func (s *System) Draw(_ *ebiten.Image) error {
 	return nil
 }

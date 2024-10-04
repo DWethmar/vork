@@ -18,7 +18,7 @@ var (
 )
 
 type CreatedEvent struct {
-	Controllable Controllable
+	Controllable *Controllable
 }
 
 func (e *CreatedEvent) Event() string                  { return CreatedEventType }
@@ -26,7 +26,7 @@ func (e *CreatedEvent) Component() component.Component { return e.Controllable }
 func (e *CreatedEvent) Deleted() bool                  { return false }
 
 type UpdatedEvent struct {
-	Controllable Controllable
+	Controllable *Controllable
 }
 
 func (e *UpdatedEvent) Event() string                  { return UpdatedEventType }
@@ -34,7 +34,7 @@ func (e *UpdatedEvent) Component() component.Component { return e.Controllable }
 func (e *UpdatedEvent) Deleted() bool                  { return false }
 
 type DeletedEvent struct {
-	Controllable Controllable
+	Controllable *Controllable
 }
 
 func (e *DeletedEvent) Event() string                  { return DeletedEventType }

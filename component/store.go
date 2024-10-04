@@ -41,7 +41,7 @@ func NewStore[C Component](uniquePerEntity bool) *Store[C] {
 // Add inserts a new component into the store.
 // If the component ID is zero, it assigns a new unique ID.
 // Enforces uniqueness per entity if the flag is set.
-func (s *Store[C]) Add(c C) error {
+func (s *Store[C]) Add(c C) (uint32, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -49,7 +49,7 @@ func (s *Store[C]) Add(c C) error {
 
 	if s.uniquePerEntity {
 		if comps, exists := s.entityIndex[entityID]; exists && len(comps) > 0 {
-			return fmt.Errorf("component for entity ID %d already exists with component ID %d", entityID, (*comps[0]).ID())
+			return 0, fmt.Errorf("component for entity ID %d already exists with component ID %d", entityID, (*comps[0]).ID())
 		}
 	}
 
@@ -60,7 +60,7 @@ func (s *Store[C]) Add(c C) error {
 		// Check if a component with this ID already exists using binary search
 		index := s.searchComponentIndex(c.ID())
 		if index < len(s.components) && (*s.components[index]).ID() == c.ID() {
-			return fmt.Errorf("component with ID %d already exists", c.ID())
+			return 0, fmt.Errorf("component with ID %d already exists", c.ID())
 		}
 	}
 
@@ -70,7 +70,7 @@ func (s *Store[C]) Add(c C) error {
 	// Add component to entityIndex
 	s.entityIndex[entityID] = append(s.entityIndex[entityID], &c)
 
-	return nil
+	return c.ID(), nil
 }
 
 // Get retrieves a component by its ID using binary search.

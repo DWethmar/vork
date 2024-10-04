@@ -1,6 +1,8 @@
 package position
 
 import (
+	"encoding/gob"
+
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
 )
@@ -24,4 +26,8 @@ func New(e entity.Entity, x, y int64) *Position {
 		X: x,
 		Y: y,
 	}
+}
+
+func init() {
+	gob.Register(Position{})
 }
