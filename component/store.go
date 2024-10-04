@@ -1,4 +1,4 @@
-package memory
+package component
 
 import (
 	"errors"
@@ -6,7 +6,6 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
 )
 
@@ -19,7 +18,7 @@ var (
 
 // Store holds components in memory and provides CRUD operations.
 // It is generic over type C, which must implement the Component interface.
-type Store[C component.Component] struct {
+type Store[C Component] struct {
 	mu              sync.RWMutex
 	components      []*C
 	entityIndex     map[entity.Entity][]*C // Maps Entity ID to Components
@@ -27,10 +26,10 @@ type Store[C component.Component] struct {
 	uniquePerEntity bool // Flag to enforce uniqueness per entity
 }
 
-// New creates a new instance of Store for a specific component type.
+// NewStore creates a new instance of Store for a specific component type.
 // If uniquePerEntity is true, the store will enforce that only one component
 // per entity can be added.
-func New[C component.Component](uniquePerEntity bool) *Store[C] {
+func NewStore[C Component](uniquePerEntity bool) *Store[C] {
 	return &Store[C]{
 		components:      []*C{},
 		entityIndex:     make(map[entity.Entity][]*C),

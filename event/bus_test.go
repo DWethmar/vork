@@ -6,11 +6,11 @@ import (
 
 // MockEvent is a simple implementation of the Event interface for testing.
 type MockEvent struct {
-	name string
+	event string
 }
 
 func (e *MockEvent) Event() string {
-	return e.name
+	return e.event
 }
 
 func TestNewBus(t *testing.T) {
@@ -28,7 +28,9 @@ func TestBus_Subscribe(t *testing.T) {
 	bus := NewBus()
 	handlerCalled := false
 
-	bus.Subscribe("testEvent", func(e Event) error {
+	bus.Subscribe(MatcherFunc(func(e Event) bool {
+		return e.Event() == "testEvent"
+	}), func(e Event) error {
 		handlerCalled = true
 		return nil
 	})
@@ -38,7 +40,7 @@ func TestBus_Subscribe(t *testing.T) {
 	}
 
 	// Trigger the event to check if the handler is called.
-	bus.Publish(&MockEvent{name: "testEvent"})
+	bus.Publish(&MockEvent{event: "testEvent"})
 
 	if !handlerCalled {
 		t.Errorf("Handler was not called after Bus.Publish()")
@@ -50,12 +52,14 @@ func TestBus_Publish(t *testing.T) {
 		bus := NewBus()
 		handlerCalled := false
 
-		bus.Subscribe("testEvent", func(e Event) error {
+		bus.Subscribe(MatcherFunc(func(e Event) bool {
+			return e.Event() == "testEvent"
+		}), func(e Event) error {
 			handlerCalled = true
 			return nil
 		})
 
-		bus.Publish(&MockEvent{name: "testEvent"})
+		bus.Publish(&MockEvent{event: "testEvent"})
 
 		if !handlerCalled {
 			t.Errorf("Bus.Publish() did not trigger the handler")
@@ -63,7 +67,7 @@ func TestBus_Publish(t *testing.T) {
 
 		// Test with an event that has no handlers
 		handlerCalled = false
-		bus.Publish(&MockEvent{name: "nonExistentEvent"})
+		bus.Publish(&MockEvent{event: "nonExistentEvent"})
 
 		if handlerCalled {
 			t.Errorf("Bus.Publish() should not trigger a handler for an event with no subscribers")
@@ -80,9 +84,11 @@ func TestBus_Unsubscribe(t *testing.T) {
 		return nil
 	}
 
-	id := bus.Subscribe("testEvent", handler)
+	id := bus.Subscribe(MatcherFunc(func(e Event) bool {
+		return e.Event() == "testEvent"
+	}), handler)
 
-	bus.Publish(&MockEvent{name: "testEvent"})
+	bus.Publish(&MockEvent{event: "testEvent"})
 
 	if !handlerCalled {
 		t.Errorf("Handler was not called after Bus.Publish()")
@@ -91,9 +97,29 @@ func TestBus_Unsubscribe(t *testing.T) {
 	handlerCalled = false
 	bus.Unsubscribe("testEvent", id)
 
-	bus.Publish(&MockEvent{name: "testEvent"})
+	bus.Publish(&MockEvent{event: "testEvent"})
 
 	if handlerCalled {
 		t.Errorf("Handler was called after Bus.Unsubscribe()")
 	}
+}
+
+func TestBus_Subscriptions(t *testing.T) {
+	t.Run("get all subscriptions", func(t *testing.T) {
+		bus := NewBus()
+
+		for i := 0; i < 10; i++ {
+			bus.Subscribe(MatcherFunc(func(e Event) bool {
+				return e.Event() == "testEvent"
+			}), func(e Event) error {
+				return nil
+			})
+		}
+
+		subscriptions := bus.Subscriptions()
+
+		if len(subscriptions) != 10 {
+			t.Errorf("Bus.Subscriptions() should return all subscriptions, got %d", len(subscriptions))
+		}
+	})
 }

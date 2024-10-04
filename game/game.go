@@ -3,12 +3,12 @@ package game
 import (
 	"log/slog"
 
+	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
-	"github.com/dwethmar/vork/component/store/memory"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/spritesheet"
@@ -32,11 +32,11 @@ func New() (*Game, error) {
 		return nil, err
 	}
 
-	positionStore := memory.New[position.Position](true)
-	controllableStore := memory.New[controllable.Controllable](true)
-	rectangleStore := memory.New[shape.Rectangle](true)
-	spriteStore := memory.New[sprite.Sprite](false)
-	skeletonStore := memory.New[skeleton.Skeleton](true)
+	positionStore := component.NewStore[position.Position](true)
+	controllableStore := component.NewStore[controllable.Controllable](true)
+	rectangleStore := component.NewStore[shape.Rectangle](true)
+	spriteStore := component.NewStore[sprite.Sprite](false)
+	skeletonStore := component.NewStore[skeleton.Skeleton](true)
 
 	eventBus := event.NewBus()
 
