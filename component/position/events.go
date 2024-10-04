@@ -1,27 +1,28 @@
 package position
 
-import "github.com/dwethmar/vork/component"
-
 const (
-	// CreatedEvent is the event type for when a component is created.
-	CreatedEvent = "position.created"
-	// UpdatedEvent is the event type for when a component is updated.
-	UpdatedEvent = "position.updated"
-	// DeletedEvent is the event type for when a component is deleted.
-	DeletedEvent = "position.deleted"
+	// CreatedEventType is the event type for when a component is created.
+	CreatedEventType = "position.created"
+	// UpdatedEventType is the event type for when a component is updated.
+	UpdatedEventType = "position.updated"
+	// DeletedEventType is the event type for when a component is deleted.
+	DeletedEventType = "position.deleted"
 )
 
-// NewCreatedEvent creates a new event with the type CreatedEvent.
-func NewCreatedEvent(c Position) *component.Event {
-	return component.NewEvent(CreatedEvent, c)
+type CreatedEvent struct {
+	Position Position
 }
 
-// NewUpdatedEvent creates a new event with the type UpdatedEvent.
-func NewUpdatedEvent(c Position) *component.Event {
-	return component.NewEvent(UpdatedEvent, c)
+func (e *CreatedEvent) Event() string { return CreatedEventType }
+
+type UpdatedEvent struct {
+	Position Position
 }
 
-// NewDeletedEvent creates a new event with the type DeletedEvent.
-func NewDeletedEvent(c Position) *component.Event {
-	return component.NewEvent(DeletedEvent, c)
+func (e *UpdatedEvent) Event() string { return UpdatedEventType }
+
+type DeletedEvent struct {
+	Position Position
 }
+
+func (e *DeletedEvent) Event() string { return DeletedEventType }

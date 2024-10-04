@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"log/slog"
+	"sort"
 
 	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/ecsys"
@@ -41,8 +42,17 @@ func New(
 	}
 }
 
+// entityDraw holds the information necessary to draw an entity.
+type entityDraw struct {
+	X, Y     int64
+	DrawFunc func(screen *ebiten.Image)
+}
+
 // Draw draws the shapes.
 func (s *System) Draw(screen *ebiten.Image) error {
+	entitiesToDraw := []entityDraw{}
+
+	// Collect rectangles to draw
 	for _, r := range s.ecs.Rectangles() {
 		var X, Y int64
 		if c, err := s.ecs.Position(r.Entity()); err == nil {
@@ -50,10 +60,17 @@ func (s *System) Draw(screen *ebiten.Image) error {
 		} else {
 			return err
 		}
-		// draw the rectangle
-		vector.DrawFilledRect(screen, float32(X), float32(Y), float32(r.Width), float32(r.Height), color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff}, true)
+
+		// Add the drawing function for this rectangle
+		entitiesToDraw = append(entitiesToDraw, entityDraw{
+			X: X, Y: Y,
+			DrawFunc: func(screen *ebiten.Image) {
+				vector.DrawFilledRect(screen, float32(X), float32(Y), float32(r.Width), float32(r.Height), color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff}, true)
+			},
+		})
 	}
 
+	// Collect sprites to draw
 	for _, spc := range s.ecs.Sprites() {
 		var X, Y int64
 		if c, err := s.ecs.Position(spc.Entity()); err == nil {
@@ -68,13 +85,26 @@ func (s *System) Draw(screen *ebiten.Image) error {
 		// apply offset
 		X += int64(spr.OffsetX)
 		Y += int64(spr.OffsetY)
-		// draw the sprite
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(
-			float64(X),
-			float64(Y),
-		)
-		screen.DrawImage(spr.Img, op)
+
+		// Add the drawing function for this sprite
+		entitiesToDraw = append(entitiesToDraw, entityDraw{
+			X: X, Y: Y,
+			DrawFunc: func(screen *ebiten.Image) {
+				op := &ebiten.DrawImageOptions{}
+				op.GeoM.Translate(float64(X), float64(Y))
+				screen.DrawImage(spr.Img, op)
+			},
+		})
+	}
+
+	// Sort entities by their Y value
+	sort.Slice(entitiesToDraw, func(i, j int) bool {
+		return entitiesToDraw[i].Y < entitiesToDraw[j].Y
+	})
+
+	// Draw sorted entities
+	for _, entity := range entitiesToDraw {
+		entity.DrawFunc(screen)
 	}
 
 	return nil

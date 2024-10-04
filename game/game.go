@@ -15,6 +15,7 @@ import (
 	"github.com/dwethmar/vork/systems"
 	"github.com/dwethmar/vork/systems/controller"
 	"github.com/dwethmar/vork/systems/render"
+	"github.com/dwethmar/vork/systems/skeletons"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -51,6 +52,7 @@ func New() (*Game, error) {
 	systems := []systems.System{
 		controller.New(l, ecs),
 		render.New(l, Sprites(spritesheet), ecs),
+		skeletons.New(l, ecs, eventBus),
 	}
 
 	addPlayer(ecs, 10, 10)

@@ -11,7 +11,7 @@ type Event interface {
 }
 
 // EventHandler is a custom type for handler functions that process events.
-type EventHandler func(Event)
+type EventHandler func(Event) error
 
 // handlerEntry holds an EventHandler with a unique identifier.
 type handlerEntry struct {
@@ -60,17 +60,21 @@ func (b *Bus) Unsubscribe(event string, id int) {
 }
 
 // Publish sends an event to all the handlers subscribed to the event's type.
-func (b *Bus) Publish(event Event) {
+func (b *Bus) Publish(event Event) error {
 	b.mu.RLock()
 	handlers, ok := b.handlers[event.Event()]
 	b.mu.RUnlock()
 
 	if !ok {
 		fmt.Printf("Warning: No handlers for event %s\n", event.Event())
-		return
+		return nil
 	}
 
 	for _, entry := range handlers {
-		entry.handler(event)
+		if err := entry.handler(event); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
