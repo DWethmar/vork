@@ -8,27 +8,40 @@ import (
 )
 
 func (s *ECS) Skeleton(e entity.Entity) (skeleton.Skeleton, error) {
-	return s.sklt.FirstByEntity(e)
+	c, err := s.sklt.FirstByEntity(e)
+	if err != nil {
+		return skeleton.Skeleton{}, fmt.Errorf("could not get skeleton: %v", err)
+	}
+	return *c, nil
 }
 
 func (s *ECS) Skeletons() []skeleton.Skeleton {
-	return s.sklt.List()
+	c := s.sklt.List()
+	r := make([]skeleton.Skeleton, len(c))
+	for i, v := range c {
+		r[i] = *v
+	}
+	return r
 }
 
 func (s *ECS) UpdateSkeleton(sk skeleton.Skeleton) error {
-	if err := s.sklt.Update(sk); err != nil {
+	if err := s.sklt.Update(&sk); err != nil {
 		return err
 	}
-	s.eventBus.Publish(&skeleton.UpdatedEvent{Skeleton: sk})
+	if err := s.eventBus.Publish(&skeleton.UpdatedEvent{Skeleton: sk}); err != nil {
+		return fmt.Errorf("could not publish event: %w", err)
+	}
 	return nil
 }
 
 func (s *ECS) AddSkeleton(sk skeleton.Skeleton) (uint32, error) {
-	id, err := s.sklt.Add(sk)
+	id, err := s.sklt.Add(&sk)
 	if err != nil {
 		return 0, fmt.Errorf("could not add skeleton: %w", err)
 	}
-	s.eventBus.Publish(&skeleton.CreatedEvent{Skeleton: sk})
+	if err := s.eventBus.Publish(&skeleton.CreatedEvent{Skeleton: sk}); err != nil {
+		return 0, fmt.Errorf("could not publish event: %w", err)
+	}
 	return id, nil
 }
 
@@ -36,6 +49,8 @@ func (s *ECS) DeleteSkeleton(sk skeleton.Skeleton) error {
 	if err := s.sklt.Delete(sk.ID()); err != nil {
 		return fmt.Errorf("could not delete skeleton: %w", err)
 	}
-	s.eventBus.Publish(&skeleton.DeletedEvent{Skeleton: sk})
+	if err := s.eventBus.Publish(&skeleton.DeletedEvent{Skeleton: sk}); err != nil {
+		return fmt.Errorf("could not publish event: %w", err)
+	}
 	return nil
 }

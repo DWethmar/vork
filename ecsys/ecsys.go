@@ -34,36 +34,36 @@ type BaseComponentStore[T any] interface {
 // ControllableStore manages Controllable components, extending BaseComponentStore.
 // Includes an additional method to get the first Controllable by an entity.
 type ControllableStore interface {
-	BaseComponentStore[controllable.Controllable]
-	FirstByEntity(entity.Entity) (controllable.Controllable, error)
+	BaseComponentStore[*controllable.Controllable]
+	FirstByEntity(entity.Entity) (*controllable.Controllable, error)
 }
 
 // PositionStore manages Position components, extending BaseComponentStore.
 // Includes an additional method to get the first Position by an entity.
 type PositionStore interface {
-	BaseComponentStore[position.Position]
-	FirstByEntity(entity.Entity) (position.Position, error)
+	BaseComponentStore[*position.Position]
+	FirstByEntity(entity.Entity) (*position.Position, error)
 }
 
 // RectanglesStore manages Rectangle components (for shapes), extending BaseComponentStore.
 // Includes an additional method to get the first Rectangle by an entity.
 type RectanglesStore interface {
-	BaseComponentStore[shape.Rectangle]
-	FirstByEntity(entity.Entity) (shape.Rectangle, error)
+	BaseComponentStore[*shape.Rectangle]
+	FirstByEntity(entity.Entity) (*shape.Rectangle, error)
 }
 
 // SpriteStore manages Sprite components, extending BaseComponentStore.
 // Includes an additional method to list all sprites associated with an entity.
 type SpriteStore interface {
-	BaseComponentStore[sprite.Sprite]
-	ListByEntity(entity.Entity) ([]sprite.Sprite, error)
+	BaseComponentStore[*sprite.Sprite]
+	ListByEntity(entity.Entity) ([]*sprite.Sprite, error)
 }
 
 // SkeletonStore manages Skeleton components, extending BaseComponentStore.
 // Includes an additional method to get the first Skeleton by an entity.
 type SkeletonStore interface {
-	BaseComponentStore[skeleton.Skeleton]
-	FirstByEntity(entity.Entity) (skeleton.Skeleton, error)
+	BaseComponentStore[*skeleton.Skeleton]
+	FirstByEntity(entity.Entity) (*skeleton.Skeleton, error)
 }
 
 // ECS is the main struct that manages entities and their associated components.
@@ -96,10 +96,10 @@ func New(eventBus *event.Bus) *ECS {
 	return &ECS{
 		lastEntityID: 0,
 		eventBus:     eventBus,
-		pos:          component.NewStore[position.Position](true),
-		contr:        component.NewStore[controllable.Controllable](true),
-		rect:         component.NewStore[shape.Rectangle](true),
-		sprites:      component.NewStore[sprite.Sprite](false),
-		sklt:         component.NewStore[skeleton.Skeleton](true),
+		pos:          component.NewStore[*position.Position](true),
+		contr:        component.NewStore[*controllable.Controllable](true),
+		rect:         component.NewStore[*shape.Rectangle](true),
+		sprites:      component.NewStore[*sprite.Sprite](false),
+		sklt:         component.NewStore[*skeleton.Skeleton](true),
 	}
 }
