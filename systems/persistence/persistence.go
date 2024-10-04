@@ -8,6 +8,7 @@ import (
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/skeleton"
+	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/systems"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -24,14 +25,16 @@ type Repositories struct {
 // Repository is a interface that defines the methods that a persistence repository should implement.
 type System struct {
 	eventBus          *event.Bus
+	ecs               *ecsys.ECS
 	repos             Repositories
 	changedComponents map[component.ComponentType]component.Component // map of components that have changed by type
 	deleteComponents  map[component.ComponentType]component.Component // map of components that have been deleted by type
 }
 
-func New(eventBus *event.Bus, r Repositories) *System {
+func New(eventBus *event.Bus, ecs *ecsys.ECS, r Repositories) *System {
 	s := &System{
 		eventBus:          eventBus,
+		ecs:               ecs,
 		repos:             r,
 		changedComponents: make(map[component.ComponentType]component.Component),
 		deleteComponents:  make(map[component.ComponentType]component.Component),
@@ -123,6 +126,42 @@ func (s *System) Save() error {
 }
 
 func (s *System) Load() error {
+	for _, r := range PersistentComponentTypes() {
+		switch r {
+		case controllable.Type:
+			l, err := s.repos.ControllableRepo.List()
+			if err != nil {
+				return fmt.Errorf("failed to list controllable components: %w", err)
+			}
+			for _, c := range l {
+				if _, err := s.ecs.AddControllable(*c); err != nil {
+					return fmt.Errorf("failed to add controllable component: %w", err)
+				}
+			}
+		case position.Type:
+			l, err := s.repos.PositionRepo.List()
+			if err != nil {
+				return fmt.Errorf("failed to list position components: %w", err)
+			}
+			for _, c := range l {
+				if _, err := s.ecs.AddPosition(*c); err != nil {
+					return fmt.Errorf("failed to add position component: %w", err)
+				}
+			}
+		case skeleton.Type:
+			l, err := s.repos.SkeletonRepo.List()
+			if err != nil {
+				return fmt.Errorf("failed to list skeleton components: %w", err)
+			}
+			for _, c := range l {
+				if _, err := s.ecs.AddSkeleton(*c); err != nil {
+					return fmt.Errorf("failed to add skeleton component: %w", err)
+				}
+			}
+		default:
+			return fmt.Errorf("unknown component type: %s", r)
+		}
+	}
 	return nil
 }
 

@@ -134,7 +134,7 @@ func (r *Repository[T]) List() ([]T, error) {
 	err := r.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(bucketName))
 		if bucket == nil {
-			return fmt.Errorf("bucket %q not found", bucketName)
+			return nil
 		}
 
 		// Iterate over all components in the bucket
