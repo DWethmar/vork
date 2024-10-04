@@ -139,8 +139,8 @@ func TestSystem_Load(t *testing.T) {
 
 		// load some data
 		for _, err := range []error{
-			repos.PositionRepo.Save(position.New(1, 11, 11)),
-			repos.PositionRepo.Save(position.New(2, 22, 22)),
+			repos.PositionRepo.Save(&position.Position{I: 1, E: 1, X: 11, Y: 11}),
+			repos.PositionRepo.Save(&position.Position{I: 2, E: 2, X: 22, Y: 22}),
 		} {
 			if err != nil {
 				t.Errorf("Save failed: %v", err)

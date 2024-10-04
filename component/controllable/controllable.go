@@ -13,17 +13,21 @@ var _ component.Component = &Controllable{}
 
 // Controllable is a component that holds the controller of an entity.
 type Controllable struct {
-	*component.BaseComponent
+	I uint32        // ID
+	E entity.Entity // Entity
 }
 
 func New(e entity.Entity) *Controllable {
 	return &Controllable{
-		BaseComponent: &component.BaseComponent{
-			E: e,
-			T: Type,
-		},
+		I: 0,
+		E: e,
 	}
 }
+
+func (c *Controllable) ID() uint32                    { return c.I }
+func (c *Controllable) SetID(i uint32)                { c.I = i }
+func (c *Controllable) Type() component.ComponentType { return Type }
+func (c *Controllable) Entity() entity.Entity         { return c.E }
 
 func init() {
 	gob.Register(Controllable{})

@@ -22,24 +22,39 @@ type CreatedEvent struct {
 	Skeleton Skeleton
 }
 
-func (e *CreatedEvent) Event() string                  { return CreatedEventType }
-func (e *CreatedEvent) Component() component.Component { return e.Skeleton }
-func (e *CreatedEvent) Deleted() bool                  { return false }
+func (e *CreatedEvent) Event() string { return CreatedEventType }
+func (e *CreatedEvent) Component() any {
+	c := e.Skeleton
+	return &c
+}
+func (e *CreatedEvent) ComponentID() uint32                    { return e.Skeleton.ID() }
+func (e *CreatedEvent) ComponentType() component.ComponentType { return e.Skeleton.Type() }
+func (e *CreatedEvent) Deleted() bool                          { return false }
 
 // UpdatedEvent is an event that is sent when a component is updated.
 type UpdatedEvent struct {
 	Skeleton Skeleton
 }
 
-func (e *UpdatedEvent) Event() string                  { return UpdatedEventType }
-func (e *UpdatedEvent) Component() component.Component { return e.Skeleton }
-func (e *UpdatedEvent) Deleted() bool                  { return false }
+func (e *UpdatedEvent) Event() string { return UpdatedEventType }
+func (e *UpdatedEvent) Component() any {
+	c := e.Skeleton
+	return &c
+}
+func (e *UpdatedEvent) ComponentID() uint32                    { return e.Skeleton.ID() }
+func (e *UpdatedEvent) ComponentType() component.ComponentType { return e.Skeleton.Type() }
+func (e *UpdatedEvent) Deleted() bool                          { return false }
 
 // DeletedEvent is an event that is sent when a component is deleted.
 type DeletedEvent struct {
 	Skeleton Skeleton
 }
 
-func (e *DeletedEvent) Event() string                  { return DeletedEventType }
-func (e *DeletedEvent) Component() component.Component { return e.Skeleton }
-func (e *DeletedEvent) Deleted() bool                  { return true }
+func (e *DeletedEvent) Event() string { return DeletedEventType }
+func (e *DeletedEvent) Component() any {
+	c := e.Skeleton
+	return &c
+}
+func (e *DeletedEvent) ComponentID() uint32                    { return e.Skeleton.ID() }
+func (e *DeletedEvent) ComponentType() component.ComponentType { return e.Skeleton.Type() }
+func (e *DeletedEvent) Deleted() bool                          { return true }

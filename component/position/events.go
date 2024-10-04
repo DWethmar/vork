@@ -21,22 +21,37 @@ type CreatedEvent struct {
 	Position Position
 }
 
-func (e *CreatedEvent) Event() string                  { return CreatedEventType }
-func (e *CreatedEvent) Component() component.Component { return e.Position }
-func (e *CreatedEvent) Deleted() bool                  { return false }
+func (e *CreatedEvent) Event() string { return CreatedEventType }
+func (e *CreatedEvent) Component() any {
+	c := e.Position
+	return &c
+}
+func (e *CreatedEvent) ComponentID() uint32                    { return e.Position.ID() }
+func (e *CreatedEvent) ComponentType() component.ComponentType { return e.Position.Type() }
+func (e *CreatedEvent) Deleted() bool                          { return false }
 
 type UpdatedEvent struct {
 	Position Position
 }
 
-func (e *UpdatedEvent) Event() string                  { return UpdatedEventType }
-func (e *UpdatedEvent) Component() component.Component { return e.Position }
-func (e *UpdatedEvent) Deleted() bool                  { return false }
+func (e *UpdatedEvent) Event() string { return UpdatedEventType }
+func (e *UpdatedEvent) Component() any {
+	c := e.Position
+	return &c
+}
+func (e *UpdatedEvent) ComponentID() uint32                    { return e.Position.ID() }
+func (e *UpdatedEvent) ComponentType() component.ComponentType { return e.Position.Type() }
+func (e *UpdatedEvent) Deleted() bool                          { return false }
 
 type DeletedEvent struct {
 	Position Position
 }
 
-func (e *DeletedEvent) Event() string                  { return DeletedEventType }
-func (e *DeletedEvent) Component() component.Component { return e.Position }
-func (e *DeletedEvent) Deleted() bool                  { return true }
+func (e *DeletedEvent) Event() string { return DeletedEventType }
+func (e *DeletedEvent) Component() any {
+	c := e.Position
+	return &c
+}
+func (e *DeletedEvent) ComponentID() uint32                    { return e.Position.ID() }
+func (e *DeletedEvent) ComponentType() component.ComponentType { return e.Position.Type() }
+func (e *DeletedEvent) Deleted() bool                          { return true }

@@ -21,22 +21,28 @@ type CreatedEvent struct {
 	Controllable Controllable
 }
 
-func (e *CreatedEvent) Event() string                  { return CreatedEventType }
-func (e *CreatedEvent) Component() component.Component { return e.Controllable }
-func (e *CreatedEvent) Deleted() bool                  { return false }
+func (e *CreatedEvent) Event() string                          { return CreatedEventType }
+func (e *CreatedEvent) Component() any                         { return e.Controllable }
+func (e *CreatedEvent) ComponentID() uint32                    { return e.Controllable.ID() }
+func (e *CreatedEvent) ComponentType() component.ComponentType { return e.Controllable.Type() }
+func (e *CreatedEvent) Deleted() bool                          { return false }
 
 type UpdatedEvent struct {
 	Controllable Controllable
 }
 
-func (e *UpdatedEvent) Event() string                  { return UpdatedEventType }
-func (e *UpdatedEvent) Component() component.Component { return e.Controllable }
-func (e *UpdatedEvent) Deleted() bool                  { return false }
+func (e *UpdatedEvent) Event() string                          { return UpdatedEventType }
+func (e *UpdatedEvent) Component() any                         { return e.Controllable }
+func (e *UpdatedEvent) ComponentID() uint32                    { return e.Controllable.ID() }
+func (e *UpdatedEvent) ComponentType() component.ComponentType { return e.Controllable.Type() }
+func (e *UpdatedEvent) Deleted() bool                          { return false }
 
 type DeletedEvent struct {
 	Controllable Controllable
 }
 
-func (e *DeletedEvent) Event() string                  { return DeletedEventType }
-func (e *DeletedEvent) Component() component.Component { return e.Controllable }
-func (e *DeletedEvent) Deleted() bool                  { return true }
+func (e *DeletedEvent) Event() string                          { return DeletedEventType }
+func (e *DeletedEvent) Component() any                         { return e.Controllable }
+func (e *DeletedEvent) ComponentID() uint32                    { return e.Controllable.ID() }
+func (e *DeletedEvent) ComponentType() component.ComponentType { return e.Controllable.Type() }
+func (e *DeletedEvent) Deleted() bool                          { return true }

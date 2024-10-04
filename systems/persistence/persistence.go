@@ -45,13 +45,13 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS, r Repositories) *System {
 	// subscribe to component change events for all persistent components.
 	s.eventBus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
 		c, ok := e.(component.Event)
-		return ok && slices.Contains(persistentComponentTypes, c.Component().Type())
+		return ok && slices.Contains(persistentComponentTypes, c.ComponentType())
 	}), s.componentChangeHandler)
 
 	// subscribe to component delete events for all persistent components.
 	s.eventBus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
 		c, ok := e.(component.Event)
-		return ok && slices.Contains(persistentComponentTypes, c.Component().Type()) && c.Deleted()
+		return ok && slices.Contains(persistentComponentTypes, c.ComponentType()) && c.Deleted()
 	}), s.componentDeleteHandler)
 
 	return s
@@ -63,10 +63,14 @@ func (s *System) componentChangeHandler(e event.Event) error {
 		return fmt.Errorf("unknown event type: %T", e)
 	}
 	// check if the component is not already deleted
-	if _, ok := s.deleteComponents[ce.Component().Type()]; ok {
-		return fmt.Errorf("component %d is already deleted", ce.Component().ID())
+	if _, ok := s.deleteComponents[ce.ComponentType()]; ok {
+		return fmt.Errorf("component %d is already deleted", ce.ComponentID())
 	}
-	s.changedComponents[ce.Component().Type()] = ce.Component()
+	c, ok := ce.Component().(component.Component)
+	if !ok {
+		return fmt.Errorf("unknown component type: %T", ce.Component())
+	}
+	s.changedComponents[ce.ComponentType()] = c
 	return nil
 }
 
@@ -76,25 +80,30 @@ func (s *System) componentDeleteHandler(e event.Event) error {
 		return fmt.Errorf("unknown event type: %T", e)
 	}
 	// delete from changed components
-	delete(s.changedComponents, ce.Component().Type())
-	s.deleteComponents[ce.Component().Type()] = ce.Component()
+	c, ok := ce.Component().(component.Component)
+	if !ok {
+		return fmt.Errorf("unknown component type: %T", ce.Component())
+	}
+	delete(s.changedComponents, ce.ComponentType())
+	s.deleteComponents[ce.ComponentType()] = c
 	return nil
 }
 
+// Save saves all changed components to the database.
 func (s *System) Save() error {
 	fmt.Printf("number of changed components: %d\n", len(s.changedComponents))
 	for _, c := range s.changedComponents {
 		switch t := c.(type) {
-		case controllable.Controllable:
-			if err := s.repos.ControllableRepo.Save(&t); err != nil {
+		case *controllable.Controllable:
+			if err := s.repos.ControllableRepo.Save(t); err != nil {
 				return fmt.Errorf("failed to save controllable component: %w", err)
 			}
-		case position.Position:
-			if err := s.repos.PositionRepo.Save(&t); err != nil {
+		case *position.Position:
+			if err := s.repos.PositionRepo.Save(t); err != nil {
 				return fmt.Errorf("failed to save position component: %w", err)
 			}
-		case skeleton.Skeleton:
-			if err := s.repos.SkeletonRepo.Save(&t); err != nil {
+		case *skeleton.Skeleton:
+			if err := s.repos.SkeletonRepo.Save(t); err != nil {
 				return fmt.Errorf("failed to save skeleton component: %w", err)
 			}
 		default:
@@ -105,15 +114,15 @@ func (s *System) Save() error {
 
 	for _, c := range s.deleteComponents {
 		switch t := c.(type) {
-		case controllable.Controllable:
+		case *controllable.Controllable:
 			if err := s.repos.ControllableRepo.Delete(t.ID()); err != nil {
 				return fmt.Errorf("failed to delete controllable component: %w", err)
 			}
-		case position.Position:
+		case *position.Position:
 			if err := s.repos.PositionRepo.Delete(t.ID()); err != nil {
 				return fmt.Errorf("failed to delete position component: %w", err)
 			}
-		case skeleton.Skeleton:
+		case *skeleton.Skeleton:
 			if err := s.repos.SkeletonRepo.Delete(t.ID()); err != nil {
 				return fmt.Errorf("failed to delete skeleton component: %w", err)
 			}
