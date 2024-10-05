@@ -27,7 +27,7 @@ func (s *ECS) UpdateControllable(c controllable.Controllable) error {
 	if err := s.contr.Update(&c); err != nil {
 		return fmt.Errorf("could not update controllable: %v", err)
 	}
-	if err := s.eventBus.Publish(&controllable.UpdatedEvent{Controllable: c}); err != nil {
+	if err := s.eventBus.Publish(controllable.NewUpdatedEvent(c)); err != nil {
 		return fmt.Errorf("could not publish event: %v", err)
 	}
 	return nil
@@ -38,7 +38,7 @@ func (s *ECS) AddControllable(c controllable.Controllable) (uint32, error) {
 	if err != nil {
 		return 0, fmt.Errorf("could not add controllable: %v", err)
 	}
-	if err := s.eventBus.Publish(&controllable.CreatedEvent{Controllable: c}); err != nil {
+	if err := s.eventBus.Publish(controllable.NewCreatedEvent(c)); err != nil {
 		return 0, fmt.Errorf("could not publish event: %v", err)
 	}
 	return id, nil

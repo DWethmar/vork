@@ -15,43 +15,56 @@ var (
 	_ component.Event = &CreatedEvent{}
 	_ component.Event = &UpdatedEvent{}
 	_ component.Event = &DeletedEvent{}
+
+	_ Event = &CreatedEvent{}
+	_ Event = &UpdatedEvent{}
+	_ Event = &DeletedEvent{}
 )
 
-type CreatedEvent struct {
-	Position Position
+// Event is a change in a component.
+type Event interface {
+	component.Event
+	Position() *Position
 }
 
-func (e *CreatedEvent) Event() string { return CreatedEventType }
-func (e *CreatedEvent) Component() any {
-	c := e.Position
-	return &c
+type CreatedEvent struct {
+	position Position
 }
-func (e *CreatedEvent) ComponentID() uint32                    { return e.Position.ID() }
-func (e *CreatedEvent) ComponentType() component.ComponentType { return e.Position.Type() }
+
+func NewCreatedEvent(position Position) *CreatedEvent {
+	return &CreatedEvent{position: position}
+}
+
+func (e *CreatedEvent) Event() string                          { return CreatedEventType }
+func (e *CreatedEvent) Position() *Position                    { return &e.position }
+func (e *CreatedEvent) ComponentID() uint32                    { return e.position.ID() }
+func (e *CreatedEvent) ComponentType() component.ComponentType { return e.position.Type() }
 func (e *CreatedEvent) Deleted() bool                          { return false }
 
 type UpdatedEvent struct {
-	Position Position
+	position Position
 }
 
-func (e *UpdatedEvent) Event() string { return UpdatedEventType }
-func (e *UpdatedEvent) Component() any {
-	c := e.Position
-	return &c
+func NewUpdatedEvent(position Position) *UpdatedEvent {
+	return &UpdatedEvent{position: position}
 }
-func (e *UpdatedEvent) ComponentID() uint32                    { return e.Position.ID() }
-func (e *UpdatedEvent) ComponentType() component.ComponentType { return e.Position.Type() }
+
+func (e *UpdatedEvent) Event() string                          { return UpdatedEventType }
+func (e *UpdatedEvent) Position() *Position                    { return &e.position }
+func (e *UpdatedEvent) ComponentID() uint32                    { return e.position.ID() }
+func (e *UpdatedEvent) ComponentType() component.ComponentType { return e.position.Type() }
 func (e *UpdatedEvent) Deleted() bool                          { return false }
 
 type DeletedEvent struct {
-	Position Position
+	position Position
 }
 
-func (e *DeletedEvent) Event() string { return DeletedEventType }
-func (e *DeletedEvent) Component() any {
-	c := e.Position
-	return &c
+func NewDeletedEvent(position Position) *DeletedEvent {
+	return &DeletedEvent{position: position}
 }
-func (e *DeletedEvent) ComponentID() uint32                    { return e.Position.ID() }
-func (e *DeletedEvent) ComponentType() component.ComponentType { return e.Position.Type() }
+
+func (e *DeletedEvent) Event() string                          { return DeletedEventType }
+func (e *DeletedEvent) Position() *Position                    { return &e.position }
+func (e *DeletedEvent) ComponentID() uint32                    { return e.position.ID() }
+func (e *DeletedEvent) ComponentType() component.ComponentType { return e.position.Type() }
 func (e *DeletedEvent) Deleted() bool                          { return true }

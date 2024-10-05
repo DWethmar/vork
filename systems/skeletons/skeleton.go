@@ -43,7 +43,7 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 	switch e := e.(type) {
 	case *skeleton.CreatedEvent:
 		s.logger.Debug("skeleton created", "skeleton", e.Skeleton)
-		if err := s.setupSkeleton(e.Skeleton); err != nil {
+		if err := s.setupSkeleton(*e.Skeleton()); err != nil {
 			s.logger.Error("could not add skeleton sprite", "error", err)
 		}
 	case *skeleton.UpdatedEvent:
