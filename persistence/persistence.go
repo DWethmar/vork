@@ -15,15 +15,15 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// Repository is a interface that defines the methods that a persistence repository should implement.
-type System struct {
+// Persistance saves and loads components from the database.
+type Persistance struct {
 	eventBus   *event.Bus
 	ecs        *ecsys.ECS
 	lifecycles map[component.ComponentType]ComponentLifeCycle
 }
 
 // New creates a new persistence system.
-func New(eventBus *event.Bus, ecs *ecsys.ECS) *System {
+func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
 	controllableRepo := boltrepo.NewRepository(func() *controllable.Controllable {
 		return controllable.New(0)
 	})
@@ -36,7 +36,7 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *System {
 		return skeleton.New(0)
 	})
 
-	s := &System{
+	s := &Persistance{
 		eventBus: eventBus,
 		ecs:      ecs,
 		lifecycles: map[component.ComponentType]ComponentLifeCycle{
@@ -97,7 +97,7 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *System {
 }
 
 // componentChangeHandler is called when a component has changed or has been deleted.
-func (s *System) componentChangeHandler(e event.Event) error {
+func (s *Persistance) componentChangeHandler(e event.Event) error {
 	ce, ok := e.(component.Event)
 	if !ok {
 		return fmt.Errorf("expected %T, got %T", ce, e)
@@ -118,34 +118,25 @@ func (s *System) componentChangeHandler(e event.Event) error {
 }
 
 // Save saves all changed or deleted components to the database.
-func (s *System) Save(db *bolt.DB) error {
-	tx, err := db.Begin(true)
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
-	}
+func (s *Persistance) Save(tx *bolt.Tx) error {
 	for _, l := range s.lifecycles {
 		if err := l.Commit(tx); err != nil {
 			return fmt.Errorf("failed to commit lifecycle: %w", err)
 		}
 	}
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
-	}
 	return nil
 }
 
 // Load loads all components from the database and adds them to the ECS.
-func (s *System) Load(db *bolt.DB) error {
-	return db.View(func(tx *bolt.Tx) error {
-		for _, r := range PersistentComponentTypes() {
-			l, ok := s.lifecycles[r]
-			if !ok {
-				return fmt.Errorf("no lifecycle for component type: %s", r)
-			}
-			if err := l.Load(tx, s.ecs); err != nil {
-				return fmt.Errorf("failed to load controllable components: %w", err)
-			}
+func (s *Persistance) Load(tx *bolt.Tx) error {
+	for _, r := range PersistentComponentTypes() {
+		l, ok := s.lifecycles[r]
+		if !ok {
+			return fmt.Errorf("no lifecycle for component type: %s", r)
 		}
-		return nil
-	})
+		if err := l.Load(tx, s.ecs); err != nil {
+			return fmt.Errorf("failed to load controllable components: %w", err)
+		}
+	}
+	return nil
 }
