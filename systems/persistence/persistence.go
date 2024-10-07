@@ -22,88 +22,30 @@ type Repositories struct {
 	SkeletonRepo     Repository[*skeleton.Skeleton]
 }
 
-type componentKey struct {
-	componentType component.ComponentType
-	componentID   uint32
+type ComponentLifeCycle interface {
+	Changed(component.Event) error // Changed is called when a component has changed.
+	Deleted(component.Event) error // Deleted is called when a component has been deleted.
+	Commit() error                 // Commit saves all changes to the database.
+	// Load(*ecsys.ECS) error         // Load function added here
 }
-
-type saveQueuerHandler func(event.Event) error
-
-type saveHandlerFunc func(Repositories, component.Component) error
-type deleteHandlerFunc func(Repositories, component.Component) error
 
 // Repository is a interface that defines the methods that a persistence repository should implement.
 type System struct {
-	eventBus          *event.Bus
-	ecs               *ecsys.ECS
-	repos             Repositories
-	changedComponents map[componentKey]component.Component // map of components that have changed by type
-	deleteComponents  map[componentKey]component.Component // map of components that have been deleted by type
-
-	// lifecycle handlers
-	saveHandlers   map[component.ComponentType]saveHandlerFunc
-	deleteHandlers map[component.ComponentType]deleteHandlerFunc
-}
-
-type ComponentLifeCycle interface {
-	Changed(component.Event) error
-	Deleted(component.Event) error
-	Save(component.Component) error
-	Delete(component.Component) error
+	eventBus   *event.Bus
+	ecs        *ecsys.ECS
+	repos      Repositories
+	lifecycles map[component.ComponentType]ComponentLifeCycle
 }
 
 func New(eventBus *event.Bus, ecs *ecsys.ECS, r Repositories) *System {
 	s := &System{
-		eventBus:          eventBus,
-		ecs:               ecs,
-		repos:             r,
-		changedComponents: make(map[componentKey]component.Component),
-		deleteComponents:  make(map[componentKey]component.Component),
-		saveHandlers: map[component.ComponentType]saveHandlerFunc{
-			controllable.Type: func(r Repositories, c component.Component) error {
-				comp, ok := c.(*controllable.Controllable)
-				if !ok {
-					return fmt.Errorf("expected %T, got %T", comp, c)
-				}
-				return r.ControllableRepo.Save(comp)
-			},
-			position.Type: func(r Repositories, c component.Component) error {
-				comp, ok := c.(*position.Position)
-				if !ok {
-					return fmt.Errorf("expected %T, got %T", comp, c)
-				}
-				return r.PositionRepo.Save(comp)
-			},
-			skeleton.Type: func(r Repositories, c component.Component) error {
-				comp, ok := c.(*skeleton.Skeleton)
-				if !ok {
-					return fmt.Errorf("expected %T, got %T", comp, c)
-				}
-				return r.SkeletonRepo.Save(comp)
-			},
-		},
-		deleteHandlers: map[component.ComponentType]deleteHandlerFunc{
-			controllable.Type: func(r Repositories, c component.Component) error {
-				comp, ok := c.(*controllable.Controllable)
-				if !ok {
-					return fmt.Errorf("expected %T, got %T", comp, c)
-				}
-				return r.ControllableRepo.Delete(comp.ID())
-			},
-			position.Type: func(r Repositories, c component.Component) error {
-				comp, ok := c.(*position.Position)
-				if !ok {
-					return fmt.Errorf("expected %T, got %T", comp, c)
-				}
-				return r.PositionRepo.Delete(comp.ID())
-			},
-			skeleton.Type: func(r Repositories, c component.Component) error {
-				comp, ok := c.(*skeleton.Skeleton)
-				if !ok {
-					return fmt.Errorf("expected %T, got %T", comp, c)
-				}
-				return r.SkeletonRepo.Delete(comp.ID())
-			},
+		eventBus: eventBus,
+		ecs:      ecs,
+		repos:    r,
+		lifecycles: map[component.ComponentType]ComponentLifeCycle{
+			controllable.Type: NewControllableLifeCycle(r.ControllableRepo),
+			position.Type:     NewPositionLifeCycle(r.PositionRepo),
+			skeleton.Type:     NewSkeletonLifeCycle(r.SkeletonRepo),
 		},
 	}
 
@@ -129,39 +71,16 @@ func (s *System) componentChangeHandler(e event.Event) error {
 	if !ok {
 		return fmt.Errorf("expected %T, got %T", ce, e)
 	}
-	key := componentKey{
-		componentType: ce.ComponentType(),
-		componentID:   ce.ComponentID(),
-	}
-	// check if the component is not already deleted
-	if _, ok := s.deleteComponents[key]; ok {
-		return fmt.Errorf("component %d is already deleted", ce.ComponentID())
-	}
-	var c component.Component
-	switch ce.ComponentType() {
-	case controllable.Type:
-		e, ok := ce.(controllable.Event)
-		if !ok {
-			return fmt.Errorf("expected %T, got %T", c, ce)
-		}
-		c = e.Controllable()
-	case position.Type:
-		e, ok := ce.(position.Event)
-		if !ok {
-			return fmt.Errorf("expected %T, got %T", c, ce)
-		}
-		c = e.Position()
-	case skeleton.Type:
-		e, ok := ce.(skeleton.Event)
-		if !ok {
-			return fmt.Errorf("expected %T, got %T", c, ce)
-		}
-		c = e.Skeleton()
-	default:
-		return fmt.Errorf("unknown component type: %s", ce.ComponentType())
+
+	l, ok := s.lifecycles[ce.ComponentType()]
+	if !ok {
+		return fmt.Errorf("no lifecycle for component type: %s", ce.ComponentType())
 	}
 
-	s.changedComponents[key] = c
+	if err := l.Changed(ce); err != nil {
+		return fmt.Errorf("failed to handle changed event for component type %s (ID: %d): %w", ce.ComponentType(), ce.ComponentID(), err)
+	}
+
 	return nil
 }
 
@@ -170,64 +89,26 @@ func (s *System) componentDeleteHandler(e event.Event) error {
 	if !ok {
 		return fmt.Errorf("unknown event type: %T", e)
 	}
-	// delete from changed components
-	var c component.Component
-	switch ce.ComponentType() {
-	case controllable.Type:
-		e, ok := ce.(controllable.Event)
-		if !ok {
-			return fmt.Errorf("expected %T, got %T", c, ce)
-		}
-		c = e.Controllable()
-	case position.Type:
-		e, ok := ce.(position.Event)
-		if !ok {
-			return fmt.Errorf("expected %T, got %T", c, ce)
-		}
-		c = e.Position()
-	case skeleton.Type:
-		e, ok := ce.(skeleton.Event)
-		if !ok {
-			return fmt.Errorf("expected %T, got %T", c, ce)
-		}
-		c = e.Skeleton()
-	default:
-		return fmt.Errorf("unknown component type: %s", ce.ComponentType())
+
+	l, ok := s.lifecycles[ce.ComponentType()]
+	if !ok {
+		return fmt.Errorf("no lifecycle for component type: %s", ce.ComponentType())
 	}
-	key := componentKey{
-		componentType: ce.ComponentType(),
-		componentID:   ce.ComponentID(),
+
+	if err := l.Deleted(ce); err != nil {
+		return fmt.Errorf("failed to handle deleted event for component type %s (ID: %d): %w", ce.ComponentType(), ce.ComponentID(), err)
 	}
-	delete(s.changedComponents, key)
-	s.deleteComponents[key] = c
+
 	return nil
 }
 
 // Save saves all changed components to the database.
 func (s *System) Save() error {
-	fmt.Printf("number of changed components: %d\n", len(s.changedComponents))
-	for key, c := range s.changedComponents {
-		handler, exists := s.saveHandlers[key.componentType]
-		if !exists {
-			return fmt.Errorf("no save handler for component type: %s", key.componentType)
-		}
-		if err := handler(s.repos, c); err != nil {
-			return err
+	for _, l := range s.lifecycles {
+		if err := l.Commit(); err != nil {
+			return fmt.Errorf("failed to commit lifecycle: %w", err)
 		}
 	}
-	s.changedComponents = make(map[componentKey]component.Component)
-
-	for key, c := range s.deleteComponents {
-		handler, exists := s.deleteHandlers[key.componentType]
-		if !exists {
-			return fmt.Errorf("no delete handler for component type: %s", key.componentType)
-		}
-		if err := handler(s.repos, c); err != nil {
-			return err
-		}
-	}
-	s.deleteComponents = make(map[componentKey]component.Component)
-
 	return nil
 }
 
