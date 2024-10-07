@@ -5,6 +5,8 @@ import (
 
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/ecsys"
+	bolt "go.etcd.io/bbolt"
 )
 
 var _ ComponentLifeCycle = &PositionLifeCycle{}
@@ -50,15 +52,30 @@ func (l *ControllableLifeCycle) Deleted(e component.Event) error {
 	return nil
 }
 
-func (l *ControllableLifeCycle) Commit() error {
+func (l *ControllableLifeCycle) Commit(tx *bolt.Tx) error {
 	for _, p := range l.changed {
-		if err := l.repo.Save(p); err != nil {
+		if err := l.repo.Save(tx, p); err != nil {
 			return err
 		}
 	}
 
 	for _, p := range l.deleted {
-		if err := l.repo.Delete(p.ID()); err != nil {
+		if err := l.repo.Delete(tx, p.ID()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (l *ControllableLifeCycle) Load(tx *bolt.Tx, ecs *ecsys.ECS) error {
+	components, err := l.repo.List(tx)
+	if err != nil {
+		return err
+	}
+
+	for _, c := range components {
+		if _, err := ecs.AddControllable(*c); err != nil {
 			return err
 		}
 	}

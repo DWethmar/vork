@@ -12,40 +12,80 @@ import (
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/systems"
 	"github.com/hajimehoshi/ebiten/v2"
+
+	boltrepo "github.com/dwethmar/vork/systems/persistence/bbolt"
+	bolt "go.etcd.io/bbolt"
 )
 
 var _ systems.System = &System{}
-
-type Repositories struct {
-	ControllableRepo Repository[*controllable.Controllable]
-	PositionRepo     Repository[*position.Position]
-	SkeletonRepo     Repository[*skeleton.Skeleton]
-}
-
-type ComponentLifeCycle interface {
-	Changed(component.Event) error // Changed is called when a component has changed.
-	Deleted(component.Event) error // Deleted is called when a component has been deleted.
-	Commit() error                 // Commit saves all changes to the database.
-	// Load(*ecsys.ECS) error         // Load function added here
-}
 
 // Repository is a interface that defines the methods that a persistence repository should implement.
 type System struct {
 	eventBus   *event.Bus
 	ecs        *ecsys.ECS
-	repos      Repositories
 	lifecycles map[component.ComponentType]ComponentLifeCycle
 }
 
-func New(eventBus *event.Bus, ecs *ecsys.ECS, r Repositories) *System {
+// New creates a new persistence system.
+func New(eventBus *event.Bus, ecs *ecsys.ECS) *System {
+	controllableRepo := boltrepo.NewRepository(func() *controllable.Controllable {
+		return controllable.New(0)
+	})
+
+	positionRepo := boltrepo.NewRepository(func() *position.Position {
+		return position.New(0, 0, 0)
+	})
+
+	skeletonRepo := boltrepo.NewRepository(func() *skeleton.Skeleton {
+		return skeleton.New(0)
+	})
+
 	s := &System{
 		eventBus: eventBus,
 		ecs:      ecs,
-		repos:    r,
 		lifecycles: map[component.ComponentType]ComponentLifeCycle{
-			controllable.Type: NewControllableLifeCycle(r.ControllableRepo),
-			position.Type:     NewPositionLifeCycle(r.PositionRepo),
-			skeleton.Type:     NewSkeletonLifeCycle(r.SkeletonRepo),
+			controllable.Type: NewGenericComponentLifeCycle(
+				controllableRepo,
+				func(c *controllable.Controllable) (uint32, error) {
+					return ecs.AddControllable(*c)
+				},
+				func(e component.Event, m map[uint32]*controllable.Controllable) error {
+					c, ok := e.(controllable.Event)
+					if !ok {
+						return fmt.Errorf("expected %T, got %T", c, e)
+					}
+					m[c.ComponentID()] = c.Controllable()
+					return nil
+				},
+			),
+			position.Type: NewGenericComponentLifeCycle(
+				positionRepo,
+				func(c *position.Position) (uint32, error) {
+					return ecs.AddPosition(*c)
+				},
+				func(e component.Event, m map[uint32]*position.Position) error {
+					c, ok := e.(position.Event)
+					if !ok {
+						return fmt.Errorf("expected %T, got %T", c, e)
+					}
+					m[c.ComponentID()] = c.Position()
+					return nil
+				},
+			),
+			skeleton.Type: NewGenericComponentLifeCycle(
+				skeletonRepo,
+				func(c *skeleton.Skeleton) (uint32, error) {
+					return ecs.AddSkeleton(*c)
+				},
+				func(e component.Event, m map[uint32]*skeleton.Skeleton) error {
+					c, ok := e.(skeleton.Event)
+					if !ok {
+						return fmt.Errorf("expected %T, got %T", c, e)
+					}
+					m[c.ComponentID()] = c.Skeleton()
+					return nil
+				},
+			),
 		},
 	}
 
@@ -57,99 +97,61 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS, r Repositories) *System {
 		return ok && slices.Contains(persistentComponentTypes, c.ComponentType())
 	}), s.componentChangeHandler)
 
-	// subscribe to component delete events for all persistent components.
-	s.eventBus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
-		c, ok := e.(component.Event)
-		return ok && slices.Contains(persistentComponentTypes, c.ComponentType()) && c.Deleted()
-	}), s.componentDeleteHandler)
-
 	return s
 }
 
+// componentChangeHandler is called when a component has changed or has been deleted.
 func (s *System) componentChangeHandler(e event.Event) error {
 	ce, ok := e.(component.Event)
 	if !ok {
 		return fmt.Errorf("expected %T, got %T", ce, e)
 	}
-
 	l, ok := s.lifecycles[ce.ComponentType()]
 	if !ok {
 		return fmt.Errorf("no lifecycle for component type: %s", ce.ComponentType())
 	}
-
-	if err := l.Changed(ce); err != nil {
+	if ce.Deleted() {
+		if err := l.Deleted(ce); err != nil {
+			return fmt.Errorf("failed to handle deleted event for component type %s (ID: %d): %w", ce.ComponentType(), ce.ComponentID(), err)
+		}
+		return nil
+	} else if err := l.Changed(ce); err != nil {
 		return fmt.Errorf("failed to handle changed event for component type %s (ID: %d): %w", ce.ComponentType(), ce.ComponentID(), err)
 	}
-
-	return nil
-}
-
-func (s *System) componentDeleteHandler(e event.Event) error {
-	ce, ok := e.(component.Event)
-	if !ok {
-		return fmt.Errorf("unknown event type: %T", e)
-	}
-
-	l, ok := s.lifecycles[ce.ComponentType()]
-	if !ok {
-		return fmt.Errorf("no lifecycle for component type: %s", ce.ComponentType())
-	}
-
-	if err := l.Deleted(ce); err != nil {
-		return fmt.Errorf("failed to handle deleted event for component type %s (ID: %d): %w", ce.ComponentType(), ce.ComponentID(), err)
-	}
-
 	return nil
 }
 
 // Save saves all changed components to the database.
-func (s *System) Save() error {
+func (s *System) Save(db *bolt.DB) error {
+	tx, err := db.Begin(true)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
 	for _, l := range s.lifecycles {
-		if err := l.Commit(); err != nil {
+		if err := l.Commit(tx); err != nil {
 			return fmt.Errorf("failed to commit lifecycle: %w", err)
 		}
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	return nil
 }
 
-func (s *System) Load() error {
-	for _, r := range PersistentComponentTypes() {
-		switch r {
-		case controllable.Type:
-			l, err := s.repos.ControllableRepo.List()
-			if err != nil {
-				return fmt.Errorf("failed to list controllable components: %w", err)
+// Load loads all components from the database and adds them to the ECS.
+func (s *System) Load(db *bolt.DB) error {
+	return db.View(func(tx *bolt.Tx) error {
+		for _, r := range PersistentComponentTypes() {
+			l, ok := s.lifecycles[r]
+			if !ok {
+				return fmt.Errorf("no lifecycle for component type: %s", r)
 			}
-			for _, c := range l {
-				if _, err := s.ecs.AddControllable(*c); err != nil {
-					return fmt.Errorf("failed to add controllable component: %w", err)
-				}
+			if err := l.Load(tx, s.ecs); err != nil {
+				return fmt.Errorf("failed to load controllable components: %w", err)
 			}
-		case position.Type:
-			l, err := s.repos.PositionRepo.List()
-			if err != nil {
-				return fmt.Errorf("failed to list position components: %w", err)
-			}
-			for _, c := range l {
-				if _, err := s.ecs.AddPosition(*c); err != nil {
-					return fmt.Errorf("failed to add position component: %w", err)
-				}
-			}
-		case skeleton.Type:
-			l, err := s.repos.SkeletonRepo.List()
-			if err != nil {
-				return fmt.Errorf("failed to list skeleton components: %w", err)
-			}
-			for _, c := range l {
-				if _, err := s.ecs.AddSkeleton(*c); err != nil {
-					return fmt.Errorf("failed to add skeleton component: %w", err)
-				}
-			}
-		default:
-			return fmt.Errorf("unknown component type: %s", r)
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 func (s *System) Update() error {

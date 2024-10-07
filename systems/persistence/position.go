@@ -3,6 +3,8 @@ package persistence
 import (
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/position"
+	"github.com/dwethmar/vork/ecsys"
+	bolt "go.etcd.io/bbolt"
 )
 
 var _ ComponentLifeCycle = &PositionLifeCycle{}
@@ -48,15 +50,30 @@ func (l *PositionLifeCycle) Deleted(e component.Event) error {
 	return nil
 }
 
-func (l *PositionLifeCycle) Commit() error {
+func (l *PositionLifeCycle) Commit(tx *bolt.Tx) error {
 	for _, p := range l.changed {
-		if err := l.repo.Save(p); err != nil {
+		if err := l.repo.Save(tx, p); err != nil {
 			return err
 		}
 	}
 
 	for _, p := range l.deleted {
-		if err := l.repo.Delete(p.ID()); err != nil {
+		if err := l.repo.Delete(tx, p.ID()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (l *PositionLifeCycle) Load(tx *bolt.Tx, ecs *ecsys.ECS) error {
+	positions, err := l.repo.List(tx)
+	if err != nil {
+		return err
+	}
+
+	for _, c := range positions {
+		if _, err := ecs.AddPosition(*c); err != nil {
 			return err
 		}
 	}

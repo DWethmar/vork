@@ -1,14 +1,18 @@
 package persistence
 
-import "github.com/dwethmar/vork/component"
+import (
+	"github.com/dwethmar/vork/component"
+	bolt "go.etcd.io/bbolt"
+)
 
+// Repository is a generic interface for a component repository.
 type Repository[T component.Component] interface {
 	// Get returns an component by its ID.
-	Get(id uint32) (T, error)
+	Get(tx *bolt.Tx, id uint32) (T, error)
 	// Save saves the given component.
-	Save(c T) error
+	Save(tx *bolt.Tx, c T) error
 	// Delete removes an component by its ID.
-	Delete(id uint32) error
+	Delete(tx *bolt.Tx, id uint32) error
 	// List returns all components.
-	List() ([]T, error)
+	List(tx *bolt.Tx) ([]T, error)
 }
