@@ -10,14 +10,10 @@ import (
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
-	"github.com/dwethmar/vork/systems"
-	"github.com/hajimehoshi/ebiten/v2"
 
 	boltrepo "github.com/dwethmar/vork/systems/persistence/bbolt"
 	bolt "go.etcd.io/bbolt"
 )
-
-var _ systems.System = &System{}
 
 // Repository is a interface that defines the methods that a persistence repository should implement.
 type System struct {
@@ -121,7 +117,7 @@ func (s *System) componentChangeHandler(e event.Event) error {
 	return nil
 }
 
-// Save saves all changed components to the database.
+// Save saves all changed or deleted components to the database.
 func (s *System) Save(db *bolt.DB) error {
 	tx, err := db.Begin(true)
 	if err != nil {
@@ -152,12 +148,4 @@ func (s *System) Load(db *bolt.DB) error {
 		}
 		return nil
 	})
-}
-
-func (s *System) Update() error {
-	return nil
-}
-
-func (s *System) Draw(_ *ebiten.Image) error {
-	return nil
 }

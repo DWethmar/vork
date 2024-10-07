@@ -16,24 +16,24 @@ type ComponentLifeCycle interface {
 }
 
 type GenericComponentLifeCycle[T component.Component] struct {
-	repo            Repository[T]
-	changed         map[uint32]T
-	deleted         map[uint32]T
-	markChangedFunc func(component.Event, map[uint32]T) error // Function to mark the component as changed
-	addFunc         func(T) (uint32, error)                   // Function to add the component to the ECS
+	repo                Repository[T]
+	changed             map[uint32]T
+	deleted             map[uint32]T
+	componentMarkerFunc func(component.Event, map[uint32]T) error // Function to mark the component as changed
+	addFunc             func(T) (uint32, error)                   // Function to add the component to the ECS
 }
 
 func NewGenericComponentLifeCycle[T component.Component](
 	repo Repository[T],
 	addFunc func(T) (uint32, error),
-	markChangedFunc func(component.Event, map[uint32]T) error,
+	componentMarkerFunc func(component.Event, map[uint32]T) error,
 ) *GenericComponentLifeCycle[T] {
 	return &GenericComponentLifeCycle[T]{
-		repo:            repo,
-		changed:         make(map[uint32]T),
-		deleted:         make(map[uint32]T),
-		markChangedFunc: markChangedFunc,
-		addFunc:         addFunc,
+		repo:                repo,
+		changed:             make(map[uint32]T),
+		deleted:             make(map[uint32]T),
+		componentMarkerFunc: componentMarkerFunc,
+		addFunc:             addFunc,
 	}
 }
 
@@ -44,7 +44,7 @@ func (l *GenericComponentLifeCycle[T]) Changed(e component.Event) error {
 	if _, ok := l.deleted[e.ComponentID()]; ok {
 		return fmt.Errorf("component %d is already deleted", e.ComponentID())
 	}
-	if err := l.markChangedFunc(e, l.changed); err != nil {
+	if err := l.componentMarkerFunc(e, l.changed); err != nil {
 		return fmt.Errorf("could not mark component as changed: %w", err)
 	}
 	return nil
@@ -52,7 +52,7 @@ func (l *GenericComponentLifeCycle[T]) Changed(e component.Event) error {
 
 func (l *GenericComponentLifeCycle[T]) Deleted(e component.Event) error {
 	delete(l.changed, e.ComponentID())
-	if err := l.markChangedFunc(e, l.deleted); err != nil {
+	if err := l.componentMarkerFunc(e, l.deleted); err != nil {
 		return fmt.Errorf("could not mark component as deleted: %w", err)
 	}
 	return nil
@@ -70,6 +70,9 @@ func (l *GenericComponentLifeCycle[T]) Commit(tx *bolt.Tx) error {
 			return err
 		}
 	}
+
+	l.changed = make(map[uint32]T)
+	l.deleted = make(map[uint32]T)
 
 	return nil
 }
