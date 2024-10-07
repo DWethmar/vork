@@ -11,7 +11,7 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 
-	boltrepo "github.com/dwethmar/vork/systems/persistence/bbolt"
+	boltrepo "github.com/dwethmar/vork/persistence/bbolt"
 	bolt "go.etcd.io/bbolt"
 )
 
