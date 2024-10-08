@@ -42,10 +42,10 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
 		lifecycles: map[component.ComponentType]ComponentLifeCycle{
 			controllable.Type: NewGenericComponentLifeCycle(
 				controllableRepo,
-				func(c *controllable.Controllable) (uint32, error) { // TODO refactor
+				func(c *controllable.Controllable) (uint, error) { // TODO refactor
 					return ecs.AddControllableComponent(*c)
 				},
-				func(e component.Event, m map[uint32]*controllable.Controllable) error {
+				func(e component.Event, m map[uint]*controllable.Controllable) error {
 					c, ok := e.(controllable.Event)
 					if !ok {
 						return fmt.Errorf("expected %T, got %T", c, e)
@@ -56,10 +56,10 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
 			),
 			position.Type: NewGenericComponentLifeCycle(
 				positionRepo,
-				func(c *position.Position) (uint32, error) {
+				func(c *position.Position) (uint, error) {
 					return ecs.AddPositionComponent(*c)
 				},
-				func(e component.Event, m map[uint32]*position.Position) error {
+				func(e component.Event, m map[uint]*position.Position) error {
 					c, ok := e.(position.Event)
 					if !ok {
 						return fmt.Errorf("expected %T, got %T", c, e)
@@ -70,10 +70,10 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
 			),
 			skeleton.Type: NewGenericComponentLifeCycle(
 				skeletonRepo,
-				func(c *skeleton.Skeleton) (uint32, error) {
+				func(c *skeleton.Skeleton) (uint, error) {
 					return ecs.AddSkeletonComponent(*c)
 				},
-				func(e component.Event, m map[uint32]*skeleton.Skeleton) error {
+				func(e component.Event, m map[uint]*skeleton.Skeleton) error {
 					c, ok := e.(skeleton.Event)
 					if !ok {
 						return fmt.Errorf("expected %T, got %T", c, e)

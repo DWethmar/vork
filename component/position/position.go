@@ -13,7 +13,7 @@ var _ component.Component = &Position{}
 
 // Position is a component that holds the position of an entity.
 type Position struct {
-	I    uint32        // ID
+	I    uint          // ID
 	E    entity.Entity // Entity
 	X, Y int64
 }
@@ -27,8 +27,8 @@ func New(e entity.Entity, x, y int64) *Position {
 	}
 }
 
-func (p *Position) ID() uint32                    { return p.I }
-func (p *Position) SetID(i uint32)                { p.I = i }
+func (p *Position) ID() uint                      { return p.I }
+func (p *Position) SetID(i uint)                  { p.I = i }
 func (p *Position) Type() component.ComponentType { return Type }
 func (p *Position) Entity() entity.Entity         { return p.E }
 

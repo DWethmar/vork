@@ -37,7 +37,7 @@ func NewCreatedEvent(controllable Controllable) *CreatedEvent {
 
 func (e *CreatedEvent) Event() string                          { return CreatedEventType }
 func (e *CreatedEvent) Controllable() *Controllable            { return &e.controllable }
-func (e *CreatedEvent) ComponentID() uint32                    { return e.controllable.ID() }
+func (e *CreatedEvent) ComponentID() uint                      { return e.controllable.ID() }
 func (e *CreatedEvent) ComponentType() component.ComponentType { return e.controllable.Type() }
 func (e *CreatedEvent) Deleted() bool                          { return false }
 
@@ -51,7 +51,7 @@ func NewUpdatedEvent(controllable Controllable) *UpdatedEvent {
 
 func (e *UpdatedEvent) Event() string                          { return UpdatedEventType }
 func (e *UpdatedEvent) Controllable() *Controllable            { return &e.controllable }
-func (e *UpdatedEvent) ComponentID() uint32                    { return e.controllable.ID() }
+func (e *UpdatedEvent) ComponentID() uint                      { return e.controllable.ID() }
 func (e *UpdatedEvent) ComponentType() component.ComponentType { return e.controllable.Type() }
 func (e *UpdatedEvent) Deleted() bool                          { return false }
 
@@ -65,6 +65,6 @@ func NewDeletedEvent(controllable Controllable) *DeletedEvent {
 
 func (e *DeletedEvent) Event() string                          { return DeletedEventType }
 func (e *DeletedEvent) Controllable() *Controllable            { return &e.controllable }
-func (e *DeletedEvent) ComponentID() uint32                    { return e.controllable.ID() }
+func (e *DeletedEvent) ComponentID() uint                      { return e.controllable.ID() }
 func (e *DeletedEvent) ComponentType() component.ComponentType { return e.controllable.Type() }
 func (e *DeletedEvent) Deleted() bool                          { return true }

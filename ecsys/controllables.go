@@ -23,4 +23,4 @@ func (s *ECS) Controllables() []controllable.Controllable {
 	return r
 }
 
-func (s *ECS) DeleteControllable(id uint32) error { return s.controllableStore.Delete(id) }
+func (s *ECS) DeleteControllable(id uint) error { return s.controllableStore.Delete(id) }

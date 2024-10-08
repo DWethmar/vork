@@ -37,7 +37,7 @@ func NewCreatedEvent(skeleton Skeleton) *CreatedEvent {
 
 func (e *CreatedEvent) Event() string                          { return CreatedEventType }
 func (e *CreatedEvent) Skeleton() *Skeleton                    { return &e.skeleton }
-func (e *CreatedEvent) ComponentID() uint32                    { return e.skeleton.ID() }
+func (e *CreatedEvent) ComponentID() uint                      { return e.skeleton.ID() }
 func (e *CreatedEvent) ComponentType() component.ComponentType { return e.skeleton.Type() }
 func (e *CreatedEvent) Deleted() bool                          { return false }
 
@@ -52,7 +52,7 @@ func NewUpdatedEvent(skeleton Skeleton) *UpdatedEvent {
 
 func (e *UpdatedEvent) Event() string                          { return UpdatedEventType }
 func (e *UpdatedEvent) Skeleton() *Skeleton                    { return &e.skeleton }
-func (e *UpdatedEvent) ComponentID() uint32                    { return e.skeleton.ID() }
+func (e *UpdatedEvent) ComponentID() uint                      { return e.skeleton.ID() }
 func (e *UpdatedEvent) ComponentType() component.ComponentType { return e.skeleton.Type() }
 func (e *UpdatedEvent) Deleted() bool                          { return false }
 
@@ -67,6 +67,6 @@ func NewDeletedEvent(skeleton Skeleton) *DeletedEvent {
 
 func (e *DeletedEvent) Event() string                          { return DeletedEventType }
 func (e *DeletedEvent) Skeleton() *Skeleton                    { return &e.skeleton }
-func (e *DeletedEvent) ComponentID() uint32                    { return e.skeleton.ID() }
+func (e *DeletedEvent) ComponentID() uint                      { return e.skeleton.ID() }
 func (e *DeletedEvent) ComponentType() component.ComponentType { return e.skeleton.Type() }
 func (e *DeletedEvent) Deleted() bool                          { return true }

@@ -21,8 +21,8 @@ func NewRepository[T component.Component](factory func() T) *Repository[T] {
 	}
 }
 
-// itob converts a uint32 ID to a byte slice for use as a key in BoltDB.
-func itob(v uint32) []byte {
+// itob converts a uint ID to a byte slice for use as a key in BoltDB.
+func itob(v uint) []byte {
 	return []byte{
 		byte(v >> 24),
 		byte(v >> 16),
@@ -60,7 +60,7 @@ func (r *Repository[T]) Save(tx *bolt.Tx, c T) error {
 }
 
 // Get retrieves a specific component of type T by its ID using the provided transaction.
-func (r *Repository[T]) Get(tx *bolt.Tx, id uint32) (T, error) {
+func (r *Repository[T]) Get(tx *bolt.Tx, id uint) (T, error) {
 	// Create a new instance of the component using the factory
 	c := r.factory()
 
@@ -87,7 +87,7 @@ func (r *Repository[T]) Get(tx *bolt.Tx, id uint32) (T, error) {
 }
 
 // Delete removes a component of type T by its ID using the provided transaction.
-func (r *Repository[T]) Delete(tx *bolt.Tx, id uint32) error {
+func (r *Repository[T]) Delete(tx *bolt.Tx, id uint) error {
 	// Fetch the component type using the factory to get the bucket name
 	c := r.factory()
 	bucketName := c.Type()

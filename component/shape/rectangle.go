@@ -13,14 +13,14 @@ var _ component.Component = &Rectangle{}
 
 // Shape is a component that holds the shape of an entity.
 type Rectangle struct {
-	I             uint32        // ID
+	I             uint          // ID
 	E             entity.Entity // Entity
 	Width, Height int64
 	Color         color.RGBA
 }
 
-func (p *Rectangle) ID() uint32                    { return p.I }
-func (p *Rectangle) SetID(i uint32)                { p.I = i }
+func (p *Rectangle) ID() uint                      { return p.I }
+func (p *Rectangle) SetID(i uint)                  { p.I = i }
 func (p *Rectangle) Type() component.ComponentType { return RectangleType }
 func (p *Rectangle) Entity() entity.Entity         { return p.E }
 

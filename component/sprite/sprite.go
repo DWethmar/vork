@@ -13,13 +13,13 @@ const Type = component.ComponentType("sprite")
 
 // Sprite is a component that holds the sprite of an entity.
 type Sprite struct {
-	I       uint32
+	I       uint
 	E       entity.Entity
 	Graphic Graphic
 }
 
-func (p *Sprite) ID() uint32                    { return p.I }
-func (p *Sprite) SetID(i uint32)                { p.I = i }
+func (p *Sprite) ID() uint                      { return p.I }
+func (p *Sprite) SetID(i uint)                  { p.I = i }
 func (p *Sprite) Type() component.ComponentType { return Type }
 func (p *Sprite) Entity() entity.Entity         { return p.E }
 

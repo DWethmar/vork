@@ -17,21 +17,21 @@ type ComponentLifeCycle interface {
 
 type GenericComponentLifeCycle[T component.Component] struct {
 	repo                Repository[T]
-	changed             map[uint32]T
-	deleted             map[uint32]T
-	componentMarkerFunc func(component.Event, map[uint32]T) error // Function to mark the component as changed
-	addFunc             func(T) (uint32, error)                   // Function to add the component to the ECS
+	changed             map[uint]T
+	deleted             map[uint]T
+	componentMarkerFunc func(component.Event, map[uint]T) error // Function to mark the component as changed
+	addFunc             func(T) (uint, error)                   // Function to add the component to the ECS
 }
 
 func NewGenericComponentLifeCycle[T component.Component](
 	repo Repository[T],
-	addFunc func(T) (uint32, error),
-	componentMarkerFunc func(component.Event, map[uint32]T) error,
+	addFunc func(T) (uint, error),
+	componentMarkerFunc func(component.Event, map[uint]T) error,
 ) *GenericComponentLifeCycle[T] {
 	return &GenericComponentLifeCycle[T]{
 		repo:                repo,
-		changed:             make(map[uint32]T),
-		deleted:             make(map[uint32]T),
+		changed:             make(map[uint]T),
+		deleted:             make(map[uint]T),
 		addFunc:             addFunc,
 		componentMarkerFunc: componentMarkerFunc,
 	}
@@ -71,8 +71,8 @@ func (l *GenericComponentLifeCycle[T]) Commit(tx *bolt.Tx) error {
 		}
 	}
 
-	l.changed = make(map[uint32]T)
-	l.deleted = make(map[uint32]T)
+	l.changed = make(map[uint]T)
+	l.deleted = make(map[uint]T)
 
 	return nil
 }

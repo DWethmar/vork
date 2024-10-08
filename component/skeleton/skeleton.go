@@ -11,7 +11,7 @@ const Type = component.ComponentType("skeleton")
 
 // Skeleton is a component that describes a skeleton enemy.
 type Skeleton struct {
-	I uint32        // ID
+	I uint          // ID
 	E entity.Entity // Entity
 }
 
@@ -22,8 +22,8 @@ func New(e entity.Entity) *Skeleton {
 	}
 }
 
-func (s *Skeleton) ID() uint32                    { return s.I }
-func (s *Skeleton) SetID(i uint32)                { s.I = i }
+func (s *Skeleton) ID() uint                      { return s.I }
+func (s *Skeleton) SetID(i uint)                  { s.I = i }
 func (s *Skeleton) Type() component.ComponentType { return Type }
 func (s *Skeleton) Entity() entity.Entity         { return s.E }
 

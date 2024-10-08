@@ -33,11 +33,11 @@ func componentTypes() []component.ComponentType {
 // BaseComponentStore defines a generic interface for managing any component type.
 // T is the component type, such as position, sprite, etc.
 type BaseComponentStore[T any] interface {
-	Add(T) (uint32, error)              // Add a new component to the store.
-	Get(uint32) (T, error)              // Get a component by its ID.
+	Add(T) (uint, error)                // Add a new component to the store.
+	Get(uint) (T, error)                // Get a component by its ID.
 	Update(T) error                     // Update an existing component.
 	List() []T                          // List all components in the store.
-	Delete(uint32) error                // Delete a component by its ID.
+	Delete(uint) error                  // Delete a component by its ID.
 	DeleteByEntity(entity.Entity) error // Delete all components associated with an entity.
 }
 
@@ -81,7 +81,7 @@ type SkeletonStore interface {
 // and integrates an event bus for handling in-game events.
 type ECS struct {
 	mu                sync.RWMutex
-	lastEntityID      entity.Entity
+	lastEntityID      entity.Entity // lastEntityID is the last entity ID that was created.
 	eventBus          *event.Bus
 	positionStore     PositionStore
 	controllableStore ControllableStore
@@ -155,7 +155,7 @@ func (s *ECS) DeleteEntity(e entity.Entity) error {
 			return fmt.Errorf("failed to delete entity because of an unknown component type %s", t)
 		}
 		if err != nil && !errors.Is(err, component.ErrEntityNotFound) {
-			return err
+			return fmt.Errorf("failed to delete entity: %w", err)
 		}
 	}
 

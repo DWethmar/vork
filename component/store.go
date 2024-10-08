@@ -22,7 +22,7 @@ type Store[C Component] struct {
 	mu              sync.RWMutex
 	components      []*C
 	entityIndex     map[entity.Entity][]*C // Maps Entity ID to Components
-	nextID          uint32
+	nextID          uint
 	uniquePerEntity bool // Flag to enforce uniqueness per entity
 }
 
@@ -41,7 +41,7 @@ func NewStore[C Component](uniquePerEntity bool) *Store[C] {
 // Add inserts a new component into the store.
 // If the component ID is zero, it assigns a new unique ID.
 // Enforces uniqueness per entity if the flag is set.
-func (s *Store[C]) Add(c C) (uint32, error) {
+func (s *Store[C]) Add(c C) (uint, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -74,7 +74,7 @@ func (s *Store[C]) Add(c C) (uint32, error) {
 }
 
 // Get retrieves a component by its ID using binary search.
-func (s *Store[C]) Get(id uint32) (C, error) {
+func (s *Store[C]) Get(id uint) (C, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -101,7 +101,7 @@ func (s *Store[C]) Update(c C) error {
 }
 
 // Delete removes a component by its ID using binary search.
-func (s *Store[C]) Delete(id uint32) error {
+func (s *Store[C]) Delete(id uint) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -137,7 +137,6 @@ func (s *Store[C]) Delete(id uint32) error {
 func (s *Store[C]) List() []C {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-
 	components := make([]C, len(s.components))
 	for i, compPtr := range s.components {
 		components[i] = *compPtr
@@ -202,7 +201,7 @@ func (s *Store[C]) DeleteByEntity(e entity.Entity) error {
 }
 
 // searchComponentIndex performs a binary search to find the index of a component with the given ID.
-func (s *Store[C]) searchComponentIndex(id uint32) int {
+func (s *Store[C]) searchComponentIndex(id uint) int {
 	return sort.Search(len(s.components), func(i int) bool {
 		return (*s.components[i]).ID() >= id
 	})

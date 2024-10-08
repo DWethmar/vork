@@ -6,8 +6,8 @@ type ComponentType string
 
 // Component is an interface that all components must implement.
 type Component interface {
-	ID() uint32
-	SetID(uint32)
+	ID() uint
+	SetID(uint)
 	Type() ComponentType
 	Entity() entity.Entity
 }
