@@ -118,25 +118,30 @@ func (s *Persistance) componentChangeHandler(e event.Event) error {
 }
 
 // Save saves all changed or deleted components to the database.
-func (s *Persistance) Save(tx *bolt.Tx) error {
-	for _, l := range s.lifecycles {
-		if err := l.Commit(tx); err != nil {
-			return fmt.Errorf("failed to commit lifecycle: %w", err)
+func (s *Persistance) Save(db *bolt.DB) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		for _, l := range s.lifecycles {
+			if err := l.Commit(tx); err != nil {
+				return fmt.Errorf("failed to commit lifecycle: %w", err)
+			}
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 // Load loads all components from the database and adds them to the ECS.
-func (s *Persistance) Load(tx *bolt.Tx) error {
-	for _, r := range PersistentComponentTypes() {
-		l, ok := s.lifecycles[r]
-		if !ok {
-			return fmt.Errorf("no lifecycle for component type: %s", r)
+func (s *Persistance) Load(db *bolt.DB) error {
+	return db.View(func(tx *bolt.Tx) error {
+		for _, r := range PersistentComponentTypes() {
+			l, ok := s.lifecycles[r]
+			if !ok {
+				return fmt.Errorf("no lifecycle for component type: %s", r)
+			}
+			if err := l.Load(tx, s.ecs); err != nil {
+				return fmt.Errorf("failed to load controllable components: %w", err)
+			}
 		}
-		if err := l.Load(tx, s.ecs); err != nil {
-			return fmt.Errorf("failed to load controllable components: %w", err)
-		}
-	}
-	return nil
+
+		return nil
+	})
 }

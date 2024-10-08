@@ -32,8 +32,8 @@ func NewGenericComponentLifeCycle[T component.Component](
 		repo:                repo,
 		changed:             make(map[uint32]T),
 		deleted:             make(map[uint32]T),
-		componentMarkerFunc: componentMarkerFunc,
 		addFunc:             addFunc,
+		componentMarkerFunc: componentMarkerFunc,
 	}
 }
 

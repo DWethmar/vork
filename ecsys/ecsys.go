@@ -56,7 +56,7 @@ type RectanglesStore interface {
 // Includes an additional method to list all sprites associated with an entity.
 type SpriteStore interface {
 	BaseComponentStore[*sprite.Sprite]
-	ListByEntity(entity.Entity) ([]*sprite.Sprite, error)
+	ListByEntity(entity.Entity) []*sprite.Sprite
 }
 
 // SkeletonStore manages Skeleton components, extending BaseComponentStore.

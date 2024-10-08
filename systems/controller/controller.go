@@ -7,11 +7,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// System is a controller system.
 type System struct {
 	logger *slog.Logger
 	ecs    *ecsys.ECS
 }
 
+// New creates a new controller system. It moves all controllable entities in the direction of the direction keys.
 func New(logger *slog.Logger, ecs *ecsys.ECS) *System {
 	return &System{
 		logger: logger,

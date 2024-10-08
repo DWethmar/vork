@@ -28,6 +28,7 @@ type System struct {
 	offsetY int
 }
 
+// New creates a new rendering system.
 func New(
 	logger *slog.Logger,
 	sprites []Sprite,

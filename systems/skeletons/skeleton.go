@@ -20,6 +20,7 @@ type System struct {
 	eventBus *event.Bus
 }
 
+// New creates a new skeleton system. It listens to skeleton events and adds the necessary components to the entity to make it a skeleton.
 func New(logger *slog.Logger, ecs *ecsys.ECS, eventBus *event.Bus) *System {
 	s := &System{
 		logger:   logger.With("system", "skeletons"),
@@ -28,13 +29,10 @@ func New(logger *slog.Logger, ecs *ecsys.ECS, eventBus *event.Bus) *System {
 	}
 
 	// Subscribe to the skeleton events
-	s.eventBus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
-		return e.Event() == skeleton.CreatedEventType
-	}), s.skeletonCreatedHandler)
-
-	s.eventBus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
-		return e.Event() == skeleton.UpdatedEventType
-	}), s.skeletonCreatedHandler)
+	s.eventBus.Subscribe(
+		event.MatchAny(skeleton.UpdatedEventType, skeleton.CreatedEventType),
+		s.skeletonCreatedHandler,
+	)
 
 	return s
 }

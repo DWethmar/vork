@@ -3,7 +3,6 @@ package gameplay
 import (
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
@@ -20,8 +19,8 @@ import (
 )
 
 var (
-	sceneKey     = []byte("gameplay")
-	startedAtKey = []byte("started_at")
+	sceneKey       = []byte("gameplay")
+	initializedKey = []byte("initialized")
 )
 
 type Scene struct {
@@ -31,7 +30,7 @@ type Scene struct {
 	persistence *persistence.Persistance
 }
 
-func NewScene(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) *Scene {
+func NewScene(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spritesheet) (*Scene, error) {
 	eventBus := event.NewBus()
 	ecs := ecsys.New(eventBus)
 
@@ -44,32 +43,26 @@ func NewScene(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) *Sc
 	persistence := persistence.New(eventBus, ecs)
 
 	// check if it is an existing save
-	err := db.Update(func(tx *bbolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists(sceneKey)
-		if err != nil {
-			return err
+	ok, err := initializedGame(db, save)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check if game is initialized: %w", err)
+	}
+	if ok {
+		// create a new game
+		logger.Info("creating a new game")
+		addPlayer(ecs, 10, 10)
+		addEnemy(ecs, 100, 100)
+		setInitialized(db, save)
+		if err := persistence.Save(db); err != nil {
+			return nil, fmt.Errorf("failed to save new game: %w", err)
 		}
-		startedAt := bucket.Get(startedAtKey)
-		if startedAt == nil {
-			// create a new game
-			logger.Info("creating a new game")
-			addPlayer(ecs, 10, 10)
-			addEnemy(ecs, 100, 100)
-			if err := bucket.Put(startedAtKey, []byte(time.Now().String())); err != nil {
-				return err
-			}
-			if err := persistence.Save(tx); err != nil {
-				return fmt.Errorf("failed to save game: %w", err)
-			}
-		} else {
-			// load the game
-			logger.Info("loading game")
-			if err := persistence.Load(tx); err != nil {
-				return fmt.Errorf("failed to load game: %w", err)
-			}
+	} else {
+		// load the game
+		logger.Info("loading game")
+		if err := persistence.Load(db); err != nil {
+			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
-		return nil
-	})
+	}
 
 	if err != nil {
 		logger.Error("failed to load game", slog.String("error", err.Error()))
@@ -80,7 +73,7 @@ func NewScene(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) *Sc
 		db:          db,
 		systems:     systems,
 		persistence: persistence,
-	}
+	}, nil
 }
 
 func (s *Scene) Name() string { return "gameplay" }
@@ -98,13 +91,11 @@ func (s *Scene) Update() error {
 	// check if F5 is pressed
 	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
 		s.logger.Info("saving game")
-		s.db.Update(func(tx *bbolt.Tx) error {
-			if err := s.persistence.Save(tx); err != nil {
-				return fmt.Errorf("failed to save game: %w", err)
-			}
-			return nil
-		})
+		if err := s.persistence.Save(s.db); err != nil {
+			return fmt.Errorf("failed to save game: %w", err)
+		}
 		s.logger.Info("game saved")
+		return nil
 	}
 
 	for _, sys := range s.systems {
@@ -114,4 +105,27 @@ func (s *Scene) Update() error {
 	}
 
 	return nil
+}
+
+func initializedGame(db *bbolt.DB, name string) (bool, error) {
+	exists := false
+	err := db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket(sceneKey)
+		if bucket == nil {
+			return nil
+		}
+		exists = bucket.Get(initializedKey) != nil
+		return nil
+	})
+	return exists, err
+}
+
+func setInitialized(db *bbolt.DB, name string) error {
+	return db.Update(func(tx *bbolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists(sceneKey)
+		if err != nil {
+			return err
+		}
+		return bucket.Put(initializedKey, []byte(""))
+	})
 }

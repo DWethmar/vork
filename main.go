@@ -30,11 +30,14 @@ func main() {
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
-			fmt.Errorf("error closing db: %v", err)
+			log.Fatal(fmt.Errorf("failed to close db: %w", err))
 		}
 	}()
 
-	gameplayScene := gameplay.NewScene(logger, db, spriteSheet)
+	gameplayScene, err := gameplay.NewScene(logger, "my-save", db, spriteSheet)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	g, err := game.New(map[string]game.Scene{
 		gameplayScene.Name(): gameplayScene,

@@ -11,7 +11,7 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
-	"github.com/dwethmar/vork/systems/persistence"
+	"github.com/dwethmar/vork/persistence"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -59,6 +59,7 @@ func saveTest(t *testing.T, path string, offset, limit int64) {
 			t.Errorf("testDB failed: %v", err)
 		}
 		defer db.Close()
+
 		eventBus := event.NewBus()
 		ecs := ecsys.New(eventBus)
 		// create system
@@ -106,11 +107,13 @@ func saveTest(t *testing.T, path string, offset, limit int64) {
 			t.Errorf("testDB failed: %v", err)
 		}
 		defer db.Close()
+
 		// create new system
 		eventBus := event.NewBus()
 		ecs := ecsys.New(eventBus)
 		s := persistence.New(eventBus, ecs)
 		s.Load(db)
+
 		for _, pt := range persistence.PersistentComponentTypes() {
 			for i := range limit {
 				e := entity.Entity(offset + i)
@@ -178,6 +181,7 @@ func TestSystem_Save(t *testing.T) {
 				t.Errorf("testDB failed: %v", err)
 			}
 			defer db.Close()
+
 			eventBus := event.NewBus()
 			ecs := ecsys.New(eventBus)
 			// create system
@@ -211,6 +215,7 @@ func TestSystem_Save(t *testing.T) {
 				t.Errorf("testDB failed: %v", err)
 			}
 			defer db.Close()
+
 			// create new system
 			eventBus := event.NewBus()
 			ecs := ecsys.New(eventBus)
@@ -239,10 +244,12 @@ func TestSystem_Save(t *testing.T) {
 func TestSystem_Load(t *testing.T) {
 	t.Run("Load should load all components", func(t *testing.T) {
 		path := t.TempDir() + "/test.db"
-		db, err := bolt.Open(path, 0600, nil)
+		db, err := testDB(t, path)
 		if err != nil {
-			log.Fatal(err)
+			t.Errorf("testDB failed: %v", err)
 		}
+		defer db.Close()
+
 		defer func() {
 			if err := db.Close(); err != nil {
 				log.Fatal(err)

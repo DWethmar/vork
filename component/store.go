@@ -160,20 +160,20 @@ func (s *Store[C]) FirstByEntity(e entity.Entity) (C, error) {
 }
 
 // ListByEntity retrieves all components associated with an entity.
-func (s *Store[C]) ListByEntity(e entity.Entity) ([]C, error) {
+func (s *Store[C]) ListByEntity(e entity.Entity) []C {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	comps, exists := s.entityIndex[e]
 	if !exists || len(comps) == 0 {
-		return nil, ErrEntityNotFound
+		return nil
 	}
 
 	components := make([]C, len(comps))
 	for i, compPtr := range comps {
 		components[i] = *compPtr
 	}
-	return components, nil
+	return components
 }
 
 // DeleteByEntity removes all components associated with an entity.
