@@ -10,7 +10,7 @@ import (
 func (s *ECS) Position(e entity.Entity) (position.Position, error) {
 	c, err := s.pos.FirstByEntity(e)
 	if err != nil {
-		return position.Position{}, fmt.Errorf("could not get position: %v", err)
+		return position.Position{}, fmt.Errorf("could not get position: %w", err)
 	}
 	return *c, nil
 }
@@ -20,7 +20,7 @@ func (s *ECS) UpdatePosition(p position.Position) error {
 		return fmt.Errorf("could not update position: %v", err)
 	}
 	if err := s.eventBus.Publish(position.NewUpdatedEvent(p)); err != nil {
-		return fmt.Errorf("could not publish position update event: %v", err)
+		return fmt.Errorf("could not publish position update event: %w", err)
 	}
 	return nil
 }
@@ -28,10 +28,10 @@ func (s *ECS) UpdatePosition(p position.Position) error {
 func (s *ECS) AddPosition(p position.Position) (uint32, error) {
 	id, err := s.pos.Add(&p)
 	if err != nil {
-		return 0, fmt.Errorf("could not add position: %v", err)
+		return 0, fmt.Errorf("could not add position: %w", err)
 	}
 	if err := s.eventBus.Publish(position.NewCreatedEvent(p)); err != nil {
-		return 0, fmt.Errorf("could not publish position create event: %v", err)
+		return 0, fmt.Errorf("could not publish position create event: %w", err)
 	}
 	return id, nil
 }
@@ -41,7 +41,7 @@ func (s *ECS) DeletePosition(p position.Position) error {
 		return fmt.Errorf("could not delete position: %v", err)
 	}
 	if err := s.eventBus.Publish(position.NewDeletedEvent(p)); err != nil {
-		return fmt.Errorf("could not publish position delete event: %v", err)
+		return fmt.Errorf("could not publish position delete event: %w", err)
 	}
 	return nil
 }

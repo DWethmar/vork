@@ -3,6 +3,7 @@ package ecsys
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/dwethmar/vork/component"
@@ -15,10 +16,19 @@ import (
 	"github.com/dwethmar/vork/event"
 )
 
-// ErrNotFound is the error returned when a component is not found in the store.
-var (
-	ErrNotFound = errors.New("not found")
-)
+// componentTypes is a list of all component types used in the ECS.
+// This list is used to initialize the component stores in the ECS.
+// It is also used to ensure that all component types are accounted for when managing entities.
+func componentTypes() []component.ComponentType {
+	return []component.ComponentType{
+		position.Type,
+		controllable.Type,
+		shape.RectangleType,
+		// shape.CircleType, // not implemented yet
+		sprite.Type,
+		skeleton.Type,
+	}
+}
 
 // BaseComponentStore defines a generic interface for managing any component type.
 // T is the component type, such as position, sprite, etc.
@@ -81,6 +91,35 @@ type ECS struct {
 	sklt    SkeletonStore
 }
 
+// New creates a new ECS system, initializing it with the provided component stores and event bus.
+// This function ensures that the ECS is ready to manage entities and components from the start.
+func New(eventBus *event.Bus) *ECS {
+	ecs := &ECS{
+		lastEntityID: 0,
+		eventBus:     eventBus,
+	}
+
+	// Initialize component stores for the ECS.
+	for _, t := range componentTypes() {
+		switch t {
+		case position.Type:
+			ecs.pos = component.NewStore[*position.Position](true)
+		case controllable.Type:
+			ecs.contr = component.NewStore[*controllable.Controllable](true)
+		case shape.RectangleType:
+			ecs.rect = component.NewStore[*shape.Rectangle](true)
+		case sprite.Type:
+			ecs.sprites = component.NewStore[*sprite.Sprite](false)
+		case skeleton.Type:
+			ecs.sklt = component.NewStore[*skeleton.Skeleton](true)
+		default:
+			panic(fmt.Sprintf("unknown component type: %s", t))
+		}
+	}
+
+	return ecs
+}
+
 // CreateEntity generates a new unique entity by incrementing the lastEntityID.
 // It also creates a position component for the entity and adds it to the ECS.
 func (s *ECS) CreateEntity(x, y int64) (entity.Entity, error) {
@@ -97,16 +136,30 @@ func (s *ECS) CreateEntity(x, y int64) (entity.Entity, error) {
 	return s.lastEntityID, nil
 }
 
-// New creates a new ECS system, initializing it with the provided component stores and event bus.
-// This function ensures that the ECS is ready to manage entities and components from the start.
-func New(eventBus *event.Bus) *ECS {
-	return &ECS{
-		lastEntityID: 0,
-		eventBus:     eventBus,
-		pos:          component.NewStore[*position.Position](true),
-		contr:        component.NewStore[*controllable.Controllable](true),
-		rect:         component.NewStore[*shape.Rectangle](true),
-		sprites:      component.NewStore[*sprite.Sprite](false),
-		sklt:         component.NewStore[*skeleton.Skeleton](true),
+func (s *ECS) DeleteEntity(e entity.Entity) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for _, t := range componentTypes() {
+		var err error
+		switch t {
+		case position.Type:
+			err = s.pos.DeleteByEntity(e)
+		case controllable.Type:
+			err = s.contr.DeleteByEntity(e)
+		case shape.RectangleType:
+			err = s.rect.DeleteByEntity(e)
+		case sprite.Type:
+			err = s.sprites.DeleteByEntity(e)
+		case skeleton.Type:
+			err = s.sklt.DeleteByEntity(e)
+		default:
+			return errors.New("unknown component type")
+		}
+		if err != nil && !errors.Is(err, component.ErrEntityNotFound) {
+			return err
+		}
 	}
+
+	return nil
 }

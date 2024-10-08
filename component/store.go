@@ -198,7 +198,6 @@ func (s *Store[C]) DeleteByEntity(e entity.Entity) error {
 
 	// Remove the entity from the index
 	delete(s.entityIndex, e)
-
 	return nil
 }
 

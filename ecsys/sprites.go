@@ -30,7 +30,7 @@ func (s *ECS) SpritesByEntity(e entity.Entity) []sprite.Sprite {
 // Sprite returns a sprite by its ID.
 func (s *ECS) UpdateSprite(sp sprite.Sprite) error {
 	if err := s.sprites.Update(&sp); err != nil {
-		return fmt.Errorf("could not update sprite: %v", err)
+		return fmt.Errorf("could not update sprite: %w", err)
 	}
 	return nil
 }

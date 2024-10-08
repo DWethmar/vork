@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"log/slog"
 
-	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
@@ -55,13 +54,6 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 // setupSkeleton adds the necessary components to the entity to make it a skeleton.
 func (s *System) setupSkeleton(sk skeleton.Skeleton) error {
 	e := sk.Entity()
-	_, err := s.ecs.Position(e)
-	if err != nil {
-		if errors.Is(err, ecsys.ErrNotFound) {
-			s.ecs.AddPosition(*position.New(e, 0, 0))
-		}
-		return err
-	}
 	s.ecs.AddRectangle(*shape.NewRectangle(e, 10, 10, color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff}))
 	s.ecs.AddSprite(*sprite.New(e, sprite.SkeletonMoveDown1))
 	return nil

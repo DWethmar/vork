@@ -10,7 +10,7 @@ import (
 func (s *ECS) Skeleton(e entity.Entity) (skeleton.Skeleton, error) {
 	c, err := s.sklt.FirstByEntity(e)
 	if err != nil {
-		return skeleton.Skeleton{}, fmt.Errorf("could not get skeleton: %v", err)
+		return skeleton.Skeleton{}, fmt.Errorf("could not get skeleton: %w", err)
 	}
 	return *c, nil
 }
