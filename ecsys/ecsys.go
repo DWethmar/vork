@@ -113,7 +113,7 @@ func New(eventBus *event.Bus) *ECS {
 		case skeleton.Type:
 			ecs.sklt = component.NewStore[*skeleton.Skeleton](true)
 		default:
-			panic(fmt.Sprintf("unknown component type: %s", t))
+			panic(fmt.Sprintf("failed to initialize ECS because of an unknown component type %s", t))
 		}
 	}
 
@@ -154,7 +154,7 @@ func (s *ECS) DeleteEntity(e entity.Entity) error {
 		case skeleton.Type:
 			err = s.sklt.DeleteByEntity(e)
 		default:
-			return errors.New("unknown component type")
+			return fmt.Errorf("failed to delete entity because of an unknown component type %s", t)
 		}
 		if err != nil && !errors.Is(err, component.ErrEntityNotFound) {
 			return err
