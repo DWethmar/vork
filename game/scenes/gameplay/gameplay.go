@@ -6,6 +6,7 @@ import (
 
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
+	"github.com/dwethmar/vork/game"
 	"github.com/dwethmar/vork/persistence"
 	"github.com/dwethmar/vork/sprites"
 	"github.com/dwethmar/vork/spritesheet"
@@ -19,18 +20,20 @@ import (
 )
 
 var (
-	sceneKey       = []byte("gameplay")
-	initializedKey = []byte("initialized")
+	_              game.Scene = &GamePlay{}
+	sceneKey                  = []byte("gameplay")
+	initializedKey            = []byte("initialized")
 )
 
-type Scene struct {
+// GamePlay is a scene where the game is played.
+type GamePlay struct {
 	logger      *slog.Logger
 	db          *bbolt.DB
 	systems     []systems.System
 	persistence *persistence.Persistance
 }
 
-func NewScene(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spritesheet) (*Scene, error) {
+func New(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
 	ecs := ecsys.New(eventBus)
 
@@ -68,7 +71,7 @@ func NewScene(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spr
 		logger.Error("failed to load game", slog.String("error", err.Error()))
 	}
 
-	return &Scene{
+	return &GamePlay{
 		logger:      logger,
 		db:          db,
 		systems:     systems,
@@ -76,9 +79,9 @@ func NewScene(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spr
 	}, nil
 }
 
-func (s *Scene) Name() string { return "gameplay" }
+func (s *GamePlay) Name() string { return "gameplay" }
 
-func (s *Scene) Draw(screen *ebiten.Image) error {
+func (s *GamePlay) Draw(screen *ebiten.Image) error {
 	for _, sys := range s.systems {
 		if err := sys.Draw(screen); err != nil {
 			return err
@@ -87,7 +90,7 @@ func (s *Scene) Draw(screen *ebiten.Image) error {
 	return nil
 }
 
-func (s *Scene) Update() error {
+func (s *GamePlay) Update() error {
 	// check if F5 is pressed
 	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
 		s.logger.Info("saving game")

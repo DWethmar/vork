@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	screenWidth  = 320
-	screenHeight = 240
+	screenWidth  = 400
+	screenHeight = 400
 )
 
 func main() {
@@ -34,24 +34,32 @@ func main() {
 		}
 	}()
 
-	gameplayScene, err := gameplay.NewScene(logger, "my-save", db, spriteSheet)
+	gameplayScene, err := gameplay.New(logger, "my-save", db, spriteSheet)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	g, err := game.New(map[string]game.Scene{
-		gameplayScene.Name(): gameplayScene,
-	}, gameplayScene.Name())
-
+	g, err := game.New()
 	if err != nil {
 		log.Fatal(err)
 	}
-	e := &EbitenGame{
-		g: g,
+
+	// Add scenes
+	if err := g.AddScene(gameplayScene); err != nil {
+		log.Fatal(err)
 	}
+
+	// Switch to the gameplay scene
+	if err := g.SwitchScene(gameplayScene.Name()); err != nil {
+		log.Fatal(err)
+	}
+
 	ebiten.SetWindowSize(screenWidth, screenHeight)
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("vorK")
-	if err := ebiten.RunGame(e); err != nil {
+	if err := ebiten.RunGame(&EbitenGame{
+		g: g,
+	}); err != nil {
 		log.Fatal(err)
 	}
 }
