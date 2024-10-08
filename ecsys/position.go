@@ -8,7 +8,7 @@ import (
 )
 
 func (s *ECS) Position(e entity.Entity) (position.Position, error) {
-	c, err := s.pos.FirstByEntity(e)
+	c, err := s.positionStore.FirstByEntity(e)
 	if err != nil {
 		return position.Position{}, fmt.Errorf("could not get position: %w", err)
 	}

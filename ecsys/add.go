@@ -36,27 +36,27 @@ func addComponent[T any](
 }
 
 func (s *ECS) AddPositionComponent(c position.Position) (uint32, error) {
-	return addComponent(s.eventBus, &c, s.pos, func(p *position.Position) event.Event {
+	return addComponent(s.eventBus, &c, s.positionStore, func(p *position.Position) event.Event {
 		return position.NewCreatedEvent(*p)
 	})
 }
 
 func (s *ECS) AddControllableComponent(c controllable.Controllable) (uint32, error) {
-	return addComponent(s.eventBus, &c, s.contr, func(ctr *controllable.Controllable) event.Event {
+	return addComponent(s.eventBus, &c, s.controllableStore, func(ctr *controllable.Controllable) event.Event {
 		return controllable.NewCreatedEvent(*ctr)
 	})
 }
 
 func (s *ECS) AddRectangleComponent(c shape.Rectangle) (uint32, error) {
-	return addComponent(s.eventBus, &c, s.rect, nil)
+	return addComponent(s.eventBus, &c, s.rectangleStore, nil)
 }
 
 func (s *ECS) AddSpriteComponent(c sprite.Sprite) (uint32, error) {
-	return addComponent(s.eventBus, &c, s.sprites, nil)
+	return addComponent(s.eventBus, &c, s.spriteStore, nil)
 }
 
 func (s *ECS) AddSkeletonComponent(c skeleton.Skeleton) (uint32, error) {
-	return addComponent(s.eventBus, &c, s.sklt, func(sk *skeleton.Skeleton) event.Event {
+	return addComponent(s.eventBus, &c, s.skeletonStore, func(sk *skeleton.Skeleton) event.Event {
 		return skeleton.NewCreatedEvent(*sk)
 	})
 }

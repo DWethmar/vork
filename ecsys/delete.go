@@ -34,27 +34,27 @@ func deleteComponent[T any](
 }
 
 func (s *ECS) DeletePositionComponent(c position.Position) error {
-	return deleteComponent(s.eventBus, &c, s.pos, func(p *position.Position) event.Event {
+	return deleteComponent(s.eventBus, &c, s.positionStore, func(p *position.Position) event.Event {
 		return position.NewDeletedEvent(*p)
 	})
 }
 
 func (s *ECS) DeleteControllableComponent(c controllable.Controllable) error {
-	return deleteComponent(s.eventBus, &c, s.contr, func(ctr *controllable.Controllable) event.Event {
+	return deleteComponent(s.eventBus, &c, s.controllableStore, func(ctr *controllable.Controllable) event.Event {
 		return controllable.NewDeletedEvent(*ctr)
 	})
 }
 
 func (s *ECS) DeleteRectangleComponent(c shape.Rectangle) error {
-	return deleteComponent(s.eventBus, &c, s.rect, nil)
+	return deleteComponent(s.eventBus, &c, s.rectangleStore, nil)
 }
 
 func (s *ECS) DeleteSpriteComponent(c sprite.Sprite) error {
-	return deleteComponent(s.eventBus, &c, s.sprites, nil)
+	return deleteComponent(s.eventBus, &c, s.spriteStore, nil)
 }
 
 func (s *ECS) DeleteSkeletonComponent(c skeleton.Skeleton) error {
-	return deleteComponent(s.eventBus, &c, s.sklt, func(sk *skeleton.Skeleton) event.Event {
+	return deleteComponent(s.eventBus, &c, s.skeletonStore, func(sk *skeleton.Skeleton) event.Event {
 		return skeleton.NewDeletedEvent(*sk)
 	})
 }

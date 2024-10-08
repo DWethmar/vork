@@ -7,7 +7,7 @@ import (
 
 // Sprites returns all sprites in the ECS.
 func (s *ECS) Sprites() []sprite.Sprite {
-	c := s.sprites.List()
+	c := s.spriteStore.List()
 	r := make([]sprite.Sprite, len(c))
 	for i, v := range c {
 		r[i] = *v
@@ -17,7 +17,7 @@ func (s *ECS) Sprites() []sprite.Sprite {
 
 // SpritesByEntity returns all sprites for a given entity.
 func (s *ECS) SpritesByEntity(e entity.Entity) []sprite.Sprite {
-	c := s.sprites.ListByEntity(e)
+	c := s.spriteStore.ListByEntity(e)
 	r := make([]sprite.Sprite, len(c))
 	for i, v := range c {
 		r[i] = *v

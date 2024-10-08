@@ -8,7 +8,7 @@ import (
 )
 
 func (s *ECS) Skeleton(e entity.Entity) (skeleton.Skeleton, error) {
-	c, err := s.sklt.FirstByEntity(e)
+	c, err := s.skeletonStore.FirstByEntity(e)
 	if err != nil {
 		return skeleton.Skeleton{}, fmt.Errorf("could not get skeleton: %w", err)
 	}
@@ -16,7 +16,7 @@ func (s *ECS) Skeleton(e entity.Entity) (skeleton.Skeleton, error) {
 }
 
 func (s *ECS) Skeletons() []skeleton.Skeleton {
-	c := s.sklt.List()
+	c := s.skeletonStore.List()
 	r := make([]skeleton.Skeleton, len(c))
 	for i, v := range c {
 		r[i] = *v

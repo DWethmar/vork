@@ -6,14 +6,14 @@ import (
 )
 
 func (s *ECS) Rectangle(e entity.Entity) (shape.Rectangle, error) {
-	c, err := s.rect.FirstByEntity(e)
+	c, err := s.rectangleStore.FirstByEntity(e)
 	if err != nil {
 		return shape.Rectangle{}, err
 	}
 	return *c, nil
 }
 func (s *ECS) Rectangles() []shape.Rectangle {
-	c := s.rect.List()
+	c := s.rectangleStore.List()
 	r := make([]shape.Rectangle, len(c))
 	for i, v := range c {
 		r[i] = *v

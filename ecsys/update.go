@@ -34,27 +34,27 @@ func updateComponent[T any](
 }
 
 func (s *ECS) UpdatePositionComponent(c position.Position) error {
-	return updateComponent(s.eventBus, &c, s.pos, func(p *position.Position) event.Event {
+	return updateComponent(s.eventBus, &c, s.positionStore, func(p *position.Position) event.Event {
 		return position.NewUpdatedEvent(*p)
 	})
 }
 
 func (s *ECS) UpdateControllableComponent(c controllable.Controllable) error {
-	return updateComponent(s.eventBus, &c, s.contr, func(ctr *controllable.Controllable) event.Event {
+	return updateComponent(s.eventBus, &c, s.controllableStore, func(ctr *controllable.Controllable) event.Event {
 		return controllable.NewUpdatedEvent(*ctr)
 	})
 }
 
 func (s *ECS) UpdateRectangleComponent(c shape.Rectangle) error {
-	return updateComponent(s.eventBus, &c, s.rect, nil)
+	return updateComponent(s.eventBus, &c, s.rectangleStore, nil)
 }
 
 func (s *ECS) UpdateSpriteComponent(c sprite.Sprite) error {
-	return updateComponent(s.eventBus, &c, s.sprites, nil)
+	return updateComponent(s.eventBus, &c, s.spriteStore, nil)
 }
 
 func (s *ECS) UpdateSkeletonComponent(c skeleton.Skeleton) error {
-	return updateComponent(s.eventBus, &c, s.sklt, func(sk *skeleton.Skeleton) event.Event {
+	return updateComponent(s.eventBus, &c, s.skeletonStore, func(sk *skeleton.Skeleton) event.Event {
 		return skeleton.NewUpdatedEvent(*sk)
 	})
 }

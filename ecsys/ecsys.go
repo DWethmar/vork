@@ -80,14 +80,14 @@ type SkeletonStore interface {
 // It also provides access to various component stores (position, controllable, rectangle, sprite, skeleton)
 // and integrates an event bus for handling in-game events.
 type ECS struct {
-	mu           sync.RWMutex
-	lastEntityID entity.Entity
-	eventBus     *event.Bus
-	pos          PositionStore
-	contr        ControllableStore
-	rect         RectanglesStore
-	sprites      SpriteStore
-	sklt         SkeletonStore
+	mu                sync.RWMutex
+	lastEntityID      entity.Entity
+	eventBus          *event.Bus
+	positionStore     PositionStore
+	controllableStore ControllableStore
+	rectangleStore    RectanglesStore
+	spriteStore       SpriteStore
+	skeletonStore     SkeletonStore
 }
 
 // New creates a new ECS system, initializing it with the provided component stores and event bus.
@@ -102,15 +102,15 @@ func New(eventBus *event.Bus) *ECS {
 	for _, t := range componentTypes() {
 		switch t {
 		case position.Type:
-			ecs.pos = component.NewStore[*position.Position](true)
+			ecs.positionStore = component.NewStore[*position.Position](true)
 		case controllable.Type:
-			ecs.contr = component.NewStore[*controllable.Controllable](true)
+			ecs.controllableStore = component.NewStore[*controllable.Controllable](true)
 		case shape.RectangleType:
-			ecs.rect = component.NewStore[*shape.Rectangle](true)
+			ecs.rectangleStore = component.NewStore[*shape.Rectangle](true)
 		case sprite.Type:
-			ecs.sprites = component.NewStore[*sprite.Sprite](false)
+			ecs.spriteStore = component.NewStore[*sprite.Sprite](false)
 		case skeleton.Type:
-			ecs.sklt = component.NewStore[*skeleton.Skeleton](true)
+			ecs.skeletonStore = component.NewStore[*skeleton.Skeleton](true)
 		default:
 			panic(fmt.Sprintf("failed to initialize ECS because of an unknown component type %s", t))
 		}
@@ -142,15 +142,15 @@ func (s *ECS) DeleteEntity(e entity.Entity) error {
 		var err error
 		switch t {
 		case position.Type:
-			err = s.pos.DeleteByEntity(e)
+			err = s.positionStore.DeleteByEntity(e)
 		case controllable.Type:
-			err = s.contr.DeleteByEntity(e)
+			err = s.controllableStore.DeleteByEntity(e)
 		case shape.RectangleType:
-			err = s.rect.DeleteByEntity(e)
+			err = s.rectangleStore.DeleteByEntity(e)
 		case sprite.Type:
-			err = s.sprites.DeleteByEntity(e)
+			err = s.spriteStore.DeleteByEntity(e)
 		case skeleton.Type:
-			err = s.sklt.DeleteByEntity(e)
+			err = s.skeletonStore.DeleteByEntity(e)
 		default:
 			return fmt.Errorf("failed to delete entity because of an unknown component type %s", t)
 		}
