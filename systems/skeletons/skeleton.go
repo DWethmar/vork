@@ -54,8 +54,8 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 // setupSkeleton adds the necessary components to the entity to make it a skeleton.
 func (s *System) setupSkeleton(sk skeleton.Skeleton) error {
 	e := sk.Entity()
-	s.ecs.AddRectangle(*shape.NewRectangle(e, 10, 10, color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff}))
-	s.ecs.AddSprite(*sprite.New(e, sprite.SkeletonMoveDown1))
+	s.ecs.AddRectangleComponent(*shape.NewRectangle(e, 10, 10, color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff}))
+	s.ecs.AddSpriteComponent(*sprite.New(e, sprite.SkeletonMoveDown1))
 	return nil
 }
 

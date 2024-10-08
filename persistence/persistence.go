@@ -42,8 +42,8 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
 		lifecycles: map[component.ComponentType]ComponentLifeCycle{
 			controllable.Type: NewGenericComponentLifeCycle(
 				controllableRepo,
-				func(c *controllable.Controllable) (uint32, error) {
-					return ecs.AddControllable(*c)
+				func(c *controllable.Controllable) (uint32, error) { // TODO refactor
+					return ecs.AddControllableComponent(*c)
 				},
 				func(e component.Event, m map[uint32]*controllable.Controllable) error {
 					c, ok := e.(controllable.Event)
@@ -57,7 +57,7 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
 			position.Type: NewGenericComponentLifeCycle(
 				positionRepo,
 				func(c *position.Position) (uint32, error) {
-					return ecs.AddPosition(*c)
+					return ecs.AddPositionComponent(*c)
 				},
 				func(e component.Event, m map[uint32]*position.Position) error {
 					c, ok := e.(position.Event)
@@ -71,7 +71,7 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
 			skeleton.Type: NewGenericComponentLifeCycle(
 				skeletonRepo,
 				func(c *skeleton.Skeleton) (uint32, error) {
-					return ecs.AddSkeleton(*c)
+					return ecs.AddSkeletonComponent(*c)
 				},
 				func(e component.Event, m map[uint32]*skeleton.Skeleton) error {
 					c, ok := e.(skeleton.Event)

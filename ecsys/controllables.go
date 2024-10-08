@@ -23,25 +23,4 @@ func (s *ECS) Controllables() []controllable.Controllable {
 	return r
 }
 
-func (s *ECS) UpdateControllable(c controllable.Controllable) error {
-	if err := s.contr.Update(&c); err != nil {
-		return fmt.Errorf("could not update controllable: %w", err)
-	}
-	if err := s.eventBus.Publish(controllable.NewUpdatedEvent(c)); err != nil {
-		return fmt.Errorf("could not publish event: %w", err)
-	}
-	return nil
-}
-
-func (s *ECS) AddControllable(c controllable.Controllable) (uint32, error) {
-	id, err := s.contr.Add(&c)
-	if err != nil {
-		return 0, fmt.Errorf("could not add controllable: %w", err)
-	}
-	if err := s.eventBus.Publish(controllable.NewCreatedEvent(c)); err != nil {
-		return 0, fmt.Errorf("could not publish event: %w", err)
-	}
-	return id, nil
-}
-
 func (s *ECS) DeleteControllable(id uint32) error { return s.contr.Delete(id) }

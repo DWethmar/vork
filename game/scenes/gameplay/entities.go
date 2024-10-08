@@ -13,10 +13,10 @@ func addPlayer(ecs *ecsys.ECS, x, y int64) error {
 	if err != nil {
 		return fmt.Errorf("could not create entity: %v", err)
 	}
-	if _, err = ecs.AddSkeleton(*skeleton.New(e)); err != nil {
+	if _, err = ecs.AddSkeletonComponent(*skeleton.New(e)); err != nil {
 		return fmt.Errorf("could not add skeleton: %v", err)
 	}
-	if _, err = ecs.AddControllable(*controllable.New(e)); err != nil {
+	if _, err = ecs.AddControllableComponent(*controllable.New(e)); err != nil {
 		return fmt.Errorf("could not add controllable: %v", err)
 	}
 	return nil
@@ -27,7 +27,7 @@ func addEnemy(ecs *ecsys.ECS, x, y int64) error {
 	if err != nil {
 		fmt.Printf("could not create entity: %v\n", err)
 	}
-	if _, err = ecs.AddSkeleton(*skeleton.New(e)); err != nil {
+	if _, err = ecs.AddSkeletonComponent(*skeleton.New(e)); err != nil {
 		return fmt.Errorf("could not add skeleton: %v", err)
 	}
 	return nil

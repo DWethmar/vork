@@ -30,7 +30,7 @@ func (s *System) Update() error {
 		}
 		p.X += int64(x)
 		p.Y += int64(y)
-		if err := s.ecs.UpdatePosition(p); err != nil {
+		if err := s.ecs.UpdatePositionComponent(p); err != nil {
 			return err
 		}
 	}

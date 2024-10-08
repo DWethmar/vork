@@ -76,17 +76,17 @@ func saveTest(t *testing.T, path string, offset, limit int64) {
 						y = -100
 					}
 					position := position.New(e, x, y)
-					if _, err = ecs.AddPosition(*position); err != nil {
+					if _, err = ecs.AddPositionComponent(*position); err != nil {
 						t.Errorf("AddPosition failed: %v", err)
 					}
 				case controllable.Type:
 					controllable := controllable.New(e)
-					if _, err = ecs.AddControllable(*controllable); err != nil {
+					if _, err = ecs.AddControllableComponent(*controllable); err != nil {
 						t.Errorf("UpdateControllable failed: %v", err)
 					}
 				case skeleton.Type:
 					skeleton := skeleton.New(e)
-					if _, err = ecs.AddSkeleton(*skeleton); err != nil {
+					if _, err = ecs.AddSkeletonComponent(*skeleton); err != nil {
 						t.Errorf("UpdateSkeleton failed: %v", err)
 					}
 				default:
@@ -190,7 +190,7 @@ func TestSystem_Save(t *testing.T) {
 				x := int64(i) * 10
 				y := int64(i) * 10
 				position := position.New(entity.Entity(i), x, y)
-				if _, err = ecs.AddPosition(*position); err != nil {
+				if _, err = ecs.AddPositionComponent(*position); err != nil {
 					t.Errorf("AddPosition failed: %v", err)
 				}
 			}
@@ -199,7 +199,7 @@ func TestSystem_Save(t *testing.T) {
 			if err != nil {
 				t.Errorf("Position failed: %v", err)
 			}
-			if err = ecs.DeletePosition(position); err != nil {
+			if err = ecs.DeletePositionComponent(position); err != nil {
 				t.Errorf("DeletePosition failed: %v", err)
 			}
 			// save all changed components
@@ -277,7 +277,7 @@ func TestSystem_Load(t *testing.T) {
 		position.X = 33
 		position.Y = 44
 
-		if err := ecs.UpdatePosition(position); err != nil {
+		if err := ecs.UpdatePositionComponent(position); err != nil {
 			t.Errorf("UpdatePosition failed: %v", err)
 		}
 

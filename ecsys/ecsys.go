@@ -80,15 +80,14 @@ type SkeletonStore interface {
 // It also provides access to various component stores (position, controllable, rectangle, sprite, skeleton)
 // and integrates an event bus for handling in-game events.
 type ECS struct {
-	mu           sync.RWMutex  // Mutex to ensure thread-safe entity and component operations.
-	lastEntityID entity.Entity // Tracks the last created entity ID to ensure unique entity creation.
-	eventBus     *event.Bus    // Event bus to handle in-game events and communication between systems.
-	// Component stores for managing different types of components.
-	pos     PositionStore
-	contr   ControllableStore
-	rect    RectanglesStore
-	sprites SpriteStore
-	sklt    SkeletonStore
+	mu           sync.RWMutex
+	lastEntityID entity.Entity
+	eventBus     *event.Bus
+	pos          PositionStore
+	contr        ControllableStore
+	rect         RectanglesStore
+	sprites      SpriteStore
+	sklt         SkeletonStore
 }
 
 // New creates a new ECS system, initializing it with the provided component stores and event bus.
@@ -129,7 +128,7 @@ func (s *ECS) CreateEntity(x, y int64) (entity.Entity, error) {
 
 	// create position component
 	pos := position.New(s.lastEntityID, x, y)
-	if _, err := s.AddPosition(*pos); err != nil {
+	if _, err := s.AddPositionComponent(*pos); err != nil {
 		return 0, err
 	}
 
@@ -139,7 +138,6 @@ func (s *ECS) CreateEntity(x, y int64) (entity.Entity, error) {
 func (s *ECS) DeleteEntity(e entity.Entity) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	for _, t := range componentTypes() {
 		var err error
 		switch t {

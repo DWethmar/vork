@@ -20,20 +20,3 @@ func (s *ECS) Rectangles() []shape.Rectangle {
 	}
 	return r
 }
-func (s *ECS) UpdateRectangle(r shape.Rectangle) error {
-	if err := s.rect.Update(&r); err != nil {
-		return err
-	}
-	return nil
-}
-func (s *ECS) AddRectangle(r shape.Rectangle) (uint32, error) {
-	id, err := s.rect.Add(&r)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
-}
-
-func (s *ECS) DeleteRectangle(id uint32) error {
-	return s.rect.Delete(id)
-}
