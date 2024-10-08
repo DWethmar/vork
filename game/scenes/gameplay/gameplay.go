@@ -53,8 +53,12 @@ func New(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spritesh
 	if ok {
 		// create a new game
 		logger.Info("creating a new game")
-		addPlayer(ecs, 10, 10)
-		addEnemy(ecs, 100, 100)
+		if err := addPlayer(ecs, 10, 10); err != nil {
+			return nil, fmt.Errorf("failed to add player: %w", err)
+		}
+		if err := addEnemy(ecs, 100, 100); err != nil {
+			return nil, fmt.Errorf("failed to add enemy: %w", err)
+		}
 		setInitialized(db, save)
 		if err := persistence.Save(db); err != nil {
 			return nil, fmt.Errorf("failed to save new game: %w", err)

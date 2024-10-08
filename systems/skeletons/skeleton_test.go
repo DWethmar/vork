@@ -25,7 +25,10 @@ func TestNew(t *testing.T) {
 			t.Errorf("Expected 1 subscriptions, got %d", len(subscriptions))
 		}
 
-		e := ecs.CreateEntity()
+		e, err := ecs.CreateEntity(0, 0)
+		if err != nil {
+			t.Errorf("CreateEntity() error = %v", err)
+		}
 		// should setup skeleton
 		eventBus.Publish(skeleton.NewCreatedEvent(skeleton.Skeleton{
 			I: 1,

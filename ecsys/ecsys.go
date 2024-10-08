@@ -82,12 +82,19 @@ type ECS struct {
 }
 
 // CreateEntity generates a new unique entity by incrementing the lastEntityID.
-// This method is thread-safe due to the use of a write lock.
-func (s *ECS) CreateEntity() entity.Entity {
+// It also creates a position component for the entity and adds it to the ECS.
+func (s *ECS) CreateEntity(x, y int64) (entity.Entity, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.lastEntityID++
-	return s.lastEntityID
+
+	// create position component
+	pos := position.New(s.lastEntityID, x, y)
+	if _, err := s.AddPosition(*pos); err != nil {
+		return 0, err
+	}
+
+	return s.lastEntityID, nil
 }
 
 // New creates a new ECS system, initializing it with the provided component stores and event bus.

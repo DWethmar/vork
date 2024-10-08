@@ -263,8 +263,23 @@ func TestSystem_Load(t *testing.T) {
 		ecs := ecsys.New(eventBus)
 
 		// load some data
-		entity := ecs.CreateEntity()
-		ecs.AddPosition(*position.New(entity, 11, 11))
+		entity, err := ecs.CreateEntity(11, 22)
+		if err != nil {
+			t.Errorf("CreateEntity failed: %v", err)
+		}
+
+		position, err := ecs.Position(entity)
+		if err != nil {
+			t.Errorf("Position failed: %v", err)
+		}
+
+		// update position
+		position.X = 33
+		position.Y = 44
+
+		if err := ecs.UpdatePosition(position); err != nil {
+			t.Errorf("UpdatePosition failed: %v", err)
+		}
 
 		// create system
 		s := persistence.New(eventBus, ecs)
@@ -273,11 +288,11 @@ func TestSystem_Load(t *testing.T) {
 		}
 
 		// check ecs for loaded components
-		position, err := ecs.Position(entity)
+		position, err = ecs.Position(entity)
 		if err != nil {
 			t.Errorf("Position failed: %v", err)
 		}
-		if position.X != 11 || position.Y != 11 {
+		if position.X != 33 || position.Y != 44 {
 			t.Errorf("Position failed: expected 11, 11, got %d, %d", position.X, position.Y)
 		}
 	})

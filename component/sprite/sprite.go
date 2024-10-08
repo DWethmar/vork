@@ -5,21 +5,28 @@ import (
 	"github.com/dwethmar/vork/entity"
 )
 
+var _ component.Component = &Sprite{}
+
 type Graphic string
 
 const Type = component.ComponentType("sprite")
 
 // Sprite is a component that holds the sprite of an entity.
 type Sprite struct {
-	*component.BaseComponent
+	I       uint32
+	E       entity.Entity
 	Graphic Graphic
 }
 
+func (p *Sprite) ID() uint32                    { return p.I }
+func (p *Sprite) SetID(i uint32)                { p.I = i }
+func (p *Sprite) Type() component.ComponentType { return Type }
+func (p *Sprite) Entity() entity.Entity         { return p.E }
+
 func New(e entity.Entity, graphic Graphic) *Sprite {
 	return &Sprite{
-		BaseComponent: &component.BaseComponent{
-			E: e,
-		},
+		I:       0,
+		E:       e,
 		Graphic: graphic,
 	}
 }

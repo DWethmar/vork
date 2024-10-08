@@ -55,21 +55,8 @@ type entityDraw struct {
 
 // Draw draws the entities on the screen.
 func (s *System) Draw(screen *ebiten.Image) error {
+	renderGrid(screen, s.offsetX, s.offsetY)
 	entitiesToDraw := []entityDraw{}
-
-	// Draw checkered background
-	for x := 0; x < 800; x += 40 {
-		for y := 0; y < 600; y += 40 {
-			dx := float32(x - s.offsetX)
-			dy := float32(y - s.offsetY)
-			if (x/40+y/40)%2 == 0 {
-				vector.DrawFilledRect(screen, dx, dy, 40, 40, color.RGBA{R: 0x00, G: 0x00, B: 0x00, A: 0xff}, true)
-			} else {
-				vector.DrawFilledRect(screen, dx, dy, 40, 40, color.RGBA{R: 0x22, G: 0x22, B: 0x22, A: 0xff}, true)
-			}
-		}
-	}
-
 	// Collect rectangles to draw
 	for _, r := range s.ecs.Rectangles() {
 		var X, Y int64

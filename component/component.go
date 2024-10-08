@@ -11,15 +11,3 @@ type Component interface {
 	Type() ComponentType
 	Entity() entity.Entity
 }
-
-// BaseComponent is a base struct that all components should embed.
-type BaseComponent struct {
-	I uint32        // ID
-	E entity.Entity // Entity
-	T ComponentType // Type
-}
-
-func (c *BaseComponent) ID() uint32            { return c.I }
-func (c *BaseComponent) SetID(i uint32)        { c.I = i }
-func (c *BaseComponent) Type() ComponentType   { return c.T }
-func (c *BaseComponent) Entity() entity.Entity { return c.E }
