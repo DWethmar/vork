@@ -123,7 +123,7 @@ func New(eventBus *event.Bus) *ECS {
 
 // CreateEntity generates a new unique entity by incrementing the lastEntityID.
 // It also creates a position component for the entity and adds it to the ECS.
-func (s *ECS) CreateEntity(x, y int64) (entity.Entity, error) {
+func (s *ECS) CreateEntity(x, y int) (entity.Entity, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.lastEntityID++

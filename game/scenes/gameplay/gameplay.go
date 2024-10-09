@@ -39,7 +39,9 @@ func New(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spritesh
 
 	systems := []systems.System{
 		controller.New(logger, ecs),
-		render.New(logger, sprites.Sprites(s), ecs),
+		render.New(logger, sprites.Sprites(s), ecs, func(x, y int) {
+			logger.Info("click", "x", x, "y", y)
+		}),
 		skeletons.New(logger, ecs, eventBus),
 	}
 

@@ -15,10 +15,10 @@ var _ component.Component = &Position{}
 type Position struct {
 	I    uint          // ID
 	E    entity.Entity // Entity
-	X, Y int64
+	X, Y int
 }
 
-func New(e entity.Entity, x, y int64) *Position {
+func New(e entity.Entity, x, y int) *Position {
 	return &Position{
 		I: 0,
 		E: e,

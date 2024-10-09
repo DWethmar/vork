@@ -12,6 +12,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+type ClickHandler func(x, y int)
+
 // Sprite is a sprite.
 type Sprite struct {
 	Graphic          sprite.Graphic
@@ -21,11 +23,13 @@ type Sprite struct {
 
 // System is the rendering system.
 type System struct {
-	logger  *slog.Logger
-	sprites map[sprite.Graphic]*Sprite
-	ecs     *ecsys.ECS
-	offsetX int
-	offsetY int
+	logger       *slog.Logger
+	sprites      map[sprite.Graphic]*Sprite
+	ecs          *ecsys.ECS
+	offsetX      int
+	offsetY      int
+	zoom         float64
+	clickHandler ClickHandler
 }
 
 // New creates a new rendering system.
@@ -33,33 +37,39 @@ func New(
 	logger *slog.Logger,
 	sprites []Sprite,
 	ecs *ecsys.ECS,
+	clickHandler ClickHandler,
 ) *System {
 	spriteMap := make(map[sprite.Graphic]*Sprite)
 	for _, s := range sprites {
 		spriteMap[s.Graphic] = &s
 	}
 	return &System{
-		logger:  logger,
-		sprites: spriteMap,
-		ecs:     ecs,
-		offsetX: 0,
-		offsetY: 0,
+		logger:       logger,
+		sprites:      spriteMap,
+		ecs:          ecs,
+		offsetX:      0,
+		offsetY:      0,
+		zoom:         1.0,
+		clickHandler: clickHandler,
 	}
 }
 
 // entityDraw holds the information necessary to draw an entity.
 type entityDraw struct {
-	X, Y     int64
+	Index    int
 	DrawFunc func(screen *ebiten.Image)
 }
 
 // Draw draws the entities on the screen.
 func (s *System) Draw(screen *ebiten.Image) error {
-	renderGrid(screen, s.offsetX, s.offsetY)
+	if err := renderGrid(screen, s.offsetX, s.offsetY, s.zoom, true); err != nil {
+		return err
+	}
+
 	entitiesToDraw := []entityDraw{}
 	// Collect rectangles to draw
 	for _, r := range s.ecs.Rectangles() {
-		var X, Y int64
+		var X, Y int
 		if c, err := s.ecs.Position(r.Entity()); err == nil {
 			X, Y = c.X, c.Y
 		} else {
@@ -68,17 +78,21 @@ func (s *System) Draw(screen *ebiten.Image) error {
 
 		// Add the drawing function for this rectangle
 		entitiesToDraw = append(entitiesToDraw, entityDraw{
-			X: X, Y: Y,
+			Index: Y,
 			DrawFunc: func(screen *ebiten.Image) {
-				// Subtract the offset to correctly position the entity relative to the camera
-				vector.DrawFilledRect(screen, float32(X)-float32(s.offsetX), float32(Y)-float32(s.offsetY), float32(r.Width), float32(r.Height), color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff}, true)
+				// Apply zoom factor to position and size
+				x := (float32(X) - float32(s.offsetX)) * float32(s.zoom)
+				y := (float32(Y) - float32(s.offsetY)) * float32(s.zoom)
+				width := float32(r.Width) * float32(s.zoom)
+				height := float32(r.Height) * float32(s.zoom)
+				vector.DrawFilledRect(screen, x, y, width, height, color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff}, true)
 			},
 		})
 	}
 
 	// Collect sprites to draw
 	for _, spc := range s.ecs.Sprites() {
-		var X, Y int64
+		var X, Y int
 		if c, err := s.ecs.Position(spc.Entity()); err == nil {
 			X, Y = c.X, c.Y
 		} else {
@@ -88,17 +102,23 @@ func (s *System) Draw(screen *ebiten.Image) error {
 		if !ok {
 			return fmt.Errorf("sprite not found: %s", spc.Graphic)
 		}
-		// Apply offset to the sprite
-		X += int64(spr.OffsetX)
-		Y += int64(spr.OffsetY)
+
+		// Apply sprite offsets
+		X += spr.OffsetX
+		Y += spr.OffsetY
 
 		// Add the drawing function for this sprite
 		entitiesToDraw = append(entitiesToDraw, entityDraw{
-			X: X, Y: Y,
+			Index: Y,
 			DrawFunc: func(screen *ebiten.Image) {
+				// Apply zoom factor to position and scale
 				op := &ebiten.DrawImageOptions{}
-				// Subtract the offset to correctly position the sprite relative to the camera
-				op.GeoM.Translate(float64(X)-float64(s.offsetX), float64(Y)-float64(s.offsetY))
+				// Scale the sprite
+				op.GeoM.Scale(s.zoom, s.zoom)
+				// Translate the sprite
+				x := (float64(X) - float64(s.offsetX)) * s.zoom
+				y := (float64(Y) - float64(s.offsetY)) * s.zoom
+				op.GeoM.Translate(x, y)
 				screen.DrawImage(spr.Img, op)
 			},
 		})
@@ -106,7 +126,7 @@ func (s *System) Draw(screen *ebiten.Image) error {
 
 	// Sort entities by their Y value to render them correctly
 	sort.Slice(entitiesToDraw, func(i, j int) bool {
-		return entitiesToDraw[i].Y < entitiesToDraw[j].Y
+		return entitiesToDraw[i].Index < entitiesToDraw[j].Index
 	})
 
 	// Draw sorted entities
@@ -118,8 +138,28 @@ func (s *System) Draw(screen *ebiten.Image) error {
 }
 
 func (s *System) Update() error {
-	controllables := s.ecs.Controllables()
-	if len(controllables) > 0 {
+	// Handle zoom in/out with mouse wheel
+	_, wheelY := ebiten.Wheel()
+	if wheelY != 0 {
+		zoomFactor := 1.1 // Adjust as needed
+		if wheelY > 0 {
+			s.zoom *= zoomFactor
+		} else if wheelY < 0 {
+			s.zoom /= zoomFactor
+		}
+
+		// Clamp zoom level to prevent extreme zooming
+		minZoom := 0.5
+		maxZoom := 5.0
+		if s.zoom < minZoom {
+			s.zoom = minZoom
+		} else if s.zoom > maxZoom {
+			s.zoom = maxZoom
+		}
+	}
+
+	// get the first controllable entity and center the camera on it
+	if controllables := s.ecs.Controllables(); len(controllables) > 0 {
 		// Get the first controllable entity
 		firstControllable := controllables[0]
 
@@ -132,9 +172,20 @@ func (s *System) Update() error {
 		// Get the actual screen dimensions from Ebiten
 		screenWidth, screenHeight := ebiten.WindowSize()
 
-		// Calculate the offsets to center the controllable on the screen
-		s.offsetX = int(float64(pos.X) - float64(screenWidth)/2)
-		s.offsetY = int(float64(pos.Y) - float64(screenHeight)/2)
+		// Calculate the offsets to center the controllable on the screen, accounting for zoom
+		s.offsetX = int(float64(pos.X) - (float64(screenWidth) / (2 * s.zoom)))
+		s.offsetY = int(float64(pos.Y) - (float64(screenHeight) / (2 * s.zoom)))
+	}
+
+	// Handle mouse click
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		x, y := ebiten.CursorPosition()
+
+		// Apply zoom factor to mouse position
+		x = int(float64(x)/s.zoom) + s.offsetX
+		y = int(float64(y)/s.zoom) + s.offsetY
+
+		s.clickHandler(x, y)
 	}
 
 	return nil

@@ -28,8 +28,8 @@ func (s *System) Update() error {
 		if err != nil {
 			return err
 		}
-		p.X += int64(x)
-		p.Y += int64(y)
+		p.X += x
+		p.Y += y
 		if err := s.ecs.UpdatePositionComponent(p); err != nil {
 			return err
 		}

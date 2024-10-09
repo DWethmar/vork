@@ -8,7 +8,7 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 )
 
-func addPlayer(ecs *ecsys.ECS, x, y int64) error {
+func addPlayer(ecs *ecsys.ECS, x, y int) error {
 	e, err := ecs.CreateEntity(x, y)
 	if err != nil {
 		return fmt.Errorf("could not create entity: %v", err)
@@ -22,7 +22,7 @@ func addPlayer(ecs *ecsys.ECS, x, y int64) error {
 	return nil
 }
 
-func addEnemy(ecs *ecsys.ECS, x, y int64) error {
+func addEnemy(ecs *ecsys.ECS, x, y int) error {
 	e, err := ecs.CreateEntity(x, y)
 	if err != nil {
 		fmt.Printf("could not create entity: %v\n", err)

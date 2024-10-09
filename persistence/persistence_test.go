@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 
 // saveTest saves and loads components to a database.
 // it created entities with the given offset and limit.
-func saveTest(t *testing.T, path string, offset, limit int64) {
+func saveTest(t *testing.T, path string, offset, limit int) {
 	// SAVE
 	save := func() {
 		db, err := testDB(t, path)
@@ -69,8 +69,8 @@ func saveTest(t *testing.T, path string, offset, limit int64) {
 				e := entity.Entity(offset + i)
 				switch pt {
 				case position.Type:
-					x := int64(i) * 10
-					y := int64(i) * 10
+					x := i * 10
+					y := i * 10
 					if i == 50 { // sanity check
 						x = -100
 						y = -100
@@ -131,8 +131,8 @@ func saveTest(t *testing.T, path string, offset, limit int64) {
 					if err != nil {
 						t.Errorf("Position failed: %v", err)
 					}
-					x := int64(i) * 10
-					y := int64(i) * 10
+					x := i * 10
+					y := i * 10
 					if i == 50 { // sanity check
 						x = -100
 						y = -100
@@ -187,8 +187,8 @@ func TestSystem_Save(t *testing.T) {
 			// create system
 			s := persistence.New(eventBus, ecs)
 			for i := range 100 {
-				x := int64(i) * 10
-				y := int64(i) * 10
+				x := i * 10
+				y := i * 10
 				position := position.New(entity.Entity(i), x, y)
 				if _, err = ecs.AddPositionComponent(*position); err != nil {
 					t.Errorf("AddPosition failed: %v", err)
