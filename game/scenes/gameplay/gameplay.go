@@ -6,6 +6,7 @@ import (
 
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
+	"github.com/dwethmar/vork/event/input"
 	"github.com/dwethmar/vork/game"
 	"github.com/dwethmar/vork/persistence"
 	"github.com/dwethmar/vork/sprites"
@@ -33,15 +34,22 @@ type GamePlay struct {
 	persistence *persistence.Persistance
 }
 
+// onClickHandler creates a click handler that publishes a clicked event.
+func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
+	return func(x, y int) {
+		if err := eventBus.Publish(input.NewLeftMouseClickedEvent(x, y)); err != nil {
+			logger.Error("failed to publish clicked event", slog.String("error", err.Error()))
+		}
+	}
+}
+
 func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
 	ecs := ecsys.New(eventBus)
 
 	systems := []systems.System{
 		controller.New(logger, ecs),
-		render.New(logger, sprites.Sprites(s), ecs, func(x, y int) {
-			logger.Info("click", "x", x, "y", y)
-		}),
+		render.New(logger, sprites.Sprites(s), ecs, onClickHandler(logger, eventBus)),
 		skeletons.New(logger, ecs, eventBus),
 	}
 

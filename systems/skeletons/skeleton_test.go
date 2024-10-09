@@ -21,8 +21,8 @@ func TestNew(t *testing.T) {
 		}
 
 		subscriptions := eventBus.Subscriptions()
-		if len(subscriptions) != 1 {
-			t.Errorf("Expected 1 subscriptions, got %d", len(subscriptions))
+		if len(subscriptions) != 2 {
+			t.Errorf("Expected 2 subscriptions, got %d", len(subscriptions))
 		}
 
 		e, err := ecs.CreateEntity(0, 0)

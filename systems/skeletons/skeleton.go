@@ -1,7 +1,6 @@
 package skeletons
 
 import (
-	"errors"
 	"fmt"
 	"image/color"
 	"log/slog"
@@ -12,6 +11,7 @@ import (
 	"github.com/dwethmar/vork/direction"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
+	"github.com/dwethmar/vork/event/input"
 	"github.com/dwethmar/vork/systems"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -40,11 +40,15 @@ func New(logger *slog.Logger, ecs *ecsys.ECS, eventBus *event.Bus) *System {
 	}
 
 	// Subscribe to the skeleton events
-	sub := s.eventBus.Subscribe(
+	s.subscriptions = append(s.subscriptions, s.eventBus.Subscribe(
 		event.MatchAny(skeleton.UpdatedEventType, skeleton.CreatedEventType, skeleton.DeletedEventType),
 		s.skeletonCreatedHandler,
-	)
-	s.subscriptions = append(s.subscriptions, sub)
+	))
+
+	s.subscriptions = append(s.subscriptions, s.eventBus.Subscribe(
+		event.MatchAny(input.LeftMouseClickedEventType),
+		s.skeletonCreatedHandler,
+	))
 
 	return s
 }
@@ -61,14 +65,16 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 	case *skeleton.CreatedEvent:
 		s.logger.Debug("skeleton created", "skeleton", e.Skeleton)
 		if err := s.setupSkeleton(*e.Skeleton()); err != nil {
-			s.logger.Error("could not add skeleton sprite", "error", err)
+			return fmt.Errorf("could not setup skeleton: %w", err)
 		}
 	case *skeleton.UpdatedEvent:
 		s.logger.Debug("skeleton updated", "skeleton", e.Skeleton)
 	case *skeleton.DeletedEvent:
 		s.logger.Debug("skeleton deleted", "skeleton", e.Skeleton)
+	case *input.LeftMouseClickedEvent:
+		s.logger.Info("clicked", "x", e.X, "y", e.Y)
 	default:
-		return errors.New("unknown event type")
+		return fmt.Errorf("unhandled event type %T", e)
 	}
 	return nil
 }
@@ -76,11 +82,12 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 // setupSkeleton adds the necessary components to the entity to make it a skeleton.
 func (s *System) setupSkeleton(sk skeleton.Skeleton) error {
 	e := sk.Entity()
-	if _, err := s.ecs.AddRectangleComponent(*shape.NewRectangle(e, 10, 10, color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff})); err != nil {
-		return err
+	rect := shape.NewRectangle(e, 10, 10, color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff})
+	if _, err := s.ecs.AddRectangleComponent(*rect); err != nil {
+		return fmt.Errorf("could not add rectangle component to entity %v: %w", e, err)
 	}
 	if _, err := s.ecs.AddSpriteComponent(*sprite.New(e, "skeleton", sprite.SkeletonMoveDown1)); err != nil {
-		return err
+		return fmt.Errorf("could not add sprite component to entity %v: %w", e, err)
 	}
 	return nil
 }

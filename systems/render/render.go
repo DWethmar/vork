@@ -9,6 +9,7 @@ import (
 	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -183,7 +184,7 @@ func (s *System) Update() error {
 	}
 
 	// Handle mouse click
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
 
 		// Apply zoom factor to mouse position

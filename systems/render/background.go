@@ -45,8 +45,23 @@ func renderGrid(s *ebiten.Image, offsetX, offsetY int, zoom float64, debug bool)
 	startX := int(offsetXf / float64(gridSize))
 	startY := int(offsetYf / float64(gridSize))
 
+	// Adjust font size based on zoom
+	fontSize := normalFontSize * zoom
+	// Set minimum and maximum font sizes
+	if fontSize < 8 {
+		fontSize = 8 // Minimum font size
+	} else if fontSize > 72 {
+		fontSize = 72 // Maximum font size
+	}
+
+	ff := &text.GoTextFace{
+		Source: mplusFaceSource,
+		Size:   fontSize,
+	}
+
 	for x := startX - 1; x < startX+numGridX; x++ {
 		for y := startY - 1; y < startY+numGridY; y++ {
+
 			dx := (float64(x*gridSize) - offsetXf) * zoom
 			dy := (float64(y*gridSize) - offsetYf) * zoom
 			size := float64(gridSize) * zoom
@@ -69,27 +84,15 @@ func renderGrid(s *ebiten.Image, offsetX, offsetY int, zoom float64, debug bool)
 			vector.DrawFilledRect(s, float32(dx), float32(dy), float32(size), float32(size), clrA, true)
 
 			// Draw the tile coordinates
-			if zoom < .8 || !debug {
+			if zoom < 1 || !debug {
 				continue
-			}
-
-			// Adjust font size based on zoom
-			fontSize := normalFontSize * zoom
-			// Set minimum and maximum font sizes
-			if fontSize < 8 {
-				fontSize = 8 // Minimum font size
-			} else if fontSize > 72 {
-				fontSize = 72 // Maximum font size
 			}
 
 			// Draw the text onto the image
 			op := &text.DrawOptions{}
 			op.GeoM.Translate(dx, dy)
 			op.ColorScale.ScaleWithColor(clrB)
-			text.Draw(s, fmt.Sprintf("%d,%d", x, y), &text.GoTextFace{
-				Source: mplusFaceSource,
-				Size:   fontSize,
-			}, op)
+			text.Draw(s, fmt.Sprintf("%d,%d", x, y), ff, op)
 		}
 	}
 
