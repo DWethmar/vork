@@ -7,4 +7,5 @@ import (
 type System interface {
 	Draw(screen *ebiten.Image) error
 	Update() error
+	Close() error
 }

@@ -95,8 +95,7 @@ func TestBus_Unsubscribe(t *testing.T) {
 	}
 
 	handlerCalled = false
-	bus.Unsubscribe("testEvent", id)
-
+	bus.Unsubscribe(id)
 	bus.Publish(&MockEvent{event: "testEvent"})
 
 	if handlerCalled {

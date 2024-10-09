@@ -21,6 +21,11 @@ func New(logger *slog.Logger, ecs *ecsys.ECS) *System {
 	}
 }
 
+// Close closes the system.
+func (s *System) Close() error {
+	return nil
+}
+
 func (s *System) Update() error {
 	x, y := direction()
 	for _, c := range s.ecs.Controllables() {

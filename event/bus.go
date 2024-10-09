@@ -50,7 +50,7 @@ func (b *Bus) Subscribe(m Matcher, handler EventHandler) int {
 }
 
 // Unsubscribe removes a handler function from the Bus for a specific event type using its identifier.
-func (b *Bus) Unsubscribe(event string, id int) {
+func (b *Bus) Unsubscribe(id int) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

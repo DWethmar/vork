@@ -69,3 +69,20 @@ func TestSystem_Update(t *testing.T) {
 		}
 	})
 }
+
+func TestSystem_Close(t *testing.T) {
+	t.Run("Close should not return an error and unsubscribe all event handlers", func(t *testing.T) {
+		eventBus := event.NewBus()
+		ecs := ecsys.New(eventBus)
+
+		s := skeletons.New(slog.Default(), ecs, eventBus)
+		if err := s.Close(); err != nil {
+			t.Errorf("Close() error = %v, wantErr %v", err, false)
+		}
+
+		subscriptions := eventBus.Subscriptions()
+		if len(subscriptions) != 0 {
+			t.Errorf("Expected 0 subscriptions, got %d", len(subscriptions))
+		}
+	})
+}

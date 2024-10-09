@@ -12,34 +12,48 @@ import (
 	"github.com/dwethmar/vork/direction"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
+	"github.com/dwethmar/vork/systems"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+var _ systems.System = &System{}
+
 const (
-	walkAnimationSteps = 8
+	walkAnimationPerFrames = 4
+	walkAnimationSteps     = 8 * walkAnimationPerFrames // frames every 8 steps (3 frames per step)
 )
 
 type System struct {
-	logger   *slog.Logger
-	ecs      *ecsys.ECS
-	eventBus *event.Bus
+	logger        *slog.Logger
+	ecs           *ecsys.ECS
+	eventBus      *event.Bus
+	subscriptions []int
 }
 
 // New creates a new skeleton system. It listens to skeleton events and adds the necessary components to the entity to make it a skeleton.
 func New(logger *slog.Logger, ecs *ecsys.ECS, eventBus *event.Bus) *System {
 	s := &System{
-		logger:   logger.With("system", "skeletons"),
-		ecs:      ecs,
-		eventBus: eventBus,
+		logger:        logger.With("system", "skeletons"),
+		ecs:           ecs,
+		eventBus:      eventBus,
+		subscriptions: []int{},
 	}
 
 	// Subscribe to the skeleton events
-	s.eventBus.Subscribe(
+	sub := s.eventBus.Subscribe(
 		event.MatchAny(skeleton.UpdatedEventType, skeleton.CreatedEventType, skeleton.DeletedEventType),
 		s.skeletonCreatedHandler,
 	)
+	s.subscriptions = append(s.subscriptions, sub)
 
 	return s
+}
+
+func (s *System) Close() error {
+	for _, sub := range s.subscriptions {
+		s.eventBus.Unsubscribe(sub)
+	}
+	return nil
 }
 
 func (s *System) skeletonCreatedHandler(e event.Event) error {
@@ -145,19 +159,18 @@ func (s *System) updateSprite(e *skeleton.Skeleton) error {
 	}
 
 	// Determine the appropriate graphic based on state and facing direction
+	step := int(e.AnimationStep / walkAnimationPerFrames) // 3 frames per step
 	var graphic sprite.Graphic
 	if e.State == skeleton.Moving {
-		// The animation step was incremented in Update; no need to increment it again here
-
 		switch e.Facing {
 		case direction.North, direction.NorthEast, direction.NorthWest:
-			graphic = sprite.SkeletonMoveUpFrames()[e.AnimationStep]
+			graphic = sprite.SkeletonMoveUpFrames()[step]
 		case direction.South, direction.SouthEast, direction.SouthWest:
-			graphic = sprite.SkeletonMoveDownFrames()[e.AnimationStep]
+			graphic = sprite.SkeletonMoveDownFrames()[step]
 		case direction.East:
-			graphic = sprite.SkeletonMoveRightFrames()[e.AnimationStep]
+			graphic = sprite.SkeletonMoveRightFrames()[step]
 		case direction.West:
-			graphic = sprite.SkeletonMoveLeftFrames()[e.AnimationStep]
+			graphic = sprite.SkeletonMoveLeftFrames()[step]
 		default:
 			s.logger.Warn("Unhandled facing direction", "direction", e.Facing)
 			graphic = spr.Graphic // Keep current graphic if direction is unhandled

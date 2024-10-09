@@ -54,6 +54,11 @@ func New(
 	}
 }
 
+// Close closes the system.
+func (s *System) Close() error {
+	return nil
+}
+
 // entityDraw holds the information necessary to draw an entity.
 type entityDraw struct {
 	Index    int
