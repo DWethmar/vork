@@ -120,9 +120,9 @@ func (s *Persistance) componentChangeHandler(e event.Event) error {
 // Save saves all changed or deleted components to the database.
 func (s *Persistance) Save(db *bolt.DB) error {
 	return db.Update(func(tx *bolt.Tx) error {
-		for _, l := range s.lifecycles {
+		for n, l := range s.lifecycles {
 			if err := l.Commit(tx); err != nil {
-				return fmt.Errorf("failed to commit lifecycle: %w", err)
+				return fmt.Errorf("failed to commit changes for component type %s: %w", n, err)
 			}
 		}
 		return nil
