@@ -51,6 +51,12 @@ func New(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spritesh
 		return nil, fmt.Errorf("failed to check if game is initialized: %w", err)
 	}
 	if ok {
+		// load the game
+		logger.Info("loading game")
+		if err := persistence.Load(db); err != nil {
+			return nil, fmt.Errorf("failed to load game: %w", err)
+		}
+	} else {
 		// create a new game
 		logger.Info("creating a new game")
 		if err := addPlayer(ecs, 10, 10); err != nil {
@@ -62,12 +68,6 @@ func New(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spritesh
 		setInitialized(db, save)
 		if err := persistence.Save(db); err != nil {
 			return nil, fmt.Errorf("failed to save new game: %w", err)
-		}
-	} else {
-		// load the game
-		logger.Info("loading game")
-		if err := persistence.Load(db); err != nil {
-			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
 	}
 

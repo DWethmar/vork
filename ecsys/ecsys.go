@@ -80,8 +80,10 @@ type SkeletonStore interface {
 // It also provides access to various component stores (position, controllable, rectangle, sprite, skeleton)
 // and integrates an event bus for handling in-game events.
 type ECS struct {
-	mu                sync.RWMutex
-	lastEntityID      entity.Entity // lastEntityID is the last entity ID that was created.
+	mu sync.RWMutex
+	// lastEntityID is the last entity ID that was created. It is used to generate new entity IDs.
+	// When adding a component with an entity ID higher than lastEntityID, lastEntityID is updated.
+	lastEntityID      entity.Entity
 	eventBus          *event.Bus
 	positionStore     PositionStore
 	controllableStore ControllableStore
