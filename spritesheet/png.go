@@ -8,7 +8,7 @@ import (
 	"io/fs"
 )
 
-func loadPng(fs fs.ReadFileFS, name string) (image.Image, error) {
+func LoadPng(fs fs.ReadFileFS, name string) (image.Image, error) {
 	content, err := fs.ReadFile(name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load png: %w", err)

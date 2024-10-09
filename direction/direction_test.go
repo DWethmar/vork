@@ -1,6 +1,10 @@
-package direction
+package direction_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/dwethmar/vork/direction"
+)
 
 func TestGetDirection(t *testing.T) {
 	type args struct {
@@ -9,7 +13,7 @@ func TestGetDirection(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want Direction
+		want direction.Direction
 	}{
 		{
 			name: "Top",
@@ -19,7 +23,7 @@ func TestGetDirection(t *testing.T) {
 				dX: 0,
 				dY: -1,
 			},
-			want: North,
+			want: direction.North,
 		},
 		{
 			name: "TopRight",
@@ -29,7 +33,7 @@ func TestGetDirection(t *testing.T) {
 				dX: 1,
 				dY: -1,
 			},
-			want: NorthEast,
+			want: direction.NorthEast,
 		},
 		{
 			name: "Right",
@@ -39,7 +43,7 @@ func TestGetDirection(t *testing.T) {
 				dX: 1,
 				dY: 0,
 			},
-			want: East,
+			want: direction.East,
 		},
 		{
 			name: "BottomRight",
@@ -49,7 +53,7 @@ func TestGetDirection(t *testing.T) {
 				dX: 1,
 				dY: 1,
 			},
-			want: SouthEast,
+			want: direction.SouthEast,
 		},
 		{
 			name: "Bottom",
@@ -59,7 +63,7 @@ func TestGetDirection(t *testing.T) {
 				dX: 0,
 				dY: 1,
 			},
-			want: South,
+			want: direction.South,
 		},
 		{
 			name: "BottomLeft",
@@ -69,7 +73,7 @@ func TestGetDirection(t *testing.T) {
 				dX: -1,
 				dY: 1,
 			},
-			want: SouthWest,
+			want: direction.SouthWest,
 		},
 		{
 			name: "Left",
@@ -79,7 +83,7 @@ func TestGetDirection(t *testing.T) {
 				dX: -1,
 				dY: 0,
 			},
-			want: West,
+			want: direction.West,
 		},
 		{
 			name: "TopLeft",
@@ -89,7 +93,7 @@ func TestGetDirection(t *testing.T) {
 				dX: -1,
 				dY: -1,
 			},
-			want: NorthWest,
+			want: direction.NorthWest,
 		},
 		{
 			name: "NoDirection",
@@ -99,12 +103,12 @@ func TestGetDirection(t *testing.T) {
 				dX: 0,
 				dY: 0,
 			},
-			want: None,
+			want: direction.None,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Get(tt.args.sX, tt.args.sY, tt.args.dX, tt.args.dY); got != tt.want {
+			if got := direction.Get(tt.args.sX, tt.args.sY, tt.args.dX, tt.args.dY); got != tt.want {
 				t.Errorf("GetDirection() = %v, want %v", got, tt.want)
 			}
 		})

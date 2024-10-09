@@ -4,15 +4,14 @@ import (
 	"fmt"
 
 	"github.com/dwethmar/vork/component"
-	"github.com/dwethmar/vork/ecsys"
 	bolt "go.etcd.io/bbolt"
 )
 
 type ComponentLifeCycle interface {
-	Changed(component.Event) error          // Changed is called when a component has changed.
-	Deleted(component.Event) error          // Deleted is called when a component has been deleted.
-	Commit(tx *bolt.Tx) error               // Commit saves all changes to the database.
-	Load(tx *bolt.Tx, ecs *ecsys.ECS) error // Load function added here
+	Changed(component.Event) error // Changed is called when a component has changed.
+	Deleted(component.Event) error // Deleted is called when a component has been deleted.
+	Commit(tx *bolt.Tx) error      // Commit saves all changes to the database.
+	Load(tx *bolt.Tx) error        // Load function added here
 }
 
 type GenericComponentLifeCycle[T component.Component] struct {
@@ -77,14 +76,14 @@ func (l *GenericComponentLifeCycle[T]) Commit(tx *bolt.Tx) error {
 	return nil
 }
 
-func (l *GenericComponentLifeCycle[T]) Load(tx *bolt.Tx, ecs *ecsys.ECS) error {
+func (l *GenericComponentLifeCycle[T]) Load(tx *bolt.Tx) error {
 	components, err := l.repo.List(tx)
 	if err != nil {
 		return err
 	}
 
 	for _, c := range components {
-		if _, err := l.addFunc(c); err != nil {
+		if _, err = l.addFunc(c); err != nil {
 			return err
 		}
 	}

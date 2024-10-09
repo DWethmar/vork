@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"image/color"
 	"log"
@@ -9,8 +10,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-
-	_ "embed"
 )
 
 const (
@@ -28,9 +27,6 @@ func init() {
 	}
 	mplusFaceSource = s
 }
-
-// Cache for rendered text images
-var textImageCache = make(map[string]*ebiten.Image)
 
 // renderGrid draws a checkered grid background onto the provided image.
 // It accounts for the camera's offset and the current zoom level to ensure
@@ -92,7 +88,7 @@ func renderGrid(s *ebiten.Image, offsetX, offsetY int, zoom float64, debug bool)
 			op.ColorScale.ScaleWithColor(clrB)
 			text.Draw(s, fmt.Sprintf("%d,%d", x, y), &text.GoTextFace{
 				Source: mplusFaceSource,
-				Size:   normalFontSize * zoom,
+				Size:   fontSize,
 			}, op)
 		}
 	}

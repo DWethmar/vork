@@ -8,8 +8,8 @@ import (
 )
 
 // PersistentComponentTypes returns a list of component types that should be saved.
-func PersistentComponentTypes() []component.ComponentType {
-	return []component.ComponentType{
+func PersistentComponentTypes() []component.Type {
+	return []component.Type{
 		controllable.Type,
 		position.Type,
 		skeleton.Type,

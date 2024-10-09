@@ -19,8 +19,8 @@ import (
 // componentTypes is a list of all component types used in the ECS.
 // This list is used to initialize the component stores in the ECS.
 // It is also used to ensure that all component types are accounted for when managing entities.
-func componentTypes() []component.ComponentType {
-	return []component.ComponentType{
+func componentTypes() []component.Type {
+	return []component.Type{
 		position.Type,
 		controllable.Type,
 		shape.RectangleType,

@@ -7,7 +7,7 @@ import (
 	"github.com/dwethmar/vork/entity"
 )
 
-const CircleType = component.ComponentType("shape-circle")
+const CircleType = component.Type("shape-circle")
 
 var _ component.Component = &Rectangle{}
 
@@ -19,10 +19,10 @@ type Circle struct {
 	Color  color.RGBA
 }
 
-func (p *Circle) ID() uint                      { return p.I }
-func (p *Circle) SetID(i uint)                  { p.I = i }
-func (p *Circle) Type() component.ComponentType { return CircleType }
-func (p *Circle) Entity() entity.Entity         { return p.E }
+func (p *Circle) ID() uint              { return p.I }
+func (p *Circle) SetID(i uint)          { p.I = i }
+func (p *Circle) Type() component.Type  { return CircleType }
+func (p *Circle) Entity() entity.Entity { return p.E }
 
 func NewCircle(e entity.Entity, radius int64, color color.RGBA) *Circle {
 	return &Circle{

@@ -1,12 +1,14 @@
-package event
+package event_test
 
 import (
 	"testing"
+
+	"github.com/dwethmar/vork/event"
 )
 
 func TestMatcherFunc_Match(t *testing.T) {
 	t.Run("Match should return true if the event matches the matcher", func(t *testing.T) {
-		matcher := MatcherFunc(func(e Event) bool {
+		matcher := event.MatcherFunc(func(e event.Event) bool {
 			return e.Event() == "test"
 		})
 		if !matcher.Match(&MockEvent{event: "test"}) {
@@ -17,7 +19,7 @@ func TestMatcherFunc_Match(t *testing.T) {
 
 func TestMatchAny(t *testing.T) {
 	t.Run("MatchAny should return a MatcherFunc that matches any event in the given list", func(t *testing.T) {
-		matcher := MatchAny("test1", "test2")
+		matcher := event.MatchAny("test1", "test2")
 		if !matcher.Match(&MockEvent{event: "test1"}) {
 			t.Errorf("expected event to match")
 		}

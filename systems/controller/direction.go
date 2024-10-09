@@ -22,35 +22,36 @@ var down = []ebiten.Key{
 	ebiten.KeyDown,
 }
 
-// direction returns the direction of the input.
-func direction() (x int, y int) {
+// direction returns the x and y direction of the keys pressed.
+func direction() (int, int) {
+	var x, y int
 	for _, k := range left {
 		if ebiten.IsKeyPressed(k) {
-			x -= 1
+			x--
 			break
 		}
 	}
 
 	for _, k := range right {
 		if ebiten.IsKeyPressed(k) {
-			x += 1
+			x++
 			break
 		}
 	}
 
 	for _, k := range up {
 		if ebiten.IsKeyPressed(k) {
-			y -= 1
+			y--
 			break
 		}
 	}
 
 	for _, k := range down {
 		if ebiten.IsKeyPressed(k) {
-			y += 1
+			y++
 			break
 		}
 	}
 
-	return
+	return x, y
 }

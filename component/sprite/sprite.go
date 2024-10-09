@@ -9,7 +9,7 @@ var _ component.Component = &Sprite{}
 
 type Graphic string
 
-const Type = component.ComponentType("sprite")
+const Type = component.Type("sprite")
 
 // Sprite is a component that holds the sprite of an entity.
 type Sprite struct {
@@ -19,10 +19,10 @@ type Sprite struct {
 	Graphic Graphic // Graphic of the sprite
 }
 
-func (p *Sprite) ID() uint                      { return p.I }
-func (p *Sprite) SetID(i uint)                  { p.I = i }
-func (p *Sprite) Type() component.ComponentType { return Type }
-func (p *Sprite) Entity() entity.Entity         { return p.E }
+func (p *Sprite) ID() uint              { return p.I }
+func (p *Sprite) SetID(i uint)          { p.I = i }
+func (p *Sprite) Type() component.Type  { return Type }
+func (p *Sprite) Entity() entity.Entity { return p.E }
 
 func New(e entity.Entity, tag string, graphic Graphic) *Sprite {
 	return &Sprite{

@@ -1,7 +1,9 @@
-package event
+package event_test
 
 import (
 	"testing"
+
+	"github.com/dwethmar/vork/event"
 )
 
 // MockEvent is a simple implementation of the Event interface for testing.
@@ -14,33 +16,35 @@ func (e *MockEvent) Event() string {
 }
 
 func TestNewBus(t *testing.T) {
-	bus := NewBus()
+	bus := event.NewBus()
 	if bus == nil {
 		t.Fatalf("NewBus() returned nil")
 	}
 
-	if len(bus.handlers) != 0 {
-		t.Errorf("NewBus() handlers map should be empty initially, got %d", len(bus.handlers))
+	if len(bus.Subscriptions()) != 0 {
+		t.Errorf("NewBus() handlers map should be empty initially, got %d", len(bus.Subscriptions()))
 	}
 }
 
 func TestBus_Subscribe(t *testing.T) {
-	bus := NewBus()
+	bus := event.NewBus()
 	handlerCalled := false
 
-	bus.Subscribe(MatcherFunc(func(e Event) bool {
+	bus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
 		return e.Event() == "testEvent"
-	}), func(e Event) error {
+	}), func(_ event.Event) error {
 		handlerCalled = true
 		return nil
 	})
 
-	if len(bus.handlers) != 1 {
-		t.Errorf("Bus.Subscribe() should add a handler, got %d", len(bus.handlers))
+	if len(bus.Subscriptions()) != 1 {
+		t.Errorf("Bus.Subscribe() should add a handler, got %d", len(bus.Subscriptions()))
 	}
 
 	// Trigger the event to check if the handler is called.
-	bus.Publish(&MockEvent{event: "testEvent"})
+	if err := bus.Publish(&MockEvent{event: "testEvent"}); err != nil {
+		t.Errorf("Bus.Publish() error = %v", err)
+	}
 
 	if !handlerCalled {
 		t.Errorf("Handler was not called after Bus.Publish()")
@@ -49,17 +53,19 @@ func TestBus_Subscribe(t *testing.T) {
 
 func TestBus_Publish(t *testing.T) {
 	t.Run("publish an event", func(t *testing.T) {
-		bus := NewBus()
+		bus := event.NewBus()
 		handlerCalled := false
 
-		bus.Subscribe(MatcherFunc(func(e Event) bool {
+		bus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
 			return e.Event() == "testEvent"
-		}), func(e Event) error {
+		}), func(_ event.Event) error {
 			handlerCalled = true
 			return nil
 		})
 
-		bus.Publish(&MockEvent{event: "testEvent"})
+		if err := bus.Publish(&MockEvent{event: "testEvent"}); err != nil {
+			t.Errorf("Bus.Publish() error = %v", err)
+		}
 
 		if !handlerCalled {
 			t.Errorf("Bus.Publish() did not trigger the handler")
@@ -67,7 +73,9 @@ func TestBus_Publish(t *testing.T) {
 
 		// Test with an event that has no handlers
 		handlerCalled = false
-		bus.Publish(&MockEvent{event: "nonExistentEvent"})
+		if err := bus.Publish(&MockEvent{event: "nonExistentEvent"}); err != nil {
+			t.Errorf("Bus.Publish() error = %v", err)
+		}
 
 		if handlerCalled {
 			t.Errorf("Bus.Publish() should not trigger a handler for an event with no subscribers")
@@ -76,19 +84,21 @@ func TestBus_Publish(t *testing.T) {
 }
 
 func TestBus_Unsubscribe(t *testing.T) {
-	bus := NewBus()
+	bus := event.NewBus()
 	handlerCalled := false
 
-	handler := func(e Event) error {
+	handler := func(_ event.Event) error {
 		handlerCalled = true
 		return nil
 	}
 
-	id := bus.Subscribe(MatcherFunc(func(e Event) bool {
+	id := bus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
 		return e.Event() == "testEvent"
 	}), handler)
 
-	bus.Publish(&MockEvent{event: "testEvent"})
+	if err := bus.Publish(&MockEvent{event: "testEvent"}); err != nil {
+		t.Errorf("Bus.Publish() error = %v", err)
+	}
 
 	if !handlerCalled {
 		t.Errorf("Handler was not called after Bus.Publish()")
@@ -96,7 +106,9 @@ func TestBus_Unsubscribe(t *testing.T) {
 
 	handlerCalled = false
 	bus.Unsubscribe(id)
-	bus.Publish(&MockEvent{event: "testEvent"})
+	if err := bus.Publish(&MockEvent{event: "testEvent"}); err != nil {
+		t.Errorf("Bus.Publish() error = %v", err)
+	}
 
 	if handlerCalled {
 		t.Errorf("Handler was called after Bus.Unsubscribe()")
@@ -105,14 +117,12 @@ func TestBus_Unsubscribe(t *testing.T) {
 
 func TestBus_Subscriptions(t *testing.T) {
 	t.Run("get all subscriptions", func(t *testing.T) {
-		bus := NewBus()
+		bus := event.NewBus()
 
 		for i := 0; i < 10; i++ {
-			bus.Subscribe(MatcherFunc(func(e Event) bool {
+			bus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
 				return e.Event() == "testEvent"
-			}), func(e Event) error {
-				return nil
-			})
+			}), func(_ event.Event) error { return nil })
 		}
 
 		subscriptions := bus.Subscriptions()

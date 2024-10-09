@@ -16,7 +16,7 @@ func TestNew(t *testing.T) {
 		sprites := []render.Sprite{}
 		eventBus := event.NewBus()
 		ecs := ecsys.New(eventBus)
-		clickHandler := func(x, y int) {}
+		clickHandler := func(_, _ int) {}
 		got := render.New(logger, sprites, ecs, clickHandler)
 		if got == nil {
 			t.Errorf("New() = nil, want System")
@@ -30,7 +30,7 @@ func TestSystem_Close(t *testing.T) {
 		sprites := []render.Sprite{}
 		eventBus := event.NewBus()
 		ecs := ecsys.New(eventBus)
-		clickHandler := func(x, y int) {}
+		clickHandler := func(_, _ int) {}
 		s := render.New(logger, sprites, ecs, clickHandler)
 		if err := s.Close(); err != nil {
 			t.Errorf("Close() = %v, want nil", err)
@@ -44,7 +44,7 @@ func TestSystem_Draw(t *testing.T) {
 		sprites := []render.Sprite{}
 		eventBus := event.NewBus()
 		ecs := ecsys.New(eventBus)
-		clickHandler := func(x, y int) {}
+		clickHandler := func(_, _ int) {}
 		s := render.New(logger, sprites, ecs, clickHandler)
 
 		screen := ebiten.NewImage(100, 100)
@@ -61,7 +61,7 @@ func TestSystem_Update(t *testing.T) {
 		sprites := []render.Sprite{}
 		eventBus := event.NewBus()
 		ecs := ecsys.New(eventBus)
-		clickHandler := func(x, y int) {}
+		clickHandler := func(_, _ int) {}
 		s := render.New(logger, sprites, ecs, clickHandler)
 
 		if err := s.Update(); err != nil {

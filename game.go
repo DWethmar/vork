@@ -20,6 +20,6 @@ func (e *EbitenGame) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (e *EbitenGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (e *EbitenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return outsideWidth, outsideHeight
 }

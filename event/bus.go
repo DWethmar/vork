@@ -9,14 +9,14 @@ type Event interface {
 	Event() string
 }
 
-// EventHandler is a custom type for handler functions that process events.
-type EventHandler func(Event) error
+// Handler is a custom type for handler functions that process events.
+type Handler func(Event) error
 
 // Subscription is a struct that represents a handler subscribed to a specific matching.
 type Subscription struct {
 	id      int
 	matcher Matcher
-	handler EventHandler
+	handler Handler
 }
 
 // Bus is a struct that manages event handlers in a thread-safe manner.
@@ -36,7 +36,7 @@ func NewBus() *Bus {
 
 // Subscribe adds a new handler function to the Bus for a specific event type.
 // It returns an identifier for the handler, which can be used to unsubscribe it later.
-func (b *Bus) Subscribe(m Matcher, handler EventHandler) int {
+func (b *Bus) Subscribe(m Matcher, handler Handler) int {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	id := b.nextID

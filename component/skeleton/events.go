@@ -35,11 +35,11 @@ func NewCreatedEvent(skeleton Skeleton) *CreatedEvent {
 	return &CreatedEvent{skeleton: skeleton}
 }
 
-func (e *CreatedEvent) Event() string                          { return CreatedEventType }
-func (e *CreatedEvent) Skeleton() *Skeleton                    { return &e.skeleton }
-func (e *CreatedEvent) ComponentID() uint                      { return e.skeleton.ID() }
-func (e *CreatedEvent) ComponentType() component.ComponentType { return e.skeleton.Type() }
-func (e *CreatedEvent) Deleted() bool                          { return false }
+func (e *CreatedEvent) Event() string                 { return CreatedEventType }
+func (e *CreatedEvent) Skeleton() *Skeleton           { return &e.skeleton }
+func (e *CreatedEvent) ComponentID() uint             { return e.skeleton.ID() }
+func (e *CreatedEvent) ComponentType() component.Type { return e.skeleton.Type() }
+func (e *CreatedEvent) Deleted() bool                 { return false }
 
 // UpdatedEvent is an event that is sent when a component is updated.
 type UpdatedEvent struct {
@@ -50,11 +50,11 @@ func NewUpdatedEvent(skeleton Skeleton) *UpdatedEvent {
 	return &UpdatedEvent{skeleton: skeleton}
 }
 
-func (e *UpdatedEvent) Event() string                          { return UpdatedEventType }
-func (e *UpdatedEvent) Skeleton() *Skeleton                    { return &e.skeleton }
-func (e *UpdatedEvent) ComponentID() uint                      { return e.skeleton.ID() }
-func (e *UpdatedEvent) ComponentType() component.ComponentType { return e.skeleton.Type() }
-func (e *UpdatedEvent) Deleted() bool                          { return false }
+func (e *UpdatedEvent) Event() string                 { return UpdatedEventType }
+func (e *UpdatedEvent) Skeleton() *Skeleton           { return &e.skeleton }
+func (e *UpdatedEvent) ComponentID() uint             { return e.skeleton.ID() }
+func (e *UpdatedEvent) ComponentType() component.Type { return e.skeleton.Type() }
+func (e *UpdatedEvent) Deleted() bool                 { return false }
 
 // DeletedEvent is an event that is sent when a component is deleted.
 type DeletedEvent struct {
@@ -65,8 +65,8 @@ func NewDeletedEvent(skeleton Skeleton) *DeletedEvent {
 	return &DeletedEvent{skeleton: skeleton}
 }
 
-func (e *DeletedEvent) Event() string                          { return DeletedEventType }
-func (e *DeletedEvent) Skeleton() *Skeleton                    { return &e.skeleton }
-func (e *DeletedEvent) ComponentID() uint                      { return e.skeleton.ID() }
-func (e *DeletedEvent) ComponentType() component.ComponentType { return e.skeleton.Type() }
-func (e *DeletedEvent) Deleted() bool                          { return true }
+func (e *DeletedEvent) Event() string                 { return DeletedEventType }
+func (e *DeletedEvent) Skeleton() *Skeleton           { return &e.skeleton }
+func (e *DeletedEvent) ComponentID() uint             { return e.skeleton.ID() }
+func (e *DeletedEvent) ComponentType() component.Type { return e.skeleton.Type() }
+func (e *DeletedEvent) Deleted() bool                 { return true }

@@ -85,46 +85,15 @@ func (s *System) setupSkeleton(sk skeleton.Skeleton) error {
 	return nil
 }
 
-func (s *System) Draw(screen *ebiten.Image) error {
-	return nil
-}
+func (s *System) Draw(_ *ebiten.Image) error { return nil }
 
+// Update updates the skeletons in the ECS.
 func (s *System) Update() error {
 	skeletons := s.ecs.Skeletons()
 	for i := range skeletons {
 		e := &skeletons[i]
-
-		pos, err := s.ecs.Position(e.Entity())
-		if err != nil {
-			return fmt.Errorf("could not get position: %w", err)
-		}
-
-		isMoving := false
-		if e.PrefX != pos.X || e.PrefY != pos.Y {
-			isMoving = true
-			// Calculate facing direction before updating e.PrefX and e.PrefY
-			facing := direction.Get(e.PrefX, e.PrefY, pos.X, pos.Y)
-			if e.Facing != facing {
-				e.AnimationStep = 0
-			}
-			e.Facing = facing
-		}
-
-		if isMoving {
-			e.State = skeleton.Moving
-		} else {
-			e.State = skeleton.Idle
-		}
-
-		// Update e.PrefX and e.PrefY after calculating facing
-		e.PrefX = pos.X
-		e.PrefY = pos.Y
-
-		if e.State == skeleton.Moving {
-			e.AnimationStep++
-			if e.AnimationStep >= walkAnimationSteps {
-				e.AnimationStep = 0
-			}
+		if err := s.updateSkeleton(e); err != nil {
+			return err
 		}
 
 		// Update the skeleton component in the ECS
@@ -135,6 +104,44 @@ func (s *System) Update() error {
 		// Move the sprite updating code to a separate function
 		if err := s.updateSprite(e); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// updateSkeleton applies skeleton behavior to the entity.
+func (s *System) updateSkeleton(e *skeleton.Skeleton) error {
+	pos, err := s.ecs.Position(e.Entity())
+	if err != nil {
+		return fmt.Errorf("could not get position: %w", err)
+	}
+
+	isMoving := false
+	if e.PrefX != pos.X || e.PrefY != pos.Y {
+		isMoving = true
+		// Calculate facing direction before updating e.PrefX and e.PrefY
+		facing := direction.Get(e.PrefX, e.PrefY, pos.X, pos.Y)
+		if e.Facing != facing {
+			e.AnimationStep = 0
+		}
+		e.Facing = facing
+	}
+
+	if isMoving {
+		e.State = skeleton.Moving
+	} else {
+		e.State = skeleton.Idle
+	}
+
+	// Update e.PrefX and e.PrefY after calculating facing
+	e.PrefX = pos.X
+	e.PrefY = pos.Y
+
+	if e.State == skeleton.Moving {
+		e.AnimationStep++
+		if e.AnimationStep >= walkAnimationSteps {
+			e.AnimationStep = 0
 		}
 	}
 
@@ -163,6 +170,8 @@ func (s *System) updateSprite(e *skeleton.Skeleton) error {
 	var graphic sprite.Graphic
 	if e.State == skeleton.Moving {
 		switch e.Facing {
+		case direction.None:
+			graphic = sprite.SkeletonMoveDownFrames()[step]
 		case direction.North, direction.NorthEast, direction.NorthWest:
 			graphic = sprite.SkeletonMoveUpFrames()[step]
 		case direction.South, direction.SouthEast, direction.SouthWest:
@@ -177,6 +186,8 @@ func (s *System) updateSprite(e *skeleton.Skeleton) error {
 		}
 	} else { // Idle state
 		switch e.Facing {
+		case direction.None:
+			graphic = sprite.SkeletonMoveDown1
 		case direction.North, direction.NorthEast, direction.NorthWest:
 			graphic = sprite.SkeletonMoveUp1
 		case direction.South, direction.SouthEast, direction.SouthWest:

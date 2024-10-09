@@ -19,62 +19,69 @@ const (
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	logger := slog.Default()
 	spriteSheet, err := spritesheet.New()
 	if err != nil {
-		log.Fatal(fmt.Printf("failed to create sprite sheet: %v", err))
+		return fmt.Errorf("failed to create sprite sheet: %w", err)
 	}
 
 	// ensure .tmp directory exists
-	if err := ensureFolderExists(".tmp"); err != nil {
-		log.Fatal(fmt.Printf("failed to ensure folder exists: %v", err))
+	if err = ensureFolderExists(".tmp"); err != nil {
+		return fmt.Errorf("failed to ensure folder exists: %w", err)
 	}
 
 	db, err := bbolt.Open(".tmp/vork.db", 0600, nil)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to open db: %w", err)
 	}
 	defer func() {
-		if err := db.Close(); err != nil {
+		if err = db.Close(); err != nil {
 			log.Fatal(fmt.Errorf("failed to close db: %w", err))
 		}
 	}()
 
-	gameplayScene, err := gameplay.New(logger, "my-save", db, spriteSheet)
+	gameplayScene, err := gameplay.New(logger, db, spriteSheet)
 	if err != nil {
-		log.Fatal(fmt.Printf("failed to create gameplay scene: %v", err))
+		return fmt.Errorf("failed to create gameplay scene: %w", err)
 	}
 
 	g, err := game.New()
 	if err != nil {
-		log.Fatal(fmt.Printf("failed to create new game: %v", err))
+		return fmt.Errorf("failed to create new game: %w", err)
 	}
 
 	// Add scenes
-	if err := g.AddScene(gameplayScene); err != nil {
-		log.Fatal(fmt.Printf("failed to add scene %s: %v", gameplayScene.Name(), err))
+	if err = g.AddScene(gameplayScene); err != nil {
+		return fmt.Errorf("failed to add scene %s: %w", gameplayScene.Name(), err)
 	}
 
 	// Switch to the gameplay scene
-	if err := g.SwitchScene(gameplayScene.Name()); err != nil {
-		log.Fatal(fmt.Printf("failed to switch to scene %s: %v", gameplayScene.Name(), err))
+	if err = g.SwitchScene(gameplayScene.Name()); err != nil {
+		return fmt.Errorf("failed to switch to scene %s: %w", gameplayScene.Name(), err)
 	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("vorK")
-	if err := ebiten.RunGame(&EbitenGame{
+	if err = ebiten.RunGame(&EbitenGame{
 		g: g,
 	}); err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to run game: %w", err)
 	}
+
+	return nil
 }
 
 func ensureFolderExists(path string) error {
 	// Check if the directory already exists
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		err := os.MkdirAll(path, 0755)
-		if err != nil {
+		if err = os.MkdirAll(path, 0755); err != nil {
 			return fmt.Errorf("failed to create directory: %w", err)
 		}
 		fmt.Printf("Directory %s created.\n", path)

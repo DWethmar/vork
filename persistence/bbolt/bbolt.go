@@ -52,7 +52,7 @@ func (r *Repository[T]) Save(tx *bolt.Tx, c T) error {
 
 	// Use the component ID as the key
 	id := c.ID()
-	if err := bucket.Put(itob(id), buf.Bytes()); err != nil {
+	if err = bucket.Put(itob(id), buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to save component: %w", err)
 	}
 
@@ -111,8 +111,7 @@ func (r *Repository[T]) List(tx *bolt.Tx) ([]T, error) {
 	var components []T
 
 	// Fetch the component type using the factory to get the bucket name
-	c := r.factory()
-	bucketName := c.Type()
+	bucketName := r.factory().Type()
 
 	// Fetch all components from the bucket
 	bucket := tx.Bucket([]byte(bucketName))
@@ -121,7 +120,7 @@ func (r *Repository[T]) List(tx *bolt.Tx) ([]T, error) {
 	}
 
 	// Iterate over all components in the bucket
-	err := bucket.ForEach(func(k, v []byte) error {
+	err := bucket.ForEach(func(_, v []byte) error {
 		// Create a new instance of the component
 		c := r.factory()
 

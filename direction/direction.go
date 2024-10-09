@@ -2,7 +2,6 @@ package direction
 
 import "math"
 
-// Direction is a type that represents a direction.
 type Direction string
 
 const (

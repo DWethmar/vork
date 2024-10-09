@@ -1,4 +1,4 @@
-package spritesheet
+package spritesheet_test
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 	"image/png"
 	"testing"
 	"testing/fstest"
+
+	"github.com/dwethmar/vork/spritesheet"
 )
 
 func createTestPNG() ([]byte, error) {
@@ -39,7 +41,7 @@ func Test_loadPng(t *testing.T) {
 	}
 
 	// Call loadPng with the in-memory filesystem
-	img, err := loadPng(testFS, "test.png")
+	img, err := spritesheet.LoadPng(testFS, "test.png")
 	if err != nil {
 		t.Fatalf("loadPng failed: %v", err)
 	}

@@ -10,7 +10,7 @@ var _ game.Scene = &MainMenu{}
 type MainMenu struct{}
 
 // Draw implements game.Scene.
-func (m *MainMenu) Draw(screen *ebiten.Image) error {
+func (m *MainMenu) Draw(_ *ebiten.Image) error {
 	panic("unimplemented")
 }
 

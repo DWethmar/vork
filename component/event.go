@@ -6,6 +6,6 @@ import "github.com/dwethmar/vork/event"
 type Event interface {
 	event.Event
 	ComponentID() uint
-	ComponentType() ComponentType
+	ComponentType() Type
 	Deleted() bool
 }

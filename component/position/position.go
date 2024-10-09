@@ -7,7 +7,7 @@ import (
 	"github.com/dwethmar/vork/entity"
 )
 
-const Type = component.ComponentType("position")
+const Type = component.Type("position")
 
 var _ component.Component = &Position{}
 
@@ -27,10 +27,10 @@ func New(e entity.Entity, x, y int) *Position {
 	}
 }
 
-func (p *Position) ID() uint                      { return p.I }
-func (p *Position) SetID(i uint)                  { p.I = i }
-func (p *Position) Type() component.ComponentType { return Type }
-func (p *Position) Entity() entity.Entity         { return p.E }
+func (p *Position) ID() uint              { return p.I }
+func (p *Position) SetID(i uint)          { p.I = i }
+func (p *Position) Type() component.Type  { return Type }
+func (p *Position) Entity() entity.Entity { return p.E }
 
 func init() {
 	gob.Register(Position{})

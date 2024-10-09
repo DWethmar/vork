@@ -7,7 +7,7 @@ import (
 	"github.com/dwethmar/vork/entity"
 )
 
-const Type = component.ComponentType("controllable")
+const Type = component.Type("controllable")
 
 var _ component.Component = &Controllable{}
 
@@ -24,10 +24,10 @@ func New(e entity.Entity) *Controllable {
 	}
 }
 
-func (c *Controllable) ID() uint                      { return c.I }
-func (c *Controllable) SetID(i uint)                  { c.I = i }
-func (c *Controllable) Type() component.ComponentType { return Type }
-func (c *Controllable) Entity() entity.Entity         { return c.E }
+func (c *Controllable) ID() uint              { return c.I }
+func (c *Controllable) SetID(i uint)          { c.I = i }
+func (c *Controllable) Type() component.Type  { return Type }
+func (c *Controllable) Entity() entity.Entity { return c.E }
 
 func init() {
 	gob.Register(Controllable{})

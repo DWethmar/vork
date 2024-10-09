@@ -7,7 +7,7 @@ import (
 	"github.com/dwethmar/vork/entity"
 )
 
-const RectangleType = component.ComponentType("shape-rectangle")
+const RectangleType = component.Type("shape-rectangle")
 
 var _ component.Component = &Rectangle{}
 
@@ -19,10 +19,10 @@ type Rectangle struct {
 	Color         color.RGBA
 }
 
-func (p *Rectangle) ID() uint                      { return p.I }
-func (p *Rectangle) SetID(i uint)                  { p.I = i }
-func (p *Rectangle) Type() component.ComponentType { return RectangleType }
-func (p *Rectangle) Entity() entity.Entity         { return p.E }
+func (p *Rectangle) ID() uint              { return p.I }
+func (p *Rectangle) SetID(i uint)          { p.I = i }
+func (p *Rectangle) Type() component.Type  { return RectangleType }
+func (p *Rectangle) Entity() entity.Entity { return p.E }
 
 func NewRectangle(e entity.Entity, width, height int64, color color.RGBA) *Rectangle {
 	return &Rectangle{

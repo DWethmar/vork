@@ -30,18 +30,20 @@ func TestNew(t *testing.T) {
 			t.Errorf("CreateEntity() error = %v", err)
 		}
 		// should setup skeleton
-		eventBus.Publish(skeleton.NewCreatedEvent(skeleton.Skeleton{
+		if err = eventBus.Publish(skeleton.NewCreatedEvent(skeleton.Skeleton{
 			I: 1,
 			E: e,
-		}))
+		})); err != nil {
+			t.Errorf("Publish() error = %v", err)
+		}
 
-		// shoudl have position
-		if _, err := ecs.Position(e); err != nil {
+		// should have position
+		if _, err = ecs.Position(e); err != nil {
 			t.Errorf("Expected position component, got %v", err)
 		}
 
 		// should have rectangle
-		if _, err := ecs.Rectangle(e); err != nil {
+		if _, err = ecs.Rectangle(e); err != nil {
 			t.Errorf("Expected shape component, got %v", err)
 		}
 

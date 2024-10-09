@@ -68,7 +68,7 @@ type Spritesheet struct {
 }
 
 func loadSkeletonDeath(s *Spritesheet) error {
-	img, err := loadPng(imagesFS, "images/skeleton_death.png")
+	img, err := LoadPng(imagesFS, "images/skeleton_death.png")
 	if err != nil {
 		return fmt.Errorf("failed to load images/skeleton_death.png: %w", err)
 	}
@@ -84,7 +84,7 @@ func loadSkeletonDeath(s *Spritesheet) error {
 }
 
 func loadSkeletonMove(s *Spritesheet) error {
-	img, err := loadPng(imagesFS, "images/skeleton_move.png")
+	img, err := LoadPng(imagesFS, "images/skeleton_move.png")
 	if err != nil {
 		return fmt.Errorf("failed to load images/skeleton_move.png: %w", err)
 	}

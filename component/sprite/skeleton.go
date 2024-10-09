@@ -1,14 +1,14 @@
 package sprite
 
 var (
-	// Skeleton Death Sprites
+	// Skeleton Death Sprites.
 	SkeletonDeath1 = Graphic("skeleton_death_1")
 	SkeletonDeath2 = Graphic("skeleton_death_2")
 	SkeletonDeath3 = Graphic("skeleton_death_3")
 	SkeletonDeath4 = Graphic("skeleton_death_4")
 	SkeletonDeath5 = Graphic("skeleton_death_5")
 	SkeletonDeath6 = Graphic("skeleton_death_6")
-	// Skeleton Move Up Sprites
+	// Skeleton Move Up Sprites.
 	SkeletonMoveUp1 = Graphic("skeleton_move_up_1") // idle
 	SkeletonMoveUp2 = Graphic("skeleton_move_up_2")
 	SkeletonMoveUp3 = Graphic("skeleton_move_up_3")
@@ -18,7 +18,7 @@ var (
 	SkeletonMoveUp7 = Graphic("skeleton_move_up_7")
 	SkeletonMoveUp8 = Graphic("skeleton_move_up_8")
 	SkeletonMoveUp9 = Graphic("skeleton_move_up_9")
-	// Skeleton Move Left Sprites
+	// Skeleton Move Left Sprites.
 	SkeletonMoveLeft1 = Graphic("skeleton_move_left_1") // idle
 	SkeletonMoveLeft2 = Graphic("skeleton_move_left_2")
 	SkeletonMoveLeft3 = Graphic("skeleton_move_left_3")
@@ -28,7 +28,7 @@ var (
 	SkeletonMoveLeft7 = Graphic("skeleton_move_left_7")
 	SkeletonMoveLeft8 = Graphic("skeleton_move_left_8")
 	SkeletonMoveLeft9 = Graphic("skeleton_move_left_9")
-	// Skeleton Move Down Sprites
+	// Skeleton Move Down Sprites.
 	SkeletonMoveDown1 = Graphic("skeleton_move_down_1") // idle
 	SkeletonMoveDown2 = Graphic("skeleton_move_down_2")
 	SkeletonMoveDown3 = Graphic("skeleton_move_down_3")
@@ -38,7 +38,7 @@ var (
 	SkeletonMoveDown7 = Graphic("skeleton_move_down_7")
 	SkeletonMoveDown8 = Graphic("skeleton_move_down_8")
 	SkeletonMoveDown9 = Graphic("skeleton_move_down_9")
-	// Skeleton Move Right Sprites
+	// Skeleton Move Right Sprites.
 	SkeletonMoveRight1 = Graphic("skeleton_move_right_1") // idle
 	SkeletonMoveRight2 = Graphic("skeleton_move_right_2")
 	SkeletonMoveRight3 = Graphic("skeleton_move_right_3")

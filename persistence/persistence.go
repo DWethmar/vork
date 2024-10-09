@@ -10,7 +10,6 @@ import (
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
-
 	boltrepo "github.com/dwethmar/vork/persistence/bbolt"
 	bolt "go.etcd.io/bbolt"
 )
@@ -19,7 +18,7 @@ import (
 type Persistance struct {
 	eventBus   *event.Bus
 	ecs        *ecsys.ECS
-	lifecycles map[component.ComponentType]ComponentLifeCycle
+	lifecycles map[component.Type]ComponentLifeCycle
 }
 
 // New creates a new persistence system.
@@ -39,7 +38,7 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
 	s := &Persistance{
 		eventBus: eventBus,
 		ecs:      ecs,
-		lifecycles: map[component.ComponentType]ComponentLifeCycle{
+		lifecycles: map[component.Type]ComponentLifeCycle{
 			controllable.Type: NewGenericComponentLifeCycle(
 				controllableRepo,
 				func(c *controllable.Controllable) (uint, error) { // TODO refactor
@@ -137,7 +136,7 @@ func (s *Persistance) Load(db *bolt.DB) error {
 			if !ok {
 				return fmt.Errorf("no lifecycle for component type: %s", r)
 			}
-			if err := l.Load(tx, s.ecs); err != nil {
+			if err := l.Load(tx); err != nil {
 				return fmt.Errorf("failed to load controllable components: %w", err)
 			}
 		}

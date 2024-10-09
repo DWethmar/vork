@@ -33,7 +33,7 @@ type GamePlay struct {
 	persistence *persistence.Persistance
 }
 
-func New(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
+func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
 	ecs := ecsys.New(eventBus)
 
@@ -48,27 +48,23 @@ func New(logger *slog.Logger, save string, db *bbolt.DB, s *spritesheet.Spritesh
 	persistence := persistence.New(eventBus, ecs)
 
 	// check if it is an existing save
-	ok, err := initializedGame(db, save)
+	ok, err := initializedGame(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if game is initialized: %w", err)
 	}
 	if ok {
 		// load the game
 		logger.Info("loading game")
-		if err := persistence.Load(db); err != nil {
+		if err = persistence.Load(db); err != nil {
 			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
 	} else {
 		// create a new game
 		logger.Info("creating a new game")
-		if err := addPlayer(ecs, 10, 10); err != nil {
-			return nil, fmt.Errorf("failed to add player: %w", err)
+		if err = initializeGame(ecs, db); err != nil {
+			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
-		if err := addEnemy(ecs, 100, 100); err != nil {
-			return nil, fmt.Errorf("failed to add enemy: %w", err)
-		}
-		setInitialized(db, save)
-		if err := persistence.Save(db); err != nil {
+		if err = persistence.Save(db); err != nil {
 			return nil, fmt.Errorf("failed to save new game: %w", err)
 		}
 	}
@@ -116,7 +112,24 @@ func (s *GamePlay) Update() error {
 	return nil
 }
 
-func initializedGame(db *bbolt.DB, name string) (bool, error) {
+func initializeGame(ecs *ecsys.ECS, db *bbolt.DB) error {
+	if err := addPlayer(ecs, 10, 10); err != nil {
+		return fmt.Errorf("failed to add player: %w", err)
+	}
+	if err := addEnemy(ecs, 100, 100); err != nil {
+		return fmt.Errorf("failed to add enemy: %w", err)
+	}
+
+	return db.Update(func(tx *bbolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists(sceneKey)
+		if err != nil {
+			return err
+		}
+		return bucket.Put(initializedKey, []byte(""))
+	})
+}
+
+func initializedGame(db *bbolt.DB) (bool, error) {
 	exists := false
 	err := db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(sceneKey)
@@ -127,14 +140,4 @@ func initializedGame(db *bbolt.DB, name string) (bool, error) {
 		return nil
 	})
 	return exists, err
-}
-
-func setInitialized(db *bbolt.DB, name string) error {
-	return db.Update(func(tx *bbolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists(sceneKey)
-		if err != nil {
-			return err
-		}
-		return bucket.Put(initializedKey, []byte(""))
-	})
 }

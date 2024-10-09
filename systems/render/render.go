@@ -74,20 +74,20 @@ func (s *System) Draw(screen *ebiten.Image) error {
 	entitiesToDraw := []entityDraw{}
 	// Collect rectangles to draw
 	for _, r := range s.ecs.Rectangles() {
-		var X, Y int
+		var x, y int
 		if c, err := s.ecs.Position(r.Entity()); err == nil {
-			X, Y = c.X, c.Y
+			x, y = c.X, c.Y
 		} else {
 			return err
 		}
 
 		// Add the drawing function for this rectangle
 		entitiesToDraw = append(entitiesToDraw, entityDraw{
-			Index: Y,
+			Index: y,
 			DrawFunc: func(screen *ebiten.Image) {
 				// Apply zoom factor to position and size
-				x := (float32(X) - float32(s.offsetX)) * float32(s.zoom)
-				y := (float32(Y) - float32(s.offsetY)) * float32(s.zoom)
+				x := (float32(x) - float32(s.offsetX)) * float32(s.zoom)
+				y := (float32(y) - float32(s.offsetY)) * float32(s.zoom)
 				width := float32(r.Width) * float32(s.zoom)
 				height := float32(r.Height) * float32(s.zoom)
 				vector.DrawFilledRect(screen, x, y, width, height, color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff}, true)
@@ -97,9 +97,9 @@ func (s *System) Draw(screen *ebiten.Image) error {
 
 	// Collect sprites to draw
 	for _, spc := range s.ecs.Sprites() {
-		var X, Y int
+		var x, y int
 		if c, err := s.ecs.Position(spc.Entity()); err == nil {
-			X, Y = c.X, c.Y
+			x, y = c.X, c.Y
 		} else {
 			return err
 		}
@@ -109,20 +109,20 @@ func (s *System) Draw(screen *ebiten.Image) error {
 		}
 
 		// Apply sprite offsets
-		X += spr.OffsetX
-		Y += spr.OffsetY
+		x += spr.OffsetX
+		y += spr.OffsetY
 
 		// Add the drawing function for this sprite
 		entitiesToDraw = append(entitiesToDraw, entityDraw{
-			Index: Y,
+			Index: y,
 			DrawFunc: func(screen *ebiten.Image) {
 				// Apply zoom factor to position and scale
 				op := &ebiten.DrawImageOptions{}
 				// Scale the sprite
 				op.GeoM.Scale(s.zoom, s.zoom)
 				// Translate the sprite
-				x := (float64(X) - float64(s.offsetX)) * s.zoom
-				y := (float64(Y) - float64(s.offsetY)) * s.zoom
+				x := (float64(x) - float64(s.offsetX)) * s.zoom
+				y := (float64(y) - float64(s.offsetY)) * s.zoom
 				op.GeoM.Translate(x, y)
 				screen.DrawImage(spr.Img, op)
 			},

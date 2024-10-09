@@ -35,13 +35,13 @@ func (s *System) Update() error {
 		}
 		p.X += x
 		p.Y += y
-		if err := s.ecs.UpdatePositionComponent(p); err != nil {
+		if err = s.ecs.UpdatePositionComponent(p); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (s *System) Draw(screen *ebiten.Image) error {
+func (s *System) Draw(_ *ebiten.Image) error {
 	return nil
 }

@@ -28,7 +28,7 @@ func addComponent[T any](
 		return 0, fmt.Errorf("could not add component: %w", err)
 	}
 	if eventCreator != nil {
-		if err := ecs.eventBus.Publish(eventCreator(comp)); err != nil {
+		if err = ecs.eventBus.Publish(eventCreator(comp)); err != nil {
 			return 0, fmt.Errorf("could not publish event: %w", err)
 		}
 	}
