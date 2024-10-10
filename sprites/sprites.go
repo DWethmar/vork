@@ -7,62 +7,75 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-func calculateOffsetX(img *ebiten.Image) int {
+// centerXOffset calculates the horizontal offset to center the image along the X-axis.
+func centerXOffset(img *ebiten.Image) int {
 	return -(img.Bounds().Dx() / 2)
 }
 
-func calculateOffsetY(img *ebiten.Image) int {
+// bottomYOffset calculates the vertical offset to place the image at the bottom of the screen.
+func bottomYOffset(img *ebiten.Image) int {
 	return -(img.Bounds().Dy())
 }
 
+// newRenderSprite creates a new render sprite.
+func newRenderSprite(graphic sprite.Graphic, img *ebiten.Image) render.Sprite {
+	return render.Sprite{
+		Graphic: graphic,
+		Img:     img,
+		OffsetX: centerXOffset(img),
+		OffsetY: bottomYOffset(img),
+	}
+}
+
+// Sprites returns all the sprites used in the game.
 func Sprites(s *spritesheet.Spritesheet) []render.Sprite {
 	return []render.Sprite{
 		// Skeleton Death Sprites
-		{Graphic: sprite.SkeletonDeath1, Img: s.SkeletonDeath1, OffsetX: calculateOffsetX(s.SkeletonDeath1), OffsetY: calculateOffsetY(s.SkeletonDeath1)},
-		{Graphic: sprite.SkeletonDeath2, Img: s.SkeletonDeath2, OffsetX: calculateOffsetX(s.SkeletonDeath2), OffsetY: calculateOffsetY(s.SkeletonDeath2)},
-		{Graphic: sprite.SkeletonDeath3, Img: s.SkeletonDeath3, OffsetX: calculateOffsetX(s.SkeletonDeath3), OffsetY: calculateOffsetY(s.SkeletonDeath3)},
-		{Graphic: sprite.SkeletonDeath4, Img: s.SkeletonDeath4, OffsetX: calculateOffsetX(s.SkeletonDeath4), OffsetY: calculateOffsetY(s.SkeletonDeath4)},
-		{Graphic: sprite.SkeletonDeath5, Img: s.SkeletonDeath5, OffsetX: calculateOffsetX(s.SkeletonDeath5), OffsetY: calculateOffsetY(s.SkeletonDeath5)},
-		{Graphic: sprite.SkeletonDeath6, Img: s.SkeletonDeath6, OffsetX: calculateOffsetX(s.SkeletonDeath6), OffsetY: calculateOffsetY(s.SkeletonDeath6)},
+		newRenderSprite(sprite.SkeletonDeath1, s.SkeletonDeath1),
+		newRenderSprite(sprite.SkeletonDeath2, s.SkeletonDeath2),
+		newRenderSprite(sprite.SkeletonDeath3, s.SkeletonDeath3),
+		newRenderSprite(sprite.SkeletonDeath4, s.SkeletonDeath4),
+		newRenderSprite(sprite.SkeletonDeath5, s.SkeletonDeath5),
+		newRenderSprite(sprite.SkeletonDeath6, s.SkeletonDeath6),
 		// Skeleton Move Up Sprites
-		{Graphic: sprite.SkeletonMoveUp1, Img: s.SkeletonMoveUp1, OffsetX: calculateOffsetX(s.SkeletonMoveUp1), OffsetY: calculateOffsetY(s.SkeletonMoveUp1)},
-		{Graphic: sprite.SkeletonMoveUp2, Img: s.SkeletonMoveUp2, OffsetX: calculateOffsetX(s.SkeletonMoveUp2), OffsetY: calculateOffsetY(s.SkeletonMoveUp2)},
-		{Graphic: sprite.SkeletonMoveUp3, Img: s.SkeletonMoveUp3, OffsetX: calculateOffsetX(s.SkeletonMoveUp3), OffsetY: calculateOffsetY(s.SkeletonMoveUp3)},
-		{Graphic: sprite.SkeletonMoveUp4, Img: s.SkeletonMoveUp4, OffsetX: calculateOffsetX(s.SkeletonMoveUp4), OffsetY: calculateOffsetY(s.SkeletonMoveUp4)},
-		{Graphic: sprite.SkeletonMoveUp5, Img: s.SkeletonMoveUp5, OffsetX: calculateOffsetX(s.SkeletonMoveUp5), OffsetY: calculateOffsetY(s.SkeletonMoveUp5)},
-		{Graphic: sprite.SkeletonMoveUp6, Img: s.SkeletonMoveUp6, OffsetX: calculateOffsetX(s.SkeletonMoveUp6), OffsetY: calculateOffsetY(s.SkeletonMoveUp6)},
-		{Graphic: sprite.SkeletonMoveUp7, Img: s.SkeletonMoveUp7, OffsetX: calculateOffsetX(s.SkeletonMoveUp7), OffsetY: calculateOffsetY(s.SkeletonMoveUp7)},
-		{Graphic: sprite.SkeletonMoveUp8, Img: s.SkeletonMoveUp8, OffsetX: calculateOffsetX(s.SkeletonMoveUp8), OffsetY: calculateOffsetY(s.SkeletonMoveUp8)},
-		{Graphic: sprite.SkeletonMoveUp9, Img: s.SkeletonMoveUp9, OffsetX: calculateOffsetX(s.SkeletonMoveUp9), OffsetY: calculateOffsetY(s.SkeletonMoveUp9)},
+		newRenderSprite(sprite.SkeletonMoveUp1, s.SkeletonMoveUp1),
+		newRenderSprite(sprite.SkeletonMoveUp2, s.SkeletonMoveUp2),
+		newRenderSprite(sprite.SkeletonMoveUp3, s.SkeletonMoveUp3),
+		newRenderSprite(sprite.SkeletonMoveUp4, s.SkeletonMoveUp4),
+		newRenderSprite(sprite.SkeletonMoveUp5, s.SkeletonMoveUp5),
+		newRenderSprite(sprite.SkeletonMoveUp6, s.SkeletonMoveUp6),
+		newRenderSprite(sprite.SkeletonMoveUp7, s.SkeletonMoveUp7),
+		newRenderSprite(sprite.SkeletonMoveUp8, s.SkeletonMoveUp8),
+		newRenderSprite(sprite.SkeletonMoveUp9, s.SkeletonMoveUp9),
 		// Skeleton Move Left Sprites
-		{Graphic: sprite.SkeletonMoveLeft1, Img: s.SkeletonMoveLeft1, OffsetX: calculateOffsetX(s.SkeletonMoveLeft1), OffsetY: calculateOffsetY(s.SkeletonMoveLeft1)},
-		{Graphic: sprite.SkeletonMoveLeft2, Img: s.SkeletonMoveLeft2, OffsetX: calculateOffsetX(s.SkeletonMoveLeft2), OffsetY: calculateOffsetY(s.SkeletonMoveLeft2)},
-		{Graphic: sprite.SkeletonMoveLeft3, Img: s.SkeletonMoveLeft3, OffsetX: calculateOffsetX(s.SkeletonMoveLeft3), OffsetY: calculateOffsetY(s.SkeletonMoveLeft3)},
-		{Graphic: sprite.SkeletonMoveLeft4, Img: s.SkeletonMoveLeft4, OffsetX: calculateOffsetX(s.SkeletonMoveLeft4), OffsetY: calculateOffsetY(s.SkeletonMoveLeft4)},
-		{Graphic: sprite.SkeletonMoveLeft5, Img: s.SkeletonMoveLeft5, OffsetX: calculateOffsetX(s.SkeletonMoveLeft5), OffsetY: calculateOffsetY(s.SkeletonMoveLeft5)},
-		{Graphic: sprite.SkeletonMoveLeft6, Img: s.SkeletonMoveLeft6, OffsetX: calculateOffsetX(s.SkeletonMoveLeft6), OffsetY: calculateOffsetY(s.SkeletonMoveLeft6)},
-		{Graphic: sprite.SkeletonMoveLeft7, Img: s.SkeletonMoveLeft7, OffsetX: calculateOffsetX(s.SkeletonMoveLeft7), OffsetY: calculateOffsetY(s.SkeletonMoveLeft7)},
-		{Graphic: sprite.SkeletonMoveLeft8, Img: s.SkeletonMoveLeft8, OffsetX: calculateOffsetX(s.SkeletonMoveLeft8), OffsetY: calculateOffsetY(s.SkeletonMoveLeft8)},
-		{Graphic: sprite.SkeletonMoveLeft9, Img: s.SkeletonMoveLeft9, OffsetX: calculateOffsetX(s.SkeletonMoveLeft9), OffsetY: calculateOffsetY(s.SkeletonMoveLeft9)},
+		newRenderSprite(sprite.SkeletonMoveLeft1, s.SkeletonMoveLeft1),
+		newRenderSprite(sprite.SkeletonMoveLeft2, s.SkeletonMoveLeft2),
+		newRenderSprite(sprite.SkeletonMoveLeft3, s.SkeletonMoveLeft3),
+		newRenderSprite(sprite.SkeletonMoveLeft4, s.SkeletonMoveLeft4),
+		newRenderSprite(sprite.SkeletonMoveLeft5, s.SkeletonMoveLeft5),
+		newRenderSprite(sprite.SkeletonMoveLeft6, s.SkeletonMoveLeft6),
+		newRenderSprite(sprite.SkeletonMoveLeft7, s.SkeletonMoveLeft7),
+		newRenderSprite(sprite.SkeletonMoveLeft8, s.SkeletonMoveLeft8),
+		newRenderSprite(sprite.SkeletonMoveLeft9, s.SkeletonMoveLeft9),
 		// Skeleton Move Down Sprites
-		{Graphic: sprite.SkeletonMoveDown1, Img: s.SkeletonMoveDown1, OffsetX: calculateOffsetX(s.SkeletonMoveDown1), OffsetY: calculateOffsetY(s.SkeletonMoveDown1)},
-		{Graphic: sprite.SkeletonMoveDown2, Img: s.SkeletonMoveDown2, OffsetX: calculateOffsetX(s.SkeletonMoveDown2), OffsetY: calculateOffsetY(s.SkeletonMoveDown2)},
-		{Graphic: sprite.SkeletonMoveDown3, Img: s.SkeletonMoveDown3, OffsetX: calculateOffsetX(s.SkeletonMoveDown3), OffsetY: calculateOffsetY(s.SkeletonMoveDown3)},
-		{Graphic: sprite.SkeletonMoveDown4, Img: s.SkeletonMoveDown4, OffsetX: calculateOffsetX(s.SkeletonMoveDown4), OffsetY: calculateOffsetY(s.SkeletonMoveDown4)},
-		{Graphic: sprite.SkeletonMoveDown5, Img: s.SkeletonMoveDown5, OffsetX: calculateOffsetX(s.SkeletonMoveDown5), OffsetY: calculateOffsetY(s.SkeletonMoveDown5)},
-		{Graphic: sprite.SkeletonMoveDown6, Img: s.SkeletonMoveDown6, OffsetX: calculateOffsetX(s.SkeletonMoveDown6), OffsetY: calculateOffsetY(s.SkeletonMoveDown6)},
-		{Graphic: sprite.SkeletonMoveDown7, Img: s.SkeletonMoveDown7, OffsetX: calculateOffsetX(s.SkeletonMoveDown7), OffsetY: calculateOffsetY(s.SkeletonMoveDown7)},
-		{Graphic: sprite.SkeletonMoveDown8, Img: s.SkeletonMoveDown8, OffsetX: calculateOffsetX(s.SkeletonMoveDown8), OffsetY: calculateOffsetY(s.SkeletonMoveDown8)},
-		{Graphic: sprite.SkeletonMoveDown9, Img: s.SkeletonMoveDown9, OffsetX: calculateOffsetX(s.SkeletonMoveDown9), OffsetY: calculateOffsetY(s.SkeletonMoveDown9)},
+		newRenderSprite(sprite.SkeletonMoveDown1, s.SkeletonMoveDown1),
+		newRenderSprite(sprite.SkeletonMoveDown2, s.SkeletonMoveDown2),
+		newRenderSprite(sprite.SkeletonMoveDown3, s.SkeletonMoveDown3),
+		newRenderSprite(sprite.SkeletonMoveDown4, s.SkeletonMoveDown4),
+		newRenderSprite(sprite.SkeletonMoveDown5, s.SkeletonMoveDown5),
+		newRenderSprite(sprite.SkeletonMoveDown6, s.SkeletonMoveDown6),
+		newRenderSprite(sprite.SkeletonMoveDown7, s.SkeletonMoveDown7),
+		newRenderSprite(sprite.SkeletonMoveDown8, s.SkeletonMoveDown8),
+		newRenderSprite(sprite.SkeletonMoveDown9, s.SkeletonMoveDown9),
 		// Skeleton Move Right Sprites
-		{Graphic: sprite.SkeletonMoveRight1, Img: s.SkeletonMoveRight1, OffsetX: calculateOffsetX(s.SkeletonMoveRight1), OffsetY: calculateOffsetY(s.SkeletonMoveRight1)},
-		{Graphic: sprite.SkeletonMoveRight2, Img: s.SkeletonMoveRight2, OffsetX: calculateOffsetX(s.SkeletonMoveRight2), OffsetY: calculateOffsetY(s.SkeletonMoveRight2)},
-		{Graphic: sprite.SkeletonMoveRight3, Img: s.SkeletonMoveRight3, OffsetX: calculateOffsetX(s.SkeletonMoveRight3), OffsetY: calculateOffsetY(s.SkeletonMoveRight3)},
-		{Graphic: sprite.SkeletonMoveRight4, Img: s.SkeletonMoveRight4, OffsetX: calculateOffsetX(s.SkeletonMoveRight4), OffsetY: calculateOffsetY(s.SkeletonMoveRight4)},
-		{Graphic: sprite.SkeletonMoveRight5, Img: s.SkeletonMoveRight5, OffsetX: calculateOffsetX(s.SkeletonMoveRight5), OffsetY: calculateOffsetY(s.SkeletonMoveRight5)},
-		{Graphic: sprite.SkeletonMoveRight6, Img: s.SkeletonMoveRight6, OffsetX: calculateOffsetX(s.SkeletonMoveRight6), OffsetY: calculateOffsetY(s.SkeletonMoveRight6)},
-		{Graphic: sprite.SkeletonMoveRight7, Img: s.SkeletonMoveRight7, OffsetX: calculateOffsetX(s.SkeletonMoveRight7), OffsetY: calculateOffsetY(s.SkeletonMoveRight7)},
-		{Graphic: sprite.SkeletonMoveRight8, Img: s.SkeletonMoveRight8, OffsetX: calculateOffsetX(s.SkeletonMoveRight8), OffsetY: calculateOffsetY(s.SkeletonMoveRight8)},
-		{Graphic: sprite.SkeletonMoveRight9, Img: s.SkeletonMoveRight9, OffsetX: calculateOffsetX(s.SkeletonMoveRight9), OffsetY: calculateOffsetY(s.SkeletonMoveRight9)},
+		newRenderSprite(sprite.SkeletonMoveRight1, s.SkeletonMoveRight1),
+		newRenderSprite(sprite.SkeletonMoveRight2, s.SkeletonMoveRight2),
+		newRenderSprite(sprite.SkeletonMoveRight3, s.SkeletonMoveRight3),
+		newRenderSprite(sprite.SkeletonMoveRight4, s.SkeletonMoveRight4),
+		newRenderSprite(sprite.SkeletonMoveRight5, s.SkeletonMoveRight5),
+		newRenderSprite(sprite.SkeletonMoveRight6, s.SkeletonMoveRight6),
+		newRenderSprite(sprite.SkeletonMoveRight7, s.SkeletonMoveRight7),
+		newRenderSprite(sprite.SkeletonMoveRight8, s.SkeletonMoveRight8),
+		newRenderSprite(sprite.SkeletonMoveRight9, s.SkeletonMoveRight9),
 	}
 }

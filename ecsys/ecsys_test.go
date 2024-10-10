@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/google/go-cmp/cmp"
@@ -15,7 +15,7 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Run("New", func(t *testing.T) {
-		ecs := ecsys.New(event.NewBus())
+		ecs := ecsys.New(event.NewBus(), store.NewStores())
 		if ecs == nil {
 			t.Errorf("New() ecs = %v", ecs)
 		}
@@ -24,7 +24,7 @@ func TestNew(t *testing.T) {
 
 func TestECS_CreateEntity(t *testing.T) {
 	t.Run("should create an entity with a position", func(t *testing.T) {
-		ecs := ecsys.New(event.NewBus())
+		ecs := ecsys.New(event.NewBus(), store.NewStores())
 		entity, err := ecs.CreateEntity(11, 22)
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)
@@ -34,7 +34,7 @@ func TestECS_CreateEntity(t *testing.T) {
 		}
 
 		// Check if the entity has a position component
-		pos, err := ecs.Position(entity)
+		pos, err := ecs.GetPosition(entity)
 		if err != nil {
 			t.Errorf("GetPosition() error = %v", err)
 		}
@@ -54,7 +54,7 @@ func TestECS_CreateEntity(t *testing.T) {
 
 func TestECS_DeleteEntity(t *testing.T) {
 	t.Run("should delete an entity", func(t *testing.T) {
-		ecs := ecsys.New(event.NewBus())
+		ecs := ecsys.New(event.NewBus(), store.NewStores())
 		entity, err := ecs.CreateEntity(11, 22)
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)
@@ -70,7 +70,7 @@ func TestECS_DeleteEntity(t *testing.T) {
 		}
 
 		// check if the sprite has been added
-		if l := len(ecs.SpritesByEntity(entity)); l != 1 {
+		if l := len(ecs.ListSpritesByEntity(entity)); l != 1 {
 			t.Errorf("SpritesByEntity() sprites = %v", l)
 		}
 
@@ -79,13 +79,13 @@ func TestECS_DeleteEntity(t *testing.T) {
 		}
 
 		// Check if the entity has been deleted
-		_, err = ecs.Position(entity)
-		if !errors.Is(err, component.ErrEntityNotFound) {
+		_, err = ecs.GetPosition(entity)
+		if !errors.Is(err, store.ErrEntityNotFound) {
 			t.Errorf("GetPosition() error = %v", err)
 		}
 
 		// Check if the sprite has been deleted
-		if l := len(ecs.SpritesByEntity(entity)); l != 0 {
+		if l := len(ecs.ListSpritesByEntity(entity)); l != 0 {
 			t.Errorf("SpritesByEntity() sprites = %v", l)
 		}
 	})

@@ -19,7 +19,7 @@ type ClickHandler func(x, y int)
 type Sprite struct {
 	Graphic          sprite.Graphic
 	Img              *ebiten.Image
-	OffsetX, OffsetY int
+	OffsetX, OffsetY int // Offset from the entity's position
 }
 
 // System is the rendering system.
@@ -74,9 +74,9 @@ func (s *System) Draw(screen *ebiten.Image) error {
 
 	entitiesToDraw := []entityDraw{}
 	// Collect rectangles to draw
-	for _, r := range s.ecs.Rectangles() {
+	for _, r := range s.ecs.ListRectangles() {
 		var x, y int
-		if c, err := s.ecs.Position(r.Entity()); err == nil {
+		if c, err := s.ecs.GetPosition(r.Entity()); err == nil {
 			x, y = c.X, c.Y
 		} else {
 			return err
@@ -97,9 +97,9 @@ func (s *System) Draw(screen *ebiten.Image) error {
 	}
 
 	// Collect sprites to draw
-	for _, spc := range s.ecs.Sprites() {
+	for _, spc := range s.ecs.ListSprites() {
 		var x, y int
-		if c, err := s.ecs.Position(spc.Entity()); err == nil {
+		if c, err := s.ecs.GetPosition(spc.Entity()); err == nil {
 			x, y = c.X, c.Y
 		} else {
 			return err
@@ -165,12 +165,12 @@ func (s *System) Update() error {
 	}
 
 	// get the first controllable entity and center the camera on it
-	if controllables := s.ecs.Controllables(); len(controllables) > 0 {
+	if controllables := s.ecs.ListControllables(); len(controllables) > 0 {
 		// Get the first controllable entity
 		firstControllable := controllables[0]
 
 		// Get the position of the controllable
-		pos, err := s.ecs.Position(firstControllable.Entity())
+		pos, err := s.ecs.GetPosition(firstControllable.Entity())
 		if err != nil {
 			return err
 		}

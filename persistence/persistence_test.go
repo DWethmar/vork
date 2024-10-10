@@ -7,6 +7,7 @@ import (
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/skeleton"
+	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
@@ -36,7 +37,7 @@ func closeTestDB(t *testing.T, db *bolt.DB, path string) {
 func TestNew(t *testing.T) {
 	t.Run("New should create a new system", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus)
+		ecs := ecsys.New(eventBus, store.NewStores())
 		s := persistence.New(eventBus, ecs)
 		if s == nil {
 			t.Error("System should not be nil")
@@ -45,7 +46,7 @@ func TestNew(t *testing.T) {
 
 	t.Run("New should subscribe to component change events", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus)
+		ecs := ecsys.New(eventBus, store.NewStores())
 		s := persistence.New(eventBus, ecs)
 		if s == nil {
 			t.Error("System should not be nil")
@@ -76,7 +77,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 			})
 
 			eventBus := event.NewBus()
-			ecs := ecsys.New(eventBus)
+			ecs := ecsys.New(eventBus, store.NewStores())
 			s := persistence.New(eventBus, ecs)
 
 			// Add components
@@ -115,7 +116,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 
 			// Create new ECS and load components
 			eventBus = event.NewBus()
-			ecs = ecsys.New(eventBus)
+			ecs = ecsys.New(eventBus, store.NewStores())
 			s = persistence.New(eventBus, ecs)
 			if err := s.Load(db); err != nil {
 				t.Fatalf("Failed to load components: %v", err)
@@ -132,7 +133,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 				}
 
 				// Verify position component
-				pos, err := ecs.Position(e)
+				pos, err := ecs.GetPosition(e)
 				if err != nil {
 					t.Fatalf("Failed to get position component: %v", err)
 				}
@@ -141,12 +142,12 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 				}
 
 				// Verify controllable component
-				if _, err = ecs.Controllable(e); err != nil {
+				if _, err = ecs.GetControllable(e); err != nil {
 					t.Fatalf("Failed to get controllable component: %v", err)
 				}
 
 				// Verify skeleton component
-				if _, err = ecs.Skeleton(e); err != nil {
+				if _, err = ecs.GetSkeleton(e); err != nil {
 					t.Fatalf("Failed to get skeleton component: %v", err)
 				}
 			}
@@ -161,7 +162,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		})
 
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus)
+		ecs := ecsys.New(eventBus, store.NewStores())
 		s := persistence.New(eventBus, ecs)
 
 		// Add position components
@@ -176,7 +177,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		}
 
 		// Delete position component of entity 50
-		if con, err := ecs.Position(entity.Entity(50)); err == nil {
+		if con, err := ecs.GetPosition(entity.Entity(50)); err == nil {
 			if err = ecs.DeletePositionComponent(con); err != nil {
 				t.Fatalf("Failed to delete position component: %v", err)
 			}
@@ -191,7 +192,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 
 		// Create new ECS and load components
 		eventBus = event.NewBus()
-		ecs = ecsys.New(eventBus)
+		ecs = ecsys.New(eventBus, store.NewStores())
 		s = persistence.New(eventBus, ecs)
 		if err := s.Load(db); err != nil {
 			t.Fatalf("Failed to load components: %v", err)
@@ -200,7 +201,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		// Verify components
 		for i := 0; i < 100; i++ {
 			e := entity.Entity(i)
-			pos, err := ecs.Position(e)
+			pos, err := ecs.GetPosition(e)
 			if i == 50 {
 				if err == nil {
 					t.Errorf("Expected position component for entity %d to be deleted", e)
@@ -228,7 +229,7 @@ func TestSystem_Load(t *testing.T) {
 		})
 
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus)
+		ecs := ecsys.New(eventBus, store.NewStores())
 
 		// load some data
 		entity, err := ecs.CreateEntity(11, 22)
@@ -236,7 +237,7 @@ func TestSystem_Load(t *testing.T) {
 			t.Errorf("CreateEntity failed: %v", err)
 		}
 
-		position, err := ecs.Position(entity)
+		position, err := ecs.GetPosition(entity)
 		if err != nil {
 			t.Errorf("Position failed: %v", err)
 		}
@@ -256,7 +257,7 @@ func TestSystem_Load(t *testing.T) {
 		}
 
 		// check ecs for loaded components
-		position, err = ecs.Position(entity)
+		position, err = ecs.GetPosition(entity)
 		if err != nil {
 			t.Errorf("Position failed: %v", err)
 		}

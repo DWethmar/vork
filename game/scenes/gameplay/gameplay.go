@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/event/input"
@@ -45,11 +46,12 @@ func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
 
 func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
-	ecs := ecsys.New(eventBus)
+	ecs := ecsys.New(eventBus, store.NewStores())
+	sprites := sprites.Sprites(s)
 
 	systems := []systems.System{
 		controller.New(logger, ecs),
-		render.New(logger, sprites.Sprites(s), ecs, onClickHandler(logger, eventBus)),
+		render.New(logger, sprites, ecs, onClickHandler(logger, eventBus)),
 		skeletons.New(logger, ecs, eventBus),
 	}
 

@@ -61,7 +61,6 @@ func renderGrid(s *ebiten.Image, offsetX, offsetY int, zoom float64, debug bool)
 
 	for x := startX - 1; x < startX+numGridX; x++ {
 		for y := startY - 1; y < startY+numGridY; y++ {
-
 			dx := (float64(x*gridSize) - offsetXf) * zoom
 			dy := (float64(y*gridSize) - offsetYf) * zoom
 			size := float64(gridSize) * zoom

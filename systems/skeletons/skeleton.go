@@ -96,7 +96,7 @@ func (s *System) Draw(_ *ebiten.Image) error { return nil }
 
 // Update updates the skeletons in the ECS.
 func (s *System) Update() error {
-	skeletons := s.ecs.Skeletons()
+	skeletons := s.ecs.ListSkeletons()
 	for i := range skeletons {
 		e := &skeletons[i]
 		if err := s.updateSkeleton(e); err != nil {
@@ -119,7 +119,7 @@ func (s *System) Update() error {
 
 // updateSkeleton applies skeleton behavior to the entity.
 func (s *System) updateSkeleton(e *skeleton.Skeleton) error {
-	pos, err := s.ecs.Position(e.Entity())
+	pos, err := s.ecs.GetPosition(e.Entity())
 	if err != nil {
 		return fmt.Errorf("could not get position: %w", err)
 	}
@@ -159,7 +159,7 @@ func (s *System) updateSkeleton(e *skeleton.Skeleton) error {
 func (s *System) updateSprite(e *skeleton.Skeleton) error {
 	// Retrieve the sprite component associated with the skeleton
 	var spr *sprite.Sprite
-	sprites := s.ecs.SpritesByEntity(e.Entity())
+	sprites := s.ecs.ListSpritesByEntity(e.Entity())
 	for i := range sprites {
 		sp := &sprites[i]
 		if sp.Tag == "skeleton" {

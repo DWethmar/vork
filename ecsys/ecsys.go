@@ -12,6 +12,7 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 )
@@ -30,52 +31,6 @@ func componentTypes() []component.Type {
 	}
 }
 
-// BaseComponentStore defines a generic interface for managing any component type.
-// T is the component type, such as position, sprite, etc.
-type BaseComponentStore[T any] interface {
-	Add(T) (uint, error)                // Add a new component to the store.
-	Get(uint) (T, error)                // Get a component by its ID.
-	Update(T) error                     // Update an existing component.
-	List() []T                          // List all components in the store.
-	Delete(uint) error                  // Delete a component by its ID.
-	DeleteByEntity(entity.Entity) error // Delete all components associated with an entity.
-}
-
-// ControllableStore manages Controllable components, extending BaseComponentStore.
-// Includes an additional method to get the first Controllable by an entity.
-type ControllableStore interface {
-	BaseComponentStore[*controllable.Controllable]
-	FirstByEntity(entity.Entity) (*controllable.Controllable, error)
-}
-
-// PositionStore manages Position components, extending BaseComponentStore.
-// Includes an additional method to get the first Position by an entity.
-type PositionStore interface {
-	BaseComponentStore[*position.Position]
-	FirstByEntity(entity.Entity) (*position.Position, error)
-}
-
-// RectanglesStore manages Rectangle components (for shapes), extending BaseComponentStore.
-// Includes an additional method to get the first Rectangle by an entity.
-type RectanglesStore interface {
-	BaseComponentStore[*shape.Rectangle]
-	FirstByEntity(entity.Entity) (*shape.Rectangle, error)
-}
-
-// SpriteStore manages Sprite components, extending BaseComponentStore.
-// Includes an additional method to list all sprites associated with an entity.
-type SpriteStore interface {
-	BaseComponentStore[*sprite.Sprite]
-	ListByEntity(entity.Entity) []*sprite.Sprite
-}
-
-// SkeletonStore manages Skeleton components, extending BaseComponentStore.
-// Includes an additional method to get the first Skeleton by an entity.
-type SkeletonStore interface {
-	BaseComponentStore[*skeleton.Skeleton]
-	FirstByEntity(entity.Entity) (*skeleton.Skeleton, error)
-}
-
 // ECS is the main struct that manages entities and their associated components.
 // It also provides access to various component stores (position, controllable, rectangle, sprite, skeleton)
 // and integrates an event bus for handling in-game events.
@@ -83,42 +38,19 @@ type ECS struct {
 	mu sync.RWMutex
 	// lastEntityID is the last entity ID that was created. It is used to generate new entity IDs.
 	// When adding a component with an entity ID higher than lastEntityID, lastEntityID is updated.
-	lastEntityID      entity.Entity
-	eventBus          *event.Bus
-	positionStore     PositionStore
-	controllableStore ControllableStore
-	rectangleStore    RectanglesStore
-	spriteStore       SpriteStore
-	skeletonStore     SkeletonStore
+	lastEntityID entity.Entity
+	eventBus     *event.Bus
+	stores       *store.Stores
 }
 
 // New creates a new ECS system, initializing it with the provided component stores and event bus.
 // This function ensures that the ECS is ready to manage entities and components from the start.
-func New(eventBus *event.Bus) *ECS {
-	ecs := &ECS{
+func New(eventBus *event.Bus, s *store.Stores) *ECS {
+	return &ECS{
 		lastEntityID: 0,
 		eventBus:     eventBus,
+		stores:       s,
 	}
-
-	// Initialize component stores for the ECS.
-	for _, t := range componentTypes() {
-		switch t {
-		case position.Type:
-			ecs.positionStore = component.NewStore[*position.Position](true)
-		case controllable.Type:
-			ecs.controllableStore = component.NewStore[*controllable.Controllable](true)
-		case shape.RectangleType:
-			ecs.rectangleStore = component.NewStore[*shape.Rectangle](true)
-		case sprite.Type:
-			ecs.spriteStore = component.NewStore[*sprite.Sprite](false)
-		case skeleton.Type:
-			ecs.skeletonStore = component.NewStore[*skeleton.Skeleton](true)
-		default:
-			panic(fmt.Sprintf("failed to initialize ECS because of an unknown component type %s", t))
-		}
-	}
-
-	return ecs
 }
 
 // CreateEntity generates a new unique entity by incrementing the lastEntityID.
@@ -138,25 +70,26 @@ func (s *ECS) CreateEntity(x, y int) (entity.Entity, error) {
 }
 
 func (s *ECS) DeleteEntity(e entity.Entity) error {
+	stores := s.stores
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, t := range componentTypes() {
 		var err error
 		switch t {
 		case position.Type:
-			err = s.positionStore.DeleteByEntity(e)
+			err = stores.Position.DeleteByEntity(e)
 		case controllable.Type:
-			err = s.controllableStore.DeleteByEntity(e)
+			err = stores.Controllable.DeleteByEntity(e)
 		case shape.RectangleType:
-			err = s.rectangleStore.DeleteByEntity(e)
+			err = stores.Rectangle.DeleteByEntity(e)
 		case sprite.Type:
-			err = s.spriteStore.DeleteByEntity(e)
+			err = stores.Sprite.DeleteByEntity(e)
 		case skeleton.Type:
-			err = s.skeletonStore.DeleteByEntity(e)
+			err = stores.Skeleton.DeleteByEntity(e)
 		default:
 			return fmt.Errorf("failed to delete entity because of an unknown component type %s", t)
 		}
-		if err != nil && !errors.Is(err, component.ErrEntityNotFound) {
+		if err != nil && !errors.Is(err, store.ErrEntityNotFound) {
 			return fmt.Errorf("failed to delete entity: %w", err)
 		}
 	}

@@ -28,8 +28,8 @@ func (s *System) Close() error {
 
 func (s *System) Update() error {
 	x, y := direction()
-	for _, c := range s.ecs.Controllables() {
-		p, err := s.ecs.Position(c.Entity())
+	for _, c := range s.ecs.ListControllables() {
+		p, err := s.ecs.GetPosition(c.Entity())
 		if err != nil {
 			return err
 		}

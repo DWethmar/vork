@@ -36,6 +36,7 @@ func NewGenericComponentLifeCycle[T component.Component](
 	}
 }
 
+// Changed is called when a component has changed.
 func (l *GenericComponentLifeCycle[T]) Changed(e component.Event) error {
 	if e.Deleted() {
 		return nil
@@ -49,6 +50,7 @@ func (l *GenericComponentLifeCycle[T]) Changed(e component.Event) error {
 	return nil
 }
 
+// Deleted is called when a component has been deleted.
 func (l *GenericComponentLifeCycle[T]) Deleted(e component.Event) error {
 	delete(l.changed, e.ComponentID())
 	if err := l.componentMarkerFunc(e, l.deleted); err != nil {
@@ -57,22 +59,20 @@ func (l *GenericComponentLifeCycle[T]) Deleted(e component.Event) error {
 	return nil
 }
 
+// Commit saves all changes to the database.
 func (l *GenericComponentLifeCycle[T]) Commit(tx *bolt.Tx) error {
 	for _, p := range l.changed {
 		if err := l.repo.Save(tx, p); err != nil {
 			return err
 		}
 	}
-
 	for _, p := range l.deleted {
 		if err := l.repo.Delete(tx, p.ID()); err != nil {
 			return err
 		}
 	}
-
 	l.changed = make(map[uint]T)
 	l.deleted = make(map[uint]T)
-
 	return nil
 }
 
@@ -81,12 +81,10 @@ func (l *GenericComponentLifeCycle[T]) Load(tx *bolt.Tx) error {
 	if err != nil {
 		return err
 	}
-
 	for _, c := range components {
 		if _, err = l.addFunc(c); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

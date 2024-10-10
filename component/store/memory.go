@@ -1,24 +1,17 @@
-package component
+package store
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"sync"
 
+	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
 )
 
-var (
-	// ErrComponentNotFound is returned when a component is not found.
-	ErrComponentNotFound = errors.New("component not found")
-	// ErrEntityNotFound is returned when an entity is not found in the store.
-	ErrEntityNotFound = errors.New("entity not found")
-)
-
-// Store holds components in memory and provides CRUD operations.
+// MemStore holds components in memory and provides CRUD operations.
 // It is generic over type C, which must implement the Component interface.
-type Store[C Component] struct {
+type MemStore[C component.Component] struct {
 	mu              sync.RWMutex
 	components      []*C
 	entityIndex     map[entity.Entity][]*C // Maps Entity ID to Components
@@ -26,11 +19,11 @@ type Store[C Component] struct {
 	uniquePerEntity bool // Flag to enforce uniqueness per entity
 }
 
-// NewStore creates a new instance of Store for a specific component type.
+// NewMemoryStore creates a new instance of Store for a specific component type.
 // If uniquePerEntity is true, the store will enforce that only one component
 // per entity can be added.
-func NewStore[C Component](uniquePerEntity bool) *Store[C] {
-	return &Store[C]{
+func NewMemStore[C component.Component](uniquePerEntity bool) *MemStore[C] {
+	return &MemStore[C]{
 		components:      []*C{},
 		entityIndex:     make(map[entity.Entity][]*C),
 		nextID:          1,
@@ -41,7 +34,7 @@ func NewStore[C Component](uniquePerEntity bool) *Store[C] {
 // Add inserts a new component into the store.
 // If the component ID is zero, it assigns a new unique ID.
 // Enforces uniqueness per entity if the flag is set.
-func (s *Store[C]) Add(c C) (uint, error) {
+func (s *MemStore[C]) Add(c C) (uint, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -74,7 +67,7 @@ func (s *Store[C]) Add(c C) (uint, error) {
 }
 
 // Get retrieves a component by its ID using binary search.
-func (s *Store[C]) Get(id uint) (C, error) {
+func (s *MemStore[C]) Get(id uint) (C, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -87,7 +80,7 @@ func (s *Store[C]) Get(id uint) (C, error) {
 }
 
 // Update modifies an existing component in the store using binary search.
-func (s *Store[C]) Update(c C) error {
+func (s *MemStore[C]) Update(c C) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -101,21 +94,17 @@ func (s *Store[C]) Update(c C) error {
 }
 
 // Delete removes a component by its ID using binary search.
-func (s *Store[C]) Delete(id uint) error {
+func (s *MemStore[C]) Delete(id uint) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	index := s.searchComponentIndex(id)
 	if index >= len(s.components) || (*s.components[index]).ID() != id {
 		return ErrComponentNotFound
 	}
-
 	c := s.components[index]
 	entityID := (*c).Entity()
-
 	// Remove the component from the components slice
 	s.components = append(s.components[:index], s.components[index+1:]...)
-
 	// Remove component from entityIndex
 	comps := s.entityIndex[entityID]
 	for i, comp := range comps {
@@ -129,12 +118,11 @@ func (s *Store[C]) Delete(id uint) error {
 	if len(s.entityIndex[entityID]) == 0 {
 		delete(s.entityIndex, entityID)
 	}
-
 	return nil
 }
 
 // List returns all components in the store.
-func (s *Store[C]) List() []C {
+func (s *MemStore[C]) List() []C {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	components := make([]C, len(s.components))
@@ -145,7 +133,7 @@ func (s *Store[C]) List() []C {
 }
 
 // FirstByEntity retrieves the first component associated with an entity.
-func (s *Store[C]) FirstByEntity(e entity.Entity) (C, error) {
+func (s *MemStore[C]) FirstByEntity(e entity.Entity) (C, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -159,7 +147,7 @@ func (s *Store[C]) FirstByEntity(e entity.Entity) (C, error) {
 }
 
 // ListByEntity retrieves all components associated with an entity.
-func (s *Store[C]) ListByEntity(e entity.Entity) []C {
+func (s *MemStore[C]) ListByEntity(e entity.Entity) []C {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -176,7 +164,7 @@ func (s *Store[C]) ListByEntity(e entity.Entity) []C {
 }
 
 // DeleteByEntity removes all components associated with an entity.
-func (s *Store[C]) DeleteByEntity(e entity.Entity) error {
+func (s *MemStore[C]) DeleteByEntity(e entity.Entity) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -201,14 +189,14 @@ func (s *Store[C]) DeleteByEntity(e entity.Entity) error {
 }
 
 // searchComponentIndex performs a binary search to find the index of a component with the given ID.
-func (s *Store[C]) searchComponentIndex(id uint) int {
+func (s *MemStore[C]) searchComponentIndex(id uint) int {
 	return sort.Search(len(s.components), func(i int) bool {
 		return (*s.components[i]).ID() >= id
 	})
 }
 
 // insertComponentSorted inserts a component into the sorted slice.
-func (s *Store[C]) insertComponentSorted(c *C) {
+func (s *MemStore[C]) insertComponentSorted(c *C) {
 	index := s.searchComponentIndex((*c).ID())
 	// Insert the component at the correct position
 	s.components = append(s.components, c) // Append to increase the slice size
