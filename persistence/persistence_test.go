@@ -228,41 +228,54 @@ func TestSystem_Load(t *testing.T) {
 			closeTestDB(t, db, path)
 		})
 
-		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		var entity entity.Entity
+		{
+			eventBus := event.NewBus()
+			ecs := ecsys.New(eventBus, store.NewStores())
+			// create system
+			s := persistence.New(eventBus, ecs)
+			var err error
+			// load some data
+			entity, err = ecs.CreateEntity(11, 22)
+			if err != nil {
+				t.Errorf("CreateEntity failed: %v", err)
+			}
 
-		// load some data
-		entity, err := ecs.CreateEntity(11, 22)
-		if err != nil {
-			t.Errorf("CreateEntity failed: %v", err)
+			position, err := ecs.GetPosition(entity)
+			if err != nil {
+				t.Errorf("Position failed: %v", err)
+			}
+
+			// update position
+			position.X = 33
+			position.Y = 44
+
+			if err = ecs.UpdatePositionComponent(position); err != nil {
+				t.Errorf("UpdatePosition failed: %v", err)
+			}
+
+			if err = s.Save(db); err != nil {
+				t.Errorf("Load failed: %v", err)
+			}
 		}
 
-		position, err := ecs.GetPosition(entity)
-		if err != nil {
-			t.Errorf("Position failed: %v", err)
-		}
+		{
+			eventBus := event.NewBus()
+			ecs := ecsys.New(eventBus, store.NewStores())
+			// create system
+			s := persistence.New(eventBus, ecs)
+			if err := s.Load(db); err != nil {
+				t.Errorf("Load failed: %v", err)
+			}
 
-		// update position
-		position.X = 33
-		position.Y = 44
-
-		if err = ecs.UpdatePositionComponent(position); err != nil {
-			t.Errorf("UpdatePosition failed: %v", err)
-		}
-
-		// create system
-		s := persistence.New(eventBus, ecs)
-		if err = s.Load(db); err != nil {
-			t.Errorf("Load failed: %v", err)
-		}
-
-		// check ecs for loaded components
-		position, err = ecs.GetPosition(entity)
-		if err != nil {
-			t.Errorf("Position failed: %v", err)
-		}
-		if position.X != 33 || position.Y != 44 {
-			t.Errorf("Position failed: expected 11, 11, got %d, %d", position.X, position.Y)
+			// check ecs for loaded components
+			position, err := ecs.GetPosition(entity)
+			if err != nil {
+				t.Errorf("Position failed: %v", err)
+			}
+			if position.X != 33 || position.Y != 44 {
+				t.Errorf("Position failed: expected (33, 44), got (%d, %d)", position.X, position.Y)
+			}
 		}
 	})
 }

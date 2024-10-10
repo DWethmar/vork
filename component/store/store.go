@@ -16,6 +16,8 @@ var (
 	ErrComponentNotFound = errors.New("component not found")
 	// ErrEntityNotFound is returned when an entity is not found in the store.
 	ErrEntityNotFound = errors.New("entity not found")
+	// ErrUniqueComponentViolation is returned when a component is unique per entity.
+	ErrUniqueComponentViolation = errors.New("only one component per entity allowed")
 )
 
 // Store defines a generic interface for managing any component type.
@@ -33,21 +35,21 @@ type Store[T any] interface {
 // Includes an additional method to get the first Controllable by an entity.
 type ControllableStore interface {
 	Store[*controllable.Controllable]
-	FirstByEntity(entity.Entity) (*controllable.Controllable, error)
+	First(entity.Entity) (*controllable.Controllable, error)
 }
 
 // PositionStore manages Position components, extending BaseComponentStore.
 // Includes an additional method to get the first Position by an entity.
 type PositionStore interface {
 	Store[*position.Position]
-	FirstByEntity(entity.Entity) (*position.Position, error)
+	First(entity.Entity) (*position.Position, error)
 }
 
 // RectanglesStore manages Rectangle components (for shapes), extending BaseComponentStore.
 // Includes an additional method to get the first Rectangle by an entity.
 type RectanglesStore interface {
 	Store[*shape.Rectangle]
-	FirstByEntity(entity.Entity) (*shape.Rectangle, error)
+	First(entity.Entity) (*shape.Rectangle, error)
 }
 
 // SpriteStore manages Sprite components, extending BaseComponentStore.
@@ -61,7 +63,7 @@ type SpriteStore interface {
 // Includes an additional method to get the first Skeleton by an entity.
 type SkeletonStore interface {
 	Store[*skeleton.Skeleton]
-	FirstByEntity(entity.Entity) (*skeleton.Skeleton, error)
+	First(entity.Entity) (*skeleton.Skeleton, error)
 }
 
 // Stores is a collection of component stores used in the ECS.

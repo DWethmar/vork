@@ -28,6 +28,9 @@ func (s *System) Close() error {
 
 func (s *System) Update() error {
 	x, y := direction()
+	if x == 0 && y == 0 {
+		return nil
+	}
 	for _, c := range s.ecs.ListControllables() {
 		p, err := s.ecs.GetPosition(c.Entity())
 		if err != nil {

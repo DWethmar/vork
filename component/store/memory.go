@@ -31,6 +31,26 @@ func NewMemStore[C component.Component](uniquePerEntity bool) *MemStore[C] {
 	}
 }
 
+// applyUniqueConstraint checks if a component violates the uniqueness constraint.
+func (s *MemStore[C]) applyUniqueConstraint(e entity.Entity, id uint) error {
+	if !s.uniquePerEntity {
+		return nil
+	}
+
+	comps := s.entityIndex[e]
+	if len(comps) == 0 {
+		// No existing components; safe to add.
+		return nil
+	}
+
+	if len(comps) == 1 && (*comps[0]).ID() == id {
+		// Existing component has the same ID; it's an update.
+		return nil
+	}
+
+	return ErrUniqueComponentViolation
+}
+
 // Add inserts a new component into the store.
 // If the component ID is zero, it assigns a new unique ID.
 // Enforces uniqueness per entity if the flag is set.
@@ -40,10 +60,8 @@ func (s *MemStore[C]) Add(c C) (uint, error) {
 
 	entityID := c.Entity()
 
-	if s.uniquePerEntity {
-		if comps, exists := s.entityIndex[entityID]; exists && len(comps) > 0 {
-			return 0, fmt.Errorf("component for entity ID %d already exists with component ID %d", entityID, (*comps[0]).ID())
-		}
+	if err := s.applyUniqueConstraint(entityID, c.ID()); err != nil {
+		return 0, err
 	}
 
 	if c.ID() == 0 {
@@ -84,13 +102,17 @@ func (s *MemStore[C]) Update(c C) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if err := s.applyUniqueConstraint(c.Entity(), c.ID()); err != nil {
+		return err
+	}
+
 	index := s.searchComponentIndex(c.ID())
 	if index < len(s.components) && (*s.components[index]).ID() == c.ID() {
 		// Update the component in the components slice
 		*s.components[index] = c
 		return nil
 	}
-	return fmt.Errorf("component with ID %d not found", c.ID())
+	return ErrComponentNotFound
 }
 
 // Delete removes a component by its ID using binary search.
@@ -132,8 +154,8 @@ func (s *MemStore[C]) List() []C {
 	return components
 }
 
-// FirstByEntity retrieves the first component associated with an entity.
-func (s *MemStore[C]) FirstByEntity(e entity.Entity) (C, error) {
+// First retrieves the first component associated with an entity.
+func (s *MemStore[C]) First(e entity.Entity) (C, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
