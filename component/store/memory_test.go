@@ -190,7 +190,7 @@ func TestMemStoreUpdate(t *testing.T) {
 			E:   entity.Entity(1),
 			Tag: "test",
 		}
-		_, err = s.Add(c)
+		err = s.Update(c)
 		if !errors.Is(err, store.ErrUniqueComponentViolation) {
 			t.Errorf("Add() should return ErrUniquePerEntity, got %v", err)
 		}
