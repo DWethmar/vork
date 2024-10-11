@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// assertChildren checks if the children of a parent are equal to the expected children
+// assertChildren checks if the children of a parent are equal to the expected children.
 func assertChildren(t *testing.T, h *hierarchy.Hierarchy, parent entity.Entity, expect []entity.Entity) {
 	t.Helper()
 	children, err := h.Children(parent)
