@@ -36,6 +36,15 @@ func (s *ECS) ListRectangles() []shape.Rectangle {
 	return r
 }
 
+func (s *ECS) ListRectanglesByEntity(e entity.Entity) []shape.Rectangle {
+	c := s.stores.Rectangle.ListByEntity(e)
+	r := make([]shape.Rectangle, len(c))
+	for i, v := range c {
+		r[i] = *v
+	}
+	return r
+}
+
 func (s *ECS) ListSprites() []sprite.Sprite {
 	c := s.stores.Sprite.List()
 	r := make([]sprite.Sprite, len(c))

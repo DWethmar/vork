@@ -55,44 +55,105 @@ func New(eventBus *event.Bus, s *store.Stores) *ECS {
 
 // CreateEntity generates a new unique entity by incrementing the lastEntityID.
 // It also creates a position component for the entity and adds it to the ECS.
-func (s *ECS) CreateEntity(x, y int) (entity.Entity, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.lastEntityID++
-
-	// create position component
-	pos := position.New(s.lastEntityID, x, y)
+func (s *ECS) CreateEntity(parent entity.Entity, x, y int) (entity.Entity, error) {
+	e := s.CreateEmptyEntity()
+	pos := position.New(parent, e, x, y)
 	if _, err := s.AddPositionComponent(*pos); err != nil {
 		return 0, err
 	}
-
-	return s.lastEntityID, nil
+	return e, nil
 }
 
-func (s *ECS) DeleteEntity(e entity.Entity) error {
-	stores := s.stores
+// CreateEmptyEntity generates a new unique entity by incrementing the lastEntityID.
+func (s *ECS) CreateEmptyEntity() entity.Entity {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for _, t := range componentTypes() {
-		var err error
-		switch t {
-		case position.Type:
-			err = stores.Position.DeleteByEntity(e)
-		case controllable.Type:
-			err = stores.Controllable.DeleteByEntity(e)
-		case shape.RectangleType:
-			err = stores.Rectangle.DeleteByEntity(e)
-		case sprite.Type:
-			err = stores.Sprite.DeleteByEntity(e)
-		case skeleton.Type:
-			err = stores.Skeleton.DeleteByEntity(e)
-		default:
-			return fmt.Errorf("failed to delete entity because of an unknown component type %s", t)
-		}
+	s.lastEntityID++
+	return s.lastEntityID
+}
+
+// DeleteEntity removes an entity and all its associated components from the ECS.
+func (s *ECS) DeleteEntity(e entity.Entity) error {
+	// Check for errors and return the first one that is not a "not found" error.
+	for _, err := range s.deleteEntity(e) {
 		if err != nil && !errors.Is(err, store.ErrEntityNotFound) {
 			return fmt.Errorf("failed to delete entity: %w", err)
 		}
 	}
-
 	return nil
+}
+
+// deleteEntity removes an entity and all its associated components from the ECS.
+func (s *ECS) deleteEntity(e entity.Entity) []error {
+	errs := make([]error, 0)
+	for _, t := range componentTypes() {
+		switch t {
+		case position.Type:
+			if err := s.deletePosition(e); err != nil {
+				errs = append(errs, err)
+			}
+		case controllable.Type:
+			if err := s.deleteControllable(e); err != nil {
+				errs = append(errs, err)
+			}
+		case shape.RectangleType:
+			if err := s.deleteRectangle(e); err != nil {
+				errs = append(errs, err)
+			}
+		case sprite.Type:
+			if err := s.deleteSprite(e); err != nil {
+				errs = append(errs, err)
+			}
+		case skeleton.Type:
+			if err := s.deleteSkeleton(e); err != nil {
+				errs = append(errs, err)
+			}
+		default:
+			errs = append(errs, fmt.Errorf("unknown component type: %v", t))
+		}
+	}
+
+	return errs
+}
+
+func (s *ECS) deletePosition(e entity.Entity) error {
+	c, err := s.GetPosition(e)
+	if err != nil {
+		return err
+	}
+	return s.DeletePosition(c)
+}
+
+func (s *ECS) deleteControllable(e entity.Entity) error {
+	c, err := s.GetControllable(e)
+	if err != nil {
+		return err
+	}
+	return s.DeleteControllable(c)
+}
+
+func (s *ECS) deleteRectangle(e entity.Entity) error {
+	for _, c := range s.ListRectanglesByEntity(e) {
+		if err := s.DeleteRectangle(c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *ECS) deleteSprite(e entity.Entity) error {
+	for _, sprite := range s.ListSpritesByEntity(e) {
+		if err := s.DeleteSprite(sprite); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *ECS) deleteSkeleton(e entity.Entity) error {
+	c, err := s.GetSkeleton(e)
+	if err != nil {
+		return err
+	}
+	return s.DeleteSkeleton(c)
 }

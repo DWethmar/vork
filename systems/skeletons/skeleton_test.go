@@ -7,6 +7,7 @@ import (
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/ecsys"
+	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/systems/skeletons"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -26,7 +27,7 @@ func TestNew(t *testing.T) {
 			t.Errorf("Expected 2 subscriptions, got %d", len(subscriptions))
 		}
 
-		e, err := ecs.CreateEntity(0, 0)
+		e, err := ecs.CreateEntity(entity.Entity(0), 0, 0)
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)
 		}
@@ -44,8 +45,8 @@ func TestNew(t *testing.T) {
 		}
 
 		// should have rectangle
-		if _, err = ecs.GetRectangle(e); err != nil {
-			t.Errorf("Expected shape component, got %v", err)
+		if len(ecs.ListRectanglesByEntity(e)) == 0 {
+			t.Errorf("Expected rectangle component, got %v", ecs.ListRectanglesByEntity(e))
 		}
 
 		// should have sprite

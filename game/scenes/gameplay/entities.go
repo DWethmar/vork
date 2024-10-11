@@ -6,10 +6,11 @@ import (
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/ecsys"
+	"github.com/dwethmar/vork/entity"
 )
 
 func addPlayer(ecs *ecsys.ECS, x, y int) error {
-	e, err := ecs.CreateEntity(x, y)
+	e, err := ecs.CreateEntity(entity.Entity(0), x, y)
 	if err != nil {
 		return fmt.Errorf("could not create entity: %w", err)
 	}
@@ -23,7 +24,7 @@ func addPlayer(ecs *ecsys.ECS, x, y int) error {
 }
 
 func addEnemy(ecs *ecsys.ECS, x, y int) error {
-	e, err := ecs.CreateEntity(x, y)
+	e, err := ecs.CreateEntity(entity.Entity(0), x, y)
 	if err != nil {
 		fmt.Printf("could not create entity: %v\n", err)
 	}

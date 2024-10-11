@@ -49,7 +49,7 @@ type PositionStore interface {
 // Includes an additional method to get the first Rectangle by an entity.
 type RectanglesStore interface {
 	Store[*shape.Rectangle]
-	First(entity.Entity) (*shape.Rectangle, error)
+	ListByEntity(entity.Entity) []*shape.Rectangle
 }
 
 // SpriteStore manages Sprite components, extending BaseComponentStore.

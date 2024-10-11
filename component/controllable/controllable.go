@@ -24,6 +24,10 @@ func New(e entity.Entity) *Controllable {
 	}
 }
 
+func Empty() *Controllable {
+	return &Controllable{}
+}
+
 func (c *Controllable) ID() uint              { return c.I }
 func (c *Controllable) SetID(i uint)          { c.I = i }
 func (c *Controllable) Type() component.Type  { return Type }

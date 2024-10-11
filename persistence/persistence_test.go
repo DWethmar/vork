@@ -91,7 +91,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 				}
 
 				// Add position component
-				pos := position.New(e, x, y)
+				pos := position.New(entity.Entity(0), e, x, y)
 				if _, err := ecs.AddPositionComponent(*pos); err != nil {
 					t.Fatalf("Failed to add position component: %v", err)
 				}
@@ -170,7 +170,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 			e := entity.Entity(i)
 			x := i * 10
 			y := i * 10
-			pos := position.New(e, x, y)
+			pos := position.New(entity.Entity(0), e, x, y)
 			if _, err := ecs.AddPositionComponent(*pos); err != nil {
 				t.Fatalf("Failed to add position component: %v", err)
 			}
@@ -178,7 +178,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 
 		// Delete position component of entity 50
 		if con, err := ecs.GetPosition(entity.Entity(50)); err == nil {
-			if err = ecs.DeletePositionComponent(con); err != nil {
+			if err = ecs.DeletePosition(con); err != nil {
 				t.Fatalf("Failed to delete position component: %v", err)
 			}
 		} else {
@@ -228,7 +228,7 @@ func TestSystem_Load(t *testing.T) {
 			closeTestDB(t, db, path)
 		})
 
-		var entity entity.Entity
+		var e entity.Entity
 		{
 			eventBus := event.NewBus()
 			ecs := ecsys.New(eventBus, store.NewStores())
@@ -236,12 +236,12 @@ func TestSystem_Load(t *testing.T) {
 			s := persistence.New(eventBus, ecs)
 			var err error
 			// load some data
-			entity, err = ecs.CreateEntity(11, 22)
+			e, err = ecs.CreateEntity(entity.Entity(0), 11, 22)
 			if err != nil {
 				t.Errorf("CreateEntity failed: %v", err)
 			}
 
-			position, err := ecs.GetPosition(entity)
+			position, err := ecs.GetPosition(e)
 			if err != nil {
 				t.Errorf("Position failed: %v", err)
 			}
@@ -269,7 +269,7 @@ func TestSystem_Load(t *testing.T) {
 			}
 
 			// check ecs for loaded components
-			position, err := ecs.GetPosition(entity)
+			position, err := ecs.GetPosition(e)
 			if err != nil {
 				t.Errorf("Position failed: %v", err)
 			}

@@ -1,8 +1,6 @@
 package event
 
-import (
-	"sync"
-)
+import "sync"
 
 // Event is an interface that requires implementing the Event method.
 type Event interface {
@@ -21,14 +19,15 @@ type Subscription struct {
 
 // Bus is a struct that manages event handlers in a thread-safe manner.
 type Bus struct {
+	mu       sync.RWMutex
 	handlers []Subscription
 	nextID   int // Used to assign a unique ID to each handler
-	mu       sync.RWMutex
 }
 
 // NewBus creates and returns a new Bus instance.
 func NewBus() *Bus {
 	return &Bus{
+		mu:       sync.RWMutex{},
 		handlers: []Subscription{},
 		nextID:   1, // Start IDs from 1
 	}

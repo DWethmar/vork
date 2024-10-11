@@ -9,6 +9,7 @@ import (
 	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/ecsys"
+	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/google/go-cmp/cmp"
 )
@@ -25,7 +26,7 @@ func TestNew(t *testing.T) {
 func TestECS_CreateEntity(t *testing.T) {
 	t.Run("should create an entity with a position", func(t *testing.T) {
 		ecs := ecsys.New(event.NewBus(), store.NewStores())
-		entity, err := ecs.CreateEntity(11, 22)
+		entity, err := ecs.CreateEntity(entity.Entity(0), 11, 22)
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)
 		}
@@ -55,7 +56,7 @@ func TestECS_CreateEntity(t *testing.T) {
 func TestECS_DeleteEntity(t *testing.T) {
 	t.Run("should delete an entity", func(t *testing.T) {
 		ecs := ecsys.New(event.NewBus(), store.NewStores())
-		entity, err := ecs.CreateEntity(11, 22)
+		entity, err := ecs.CreateEntity(entity.Entity(0), 11, 22)
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)
 		}

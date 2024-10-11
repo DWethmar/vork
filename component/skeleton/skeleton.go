@@ -37,6 +37,10 @@ func New(e entity.Entity) *Skeleton {
 	}
 }
 
+func Empty() *Skeleton {
+	return &Skeleton{}
+}
+
 func (s *Skeleton) ID() uint              { return s.I }
 func (s *Skeleton) SetID(i uint)          { s.I = i }
 func (s *Skeleton) Type() component.Type  { return Type }
