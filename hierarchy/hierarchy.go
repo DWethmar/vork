@@ -103,13 +103,9 @@ func (h *Hierarchy) update(p *position.Position) error {
 		return errors.New("current parent entity not found")
 	}
 
-	index := -1
-	for i, c := range children {
-		if c == p.Entity() {
-			index = i
-			break
-		}
-	}
+	index := slices.IndexFunc(children, func(e entity.Entity) bool {
+		return e == p.Entity()
+	})
 
 	if index == -1 {
 		return errors.New("child entity not found")

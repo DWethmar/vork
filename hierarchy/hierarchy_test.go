@@ -12,6 +12,19 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// assertChildren checks if the children of a parent are equal to the expected children
+func assertChildren(t *testing.T, h *hierarchy.Hierarchy, parent entity.Entity, expect []entity.Entity) {
+	t.Helper()
+	children, err := h.Children(parent)
+	if err != nil {
+		t.Errorf("Error getting children: %s", err)
+	}
+
+	if diff := cmp.Diff(children, expect); diff != "" {
+		t.Errorf("Children should be equal: %s", diff)
+	}
+}
+
 //nolint:gocognit
 func TestNew(t *testing.T) {
 	t.Run("New should create a new hierarchy", func(t *testing.T) {
@@ -90,13 +103,7 @@ func TestNew(t *testing.T) {
 		}
 
 		// check if the children are removed from the hierarchy
-		children, err := h.Children(parent)
-		if !errors.Is(err, hierarchy.ErrEntityNotFound) {
-			t.Error("Error should not be nil")
-		}
-		if len(children) != 0 {
-			t.Errorf("Children should be empty: %v", children)
-		}
+		assertChildren(t, h, root, []entity.Entity{})
 
 		// check if the children are removed from the ecs
 		if _, err = ecs.GetPosition(child1); !errors.Is(err, store.ErrEntityNotFound) {
@@ -111,16 +118,50 @@ func TestNew(t *testing.T) {
 		if _, err = ecs.GetPosition(parent); !errors.Is(err, store.ErrEntityNotFound) {
 			t.Errorf("Error should not be nil: %s", err)
 		}
+	})
 
-		// root should have zero children
-		children, err = h.Children(root)
+	t.Run("updating a parent should update the children in the hierarchy", func(t *testing.T) {
+		eventBus := event.NewBus()
+		ecs := ecsys.New(eventBus, store.NewStores())
+		root := ecs.CreateEmptyEntity()
+		h := hierarchy.New(root, eventBus, ecs)
+
+		child1, err := ecs.CreateEntity(root, 0, 0)
 		if err != nil {
-			t.Errorf("Error getting children: %s", err)
+			t.Errorf("Error creating entity: %s", err)
 		}
 
-		if len(children) != 0 {
-			t.Errorf("Children should be empty: %v", children)
+		child2, err := ecs.CreateEntity(child1, 0, 0)
+		if err != nil {
+			t.Errorf("Error creating entity: %s", err)
 		}
+
+		child3, err := ecs.CreateEntity(child2, 0, 0)
+		if err != nil {
+			t.Errorf("Error creating entity: %s", err)
+		}
+
+		// tree should be root -> child1 -> child2 -> child3
+
+		assertChildren(t, h, root, []entity.Entity{child1})
+		assertChildren(t, h, child1, []entity.Entity{child2})
+		assertChildren(t, h, child2, []entity.Entity{child3})
+
+		// update child3's parent to child1
+		pos, err := ecs.GetPosition(child3)
+		if err != nil {
+			t.Errorf("Error getting position: %s", err)
+		}
+
+		pos.Parent = child1
+		if err = ecs.UpdatePositionComponent(pos); err != nil {
+			t.Errorf("Error updating position: %s", err)
+		}
+
+		// tree should be root -> child1 -> child2, child3
+		assertChildren(t, h, child1, []entity.Entity{child2, child3})
+		// child2 should have no children
+		assertChildren(t, h, child2, []entity.Entity{})
 	})
 }
 
