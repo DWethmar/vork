@@ -168,7 +168,11 @@ func (h *Hierarchy) Children(e entity.Entity) ([]entity.Entity, error) {
 	if !ok {
 		return nil, ErrEntityNotFound
 	}
-	r := make([]entity.Entity, len(children))
+	var r []entity.Entity
+	if len(children) == 0 {
+		return r, nil
+	}
+	r = make([]entity.Entity, len(children))
 	copy(r, children)
 	return r, nil
 }
