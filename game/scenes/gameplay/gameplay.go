@@ -12,7 +12,6 @@ import (
 	"github.com/dwethmar/vork/persistence"
 	"github.com/dwethmar/vork/sprites"
 	"github.com/dwethmar/vork/spritesheet"
-	"github.com/dwethmar/vork/systems"
 	"github.com/dwethmar/vork/systems/controller"
 	"github.com/dwethmar/vork/systems/render"
 	"github.com/dwethmar/vork/systems/skeletons"
@@ -31,7 +30,7 @@ var (
 type GamePlay struct {
 	logger      *slog.Logger
 	db          *bbolt.DB
-	systems     []systems.System
+	systems     []System
 	persistence *persistence.Persistance
 }
 
@@ -47,11 +46,14 @@ func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
 func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
 	ecs := ecsys.New(eventBus, store.NewStores())
-	sprites := sprites.Sprites(s)
-
-	systems := []systems.System{
+	systems := []System{
 		controller.New(logger, ecs),
-		render.New(logger, sprites, ecs, onClickHandler(logger, eventBus)),
+		render.New(render.Options{
+			Logger:       logger,
+			Sprites:      sprites.Sprites(s),
+			ECS:          ecs,
+			ClickHandler: onClickHandler(logger, eventBus),
+		}),
 		skeletons.New(logger, ecs, eventBus),
 	}
 
@@ -119,6 +121,16 @@ func (s *GamePlay) Update() error {
 		}
 	}
 
+	return nil
+}
+
+// Close closes the game.
+func (s *GamePlay) Close() error {
+	for _, sys := range s.systems {
+		if err := sys.Close(); err != nil {
+			return fmt.Errorf("failed to close system: %w", err)
+		}
+	}
 	return nil
 }
 

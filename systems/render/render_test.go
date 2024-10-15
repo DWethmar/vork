@@ -13,12 +13,13 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Run("New", func(t *testing.T) {
-		logger := slog.Default()
-		sprites := []render.Sprite{}
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
-		clickHandler := func(_, _ int) {}
-		got := render.New(logger, sprites, ecs, clickHandler)
+		got := render.New(render.Options{
+			Logger:       slog.Default(),
+			Sprites:      []render.Sprite{},
+			ECS:          ecsys.New(eventBus, store.NewStores()),
+			ClickHandler: func(_, _ int) {},
+		})
 		if got == nil {
 			t.Errorf("New() = nil, want System")
 		}
@@ -27,12 +28,13 @@ func TestNew(t *testing.T) {
 
 func TestSystem_Close(t *testing.T) {
 	t.Run("Close", func(t *testing.T) {
-		logger := slog.Default()
-		sprites := []render.Sprite{}
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
-		clickHandler := func(_, _ int) {}
-		s := render.New(logger, sprites, ecs, clickHandler)
+		s := render.New(render.Options{
+			Logger:       slog.Default(),
+			Sprites:      []render.Sprite{},
+			ECS:          ecsys.New(eventBus, store.NewStores()),
+			ClickHandler: func(_, _ int) {},
+		})
 		if err := s.Close(); err != nil {
 			t.Errorf("Close() = %v, want nil", err)
 		}
@@ -41,12 +43,14 @@ func TestSystem_Close(t *testing.T) {
 
 func TestSystem_Draw(t *testing.T) {
 	t.Run("Draw", func(t *testing.T) {
-		logger := slog.Default()
-		sprites := []render.Sprite{}
 		eventBus := event.NewBus()
 		ecs := ecsys.New(eventBus, store.NewStores())
-		clickHandler := func(_, _ int) {}
-		s := render.New(logger, sprites, ecs, clickHandler)
+		s := render.New(render.Options{
+			Logger:       slog.Default(),
+			Sprites:      []render.Sprite{},
+			ECS:          ecs,
+			ClickHandler: func(_, _ int) {},
+		})
 
 		screen := ebiten.NewImage(100, 100)
 
@@ -58,13 +62,13 @@ func TestSystem_Draw(t *testing.T) {
 
 func TestSystem_Update(t *testing.T) {
 	t.Run("Update", func(t *testing.T) {
-		logger := slog.Default()
-		sprites := []render.Sprite{}
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
-		clickHandler := func(_, _ int) {}
-		s := render.New(logger, sprites, ecs, clickHandler)
-
+		s := render.New(render.Options{
+			Logger:       slog.Default(),
+			Sprites:      []render.Sprite{},
+			ECS:          ecsys.New(eventBus, store.NewStores()),
+			ClickHandler: func(_, _ int) {},
+		})
 		if err := s.Update(); err != nil {
 			t.Errorf("Update() = %v, want nil", err)
 		}

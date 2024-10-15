@@ -64,7 +64,7 @@ func (s *ECS) CreateEntity(parent entity.Entity, x, y int) (entity.Entity, error
 	return e, nil
 }
 
-// CreateEmptyEntity generates a new unique entity by incrementing the lastEntityID.
+// CreateEmptyEntity generates a new unique entity by incrementing the last entity ID.
 func (s *ECS) CreateEmptyEntity() entity.Entity {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -75,7 +75,7 @@ func (s *ECS) CreateEmptyEntity() entity.Entity {
 // DeleteEntity removes an entity and all its associated components from the ECS.
 func (s *ECS) DeleteEntity(e entity.Entity) error {
 	// Check for errors and return the first one that is not a "not found" error.
-	for _, err := range s.deleteEntity(e) {
+	for _, err := range s.deleteAllComponents(e) {
 		if err != nil && !errors.Is(err, store.ErrEntityNotFound) {
 			return fmt.Errorf("failed to delete entity: %w", err)
 		}
@@ -83,9 +83,9 @@ func (s *ECS) DeleteEntity(e entity.Entity) error {
 	return nil
 }
 
-// deleteEntity removes an entity and all its associated components from the ECS.
-func (s *ECS) deleteEntity(e entity.Entity) []error {
-	errs := make([]error, 0)
+// deleteAllComponents removes an entity and all its associated components from the ECS.
+func (s *ECS) deleteAllComponents(e entity.Entity) []error {
+	var errs []error
 	for _, t := range componentTypes() {
 		switch t {
 		case position.Type:
@@ -112,7 +112,6 @@ func (s *ECS) deleteEntity(e entity.Entity) []error {
 			errs = append(errs, fmt.Errorf("unknown component type: %v", t))
 		}
 	}
-
 	return errs
 }
 

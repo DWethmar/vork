@@ -12,17 +12,15 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/event/input"
-	"github.com/dwethmar/vork/systems"
 	"github.com/hajimehoshi/ebiten/v2"
 )
-
-var _ systems.System = &System{}
 
 const (
 	walkAnimationPerFrames = 4
 	walkAnimationSteps     = 8 * walkAnimationPerFrames // frames every 8 steps (3 frames per step)
 )
 
+// System is a system that manages skeletons in the game.
 type System struct {
 	logger        *slog.Logger
 	ecs           *ecsys.ECS

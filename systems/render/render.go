@@ -33,25 +33,28 @@ type System struct {
 	clickHandler ClickHandler
 }
 
+// Options are the options for the rendering system.
+type Options struct {
+	Logger       *slog.Logger
+	Sprites      []Sprite
+	ECS          *ecsys.ECS
+	ClickHandler ClickHandler
+}
+
 // New creates a new rendering system.
-func New(
-	logger *slog.Logger,
-	sprites []Sprite,
-	ecs *ecsys.ECS,
-	clickHandler ClickHandler,
-) *System {
+func New(opts Options) *System {
 	spriteMap := make(map[sprite.Graphic]*Sprite)
-	for _, s := range sprites {
+	for _, s := range opts.Sprites {
 		spriteMap[s.Graphic] = &s
 	}
 	return &System{
-		logger:       logger,
+		logger:       opts.Logger.With("system", "render"),
 		sprites:      spriteMap,
-		ecs:          ecs,
+		ecs:          opts.ECS,
 		offsetX:      0,
 		offsetY:      0,
 		zoom:         1.0,
-		clickHandler: clickHandler,
+		clickHandler: opts.ClickHandler,
 	}
 }
 

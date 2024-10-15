@@ -1,4 +1,4 @@
-package systems
+package gameplay
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"

@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -15,6 +16,7 @@ type Scene interface {
 	Name() string
 	Draw(screen *ebiten.Image) error
 	Update() error
+	Close() error
 }
 
 // Game updates and draws the game.
@@ -37,7 +39,7 @@ func (g *Game) SwitchScene(name string) error {
 		g.scene = scene
 		return nil
 	}
-	return errors.New("scene not found")
+	return fmt.Errorf("scene %s not found", name)
 }
 
 // AddScene adds a scene to the game.

@@ -23,3 +23,8 @@ func (m *MainMenu) Name() string {
 func (m *MainMenu) Update() error {
 	panic("unimplemented")
 }
+
+// Close implements game.Scene.
+func (m *MainMenu) Close() error {
+	panic("unimplemented")
+}
