@@ -19,10 +19,11 @@ type Persistance struct {
 	eventBus   *event.Bus
 	ecs        *ecsys.ECS
 	lifecycles map[component.Type]ComponentLifeCycle
+	stores     *ecsys.Stores
 }
 
 // New creates a new persistence system.
-func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
+func New(eventBus *event.Bus, stores *ecsys.Stores, ecs *ecsys.ECS) *Persistance {
 	controllableRepo := boltrepo.NewRepository(func() *controllable.Controllable {
 		return controllable.Empty()
 	})
@@ -38,46 +39,41 @@ func New(eventBus *event.Bus, ecs *ecsys.ECS) *Persistance {
 	s := &Persistance{
 		eventBus: eventBus,
 		ecs:      ecs,
+		stores:   stores,
 		lifecycles: map[component.Type]ComponentLifeCycle{
 			controllable.Type: NewGenericComponentLifeCycle(
 				controllableRepo,
-				func(c *controllable.Controllable) (uint, error) { // TODO refactor
-					return ecs.AddControllableComponent(*c)
-				},
-				func(e component.Event, m map[uint]*controllable.Controllable) error {
-					c, ok := e.(controllable.Event)
+				stores.Controllable,
+				func(c component.Component, m map[uint]*controllable.Controllable) error {
+					cc, ok := c.(*controllable.Controllable)
 					if !ok {
-						return fmt.Errorf("expected %T, got %T", c, e)
+						return fmt.Errorf("expected *controllable.Controllable, got %T", c)
 					}
-					m[c.ComponentID()] = c.Controllable()
+					m[c.ID()] = cc
 					return nil
 				},
 			),
 			position.Type: NewGenericComponentLifeCycle(
 				positionRepo,
-				func(c *position.Position) (uint, error) {
-					return ecs.AddPositionComponent(*c)
-				},
-				func(e component.Event, m map[uint]*position.Position) error {
-					c, ok := e.(position.Event)
+				stores.Position,
+				func(c component.Component, m map[uint]*position.Position) error {
+					cc, ok := c.(*position.Position)
 					if !ok {
-						return fmt.Errorf("expected %T, got %T", c, e)
+						return fmt.Errorf("expected *position.Position, got %T", c)
 					}
-					m[c.ComponentID()] = c.Position()
+					m[c.ID()] = cc
 					return nil
 				},
 			),
 			skeleton.Type: NewGenericComponentLifeCycle(
 				skeletonRepo,
-				func(c *skeleton.Skeleton) (uint, error) {
-					return ecs.AddSkeletonComponent(*c)
-				},
-				func(e component.Event, m map[uint]*skeleton.Skeleton) error {
-					c, ok := e.(skeleton.Event)
+				stores.Skeleton,
+				func(e component.Component, m map[uint]*skeleton.Skeleton) error {
+					cc, ok := e.(*skeleton.Skeleton)
 					if !ok {
-						return fmt.Errorf("expected %T, got %T", c, e)
+						return fmt.Errorf("expected *skeleton.Skeleton, got %T", e)
 					}
-					m[c.ComponentID()] = c.Skeleton()
+					m[e.ID()] = cc
 					return nil
 				},
 			),
@@ -105,13 +101,22 @@ func (s *Persistance) componentChangeHandler(e event.Event) error {
 	if !ok {
 		return fmt.Errorf("no lifecycle for component type: %s", ce.ComponentType())
 	}
-	if ce.Deleted() {
-		if err := l.Deleted(ce); err != nil {
-			return fmt.Errorf("failed to handle deleted event for component type %s (ID: %d): %w", ce.ComponentType(), ce.ComponentID(), err)
+
+	switch c := ce.(type) {
+	case position.Event:
+		if err := l.Changed(c.Position(), c.Deleted()); err != nil {
+			return fmt.Errorf("failed to mark position component as changed: %w", err)
 		}
-		return nil
-	} else if err := l.Changed(ce); err != nil {
-		return fmt.Errorf("failed to handle changed event for component type %s (ID: %d): %w", ce.ComponentType(), ce.ComponentID(), err)
+	case controllable.Event:
+		if err := l.Changed(c.Controllable(), c.Deleted()); err != nil {
+			return fmt.Errorf("failed to mark controllable component as changed: %w", err)
+		}
+	case skeleton.Event:
+		if err := l.Changed(c.Skeleton(), c.Deleted()); err != nil {
+			return fmt.Errorf("failed to mark skeleton component as changed: %w", err)
+		}
+	default:
+		return fmt.Errorf("unsupported component type: %s", ce.ComponentType())
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 )
 
 type System interface {
+	Init() error
 	Draw(screen *ebiten.Image) error
 	Update() error
 	Close() error

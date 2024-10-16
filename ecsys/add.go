@@ -9,7 +9,6 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
-	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/event"
 )
 
@@ -17,7 +16,7 @@ import (
 func addComponent[T any](
 	ecs *ECS,
 	c component.Component,
-	store store.Store[T],
+	store Store[T],
 	eventCreator func(T) event.Event,
 ) (uint, error) {
 	comp, ok := c.(T)

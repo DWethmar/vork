@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
@@ -29,7 +28,7 @@ func assertChildren(t *testing.T, h *hierarchy.Hierarchy, parent entity.Entity, 
 func TestNew(t *testing.T) {
 	t.Run("New should create a new hierarchy", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		root := ecs.CreateEmptyEntity()
 		h := hierarchy.New(root, eventBus, ecs)
 		if h == nil {
@@ -39,7 +38,7 @@ func TestNew(t *testing.T) {
 
 	t.Run("should return an error if a cyclic relationship is detected", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		root := ecs.CreateEmptyEntity()
 		hierarchy.New(root, eventBus, ecs)
 
@@ -76,7 +75,7 @@ func TestNew(t *testing.T) {
 
 	t.Run("deleting a parent should remove the children from the hierarchy and ecs", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		root := ecs.CreateEmptyEntity()
 		h := hierarchy.New(root, eventBus, ecs)
 
@@ -106,23 +105,23 @@ func TestNew(t *testing.T) {
 		assertChildren(t, h, root, nil)
 
 		// check if the children are removed from the ecs
-		if _, err = ecs.GetPosition(child1); !errors.Is(err, store.ErrEntityNotFound) {
+		if _, err = ecs.GetPosition(child1); !errors.Is(err, ecsys.ErrEntityNotFound) {
 			t.Errorf("Error should not be nil: %s", err)
 		}
 
-		if _, err = ecs.GetPosition(child2); !errors.Is(err, store.ErrEntityNotFound) {
+		if _, err = ecs.GetPosition(child2); !errors.Is(err, ecsys.ErrEntityNotFound) {
 			t.Errorf("Error should not be nil: %s", err)
 		}
 
 		// check if the parent is removed from ecs
-		if _, err = ecs.GetPosition(parent); !errors.Is(err, store.ErrEntityNotFound) {
+		if _, err = ecs.GetPosition(parent); !errors.Is(err, ecsys.ErrEntityNotFound) {
 			t.Errorf("Error should not be nil: %s", err)
 		}
 	})
 
 	t.Run("updating a parent should update the children in the hierarchy", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		root := ecs.CreateEmptyEntity()
 		h := hierarchy.New(root, eventBus, ecs)
 
@@ -168,7 +167,7 @@ func TestNew(t *testing.T) {
 func TestHierarchy_Close(t *testing.T) {
 	t.Run("Close should close the hierarchy", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		root := ecs.CreateEmptyEntity()
 		h := hierarchy.New(root, eventBus, ecs)
 		if err := h.Close(); err != nil {
@@ -186,7 +185,7 @@ func TestHierarchy_Close(t *testing.T) {
 func TestHierarchy_Children(t *testing.T) {
 	t.Run("should add a child to the hierarchy", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		root := ecs.CreateEmptyEntity()
 		h := hierarchy.New(root, eventBus, ecs)
 
@@ -212,7 +211,7 @@ func TestHierarchy_Children(t *testing.T) {
 
 	t.Run("should return an error if the entity does not exist", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		root := ecs.CreateEmptyEntity()
 		h := hierarchy.New(root, eventBus, ecs)
 
@@ -224,7 +223,7 @@ func TestHierarchy_Children(t *testing.T) {
 
 	t.Run("should return an empty list if the entity has no children", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		root := ecs.CreateEmptyEntity()
 		h := hierarchy.New(root, eventBus, ecs)
 
@@ -242,7 +241,7 @@ func TestHierarchy_Children(t *testing.T) {
 func TestHierarchy_Root(t *testing.T) {
 	t.Run("Root should return the root entity", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		root := ecs.CreateEmptyEntity()
 		h := hierarchy.New(root, eventBus, ecs)
 		if h.Root() != root {
@@ -254,7 +253,7 @@ func TestHierarchy_Root(t *testing.T) {
 func TestHierarchy_GetAbsolutePosition(t *testing.T) {
 	t.Run("GetAbsolutePosition should return the absolute position of an entity", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		h := hierarchy.New(ecs.CreateEmptyEntity(), eventBus, ecs)
 
 		current := h.Root()

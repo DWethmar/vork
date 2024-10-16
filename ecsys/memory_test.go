@@ -1,11 +1,11 @@
-package store_test
+package ecsys_test
 
 import (
 	"errors"
 	"testing"
 
 	"github.com/dwethmar/vork/component"
-	"github.com/dwethmar/vork/component/store"
+	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/google/go-cmp/cmp"
 )
@@ -22,7 +22,7 @@ func (t *TestComponent) Type() component.Type  { return "test" }
 func (t *TestComponent) Entity() entity.Entity { return t.E }
 
 func TestNewMemStore(t *testing.T) {
-	s := store.NewMemStore[*TestComponent](false)
+	s := ecsys.NewMemStore[*TestComponent](false)
 	if s == nil {
 		t.Error("NewMemStore() should not return nil")
 	}
@@ -30,7 +30,7 @@ func TestNewMemStore(t *testing.T) {
 
 func TestMemStoreAdd(t *testing.T) {
 	t.Run("should add component", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -47,7 +47,7 @@ func TestMemStoreAdd(t *testing.T) {
 	})
 
 	t.Run("should fail to add component with same ID", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -65,7 +65,7 @@ func TestMemStoreAdd(t *testing.T) {
 	})
 
 	t.Run("should fail if store only 1 component per entity", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](true)
+		s := ecsys.NewMemStore[*TestComponent](true)
 		c := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -81,7 +81,7 @@ func TestMemStoreAdd(t *testing.T) {
 			Tag: "test",
 		}
 		_, err = s.Add(c)
-		if !errors.Is(err, store.ErrUniqueComponentViolation) {
+		if !errors.Is(err, ecsys.ErrUniqueComponentViolation) {
 			t.Errorf("Add() should return ErrUniquePerEntity, got %v", err)
 		}
 	})
@@ -89,7 +89,7 @@ func TestMemStoreAdd(t *testing.T) {
 
 func TestMemStoreGet(t *testing.T) {
 	t.Run("should return component", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -117,9 +117,9 @@ func TestMemStoreGet(t *testing.T) {
 	})
 
 	t.Run("should return error if component not found", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		_, err := s.Get(1)
-		if !errors.Is(err, store.ErrComponentNotFound) {
+		if !errors.Is(err, ecsys.ErrComponentNotFound) {
 			t.Errorf("Get() should return ErrComponentNotFound, got %v", err)
 		}
 	})
@@ -127,7 +127,7 @@ func TestMemStoreGet(t *testing.T) {
 
 func TestMemStoreUpdate(t *testing.T) {
 	t.Run("should update component", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -161,20 +161,20 @@ func TestMemStoreUpdate(t *testing.T) {
 	})
 
 	t.Run("should return error if component not found", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
 			Tag: "test",
 		}
 		err := s.Update(c)
-		if !errors.Is(err, store.ErrComponentNotFound) {
+		if !errors.Is(err, ecsys.ErrComponentNotFound) {
 			t.Errorf("Update() should return ErrComponentNotFound, got %v", err)
 		}
 	})
 
 	t.Run("should return error if unique constraint is violated", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](true)
+		s := ecsys.NewMemStore[*TestComponent](true)
 		c := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -191,7 +191,7 @@ func TestMemStoreUpdate(t *testing.T) {
 			Tag: "test",
 		}
 		err = s.Update(c)
-		if !errors.Is(err, store.ErrUniqueComponentViolation) {
+		if !errors.Is(err, ecsys.ErrUniqueComponentViolation) {
 			t.Errorf("Add() should return ErrUniquePerEntity, got %v", err)
 		}
 	})
@@ -199,7 +199,7 @@ func TestMemStoreUpdate(t *testing.T) {
 
 func TestMemStoreDelete(t *testing.T) {
 	t.Run("should delete component", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -225,7 +225,7 @@ func TestMemStoreDelete(t *testing.T) {
 		}
 
 		_, err = s.Get(1)
-		if !errors.Is(err, store.ErrComponentNotFound) {
+		if !errors.Is(err, ecsys.ErrComponentNotFound) {
 			t.Errorf("Get() should return ErrComponentNotFound, got %v", err)
 		}
 
@@ -236,9 +236,9 @@ func TestMemStoreDelete(t *testing.T) {
 	})
 
 	t.Run("should return error if component not found", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		err := s.Delete(1)
-		if !errors.Is(err, store.ErrComponentNotFound) {
+		if !errors.Is(err, ecsys.ErrComponentNotFound) {
 			t.Errorf("Delete() should return ErrComponentNotFound, got %v", err)
 		}
 	})
@@ -246,7 +246,7 @@ func TestMemStoreDelete(t *testing.T) {
 
 func TestMemStoreList(t *testing.T) {
 	t.Run("should return all components", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c1 := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -271,7 +271,7 @@ func TestMemStoreList(t *testing.T) {
 
 func TestMemStoreFirstByEntity(t *testing.T) {
 	t.Run("should return first component by entity", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c1 := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -302,9 +302,9 @@ func TestMemStoreFirstByEntity(t *testing.T) {
 	})
 
 	t.Run("should return error if component not found", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		_, err := s.First(entity.Entity(1))
-		if !errors.Is(err, store.ErrEntityNotFound) {
+		if !errors.Is(err, ecsys.ErrEntityNotFound) {
 			t.Errorf("FirstByEntity() should return ErrComponentNotFound, got %v", err)
 		}
 	})
@@ -312,7 +312,7 @@ func TestMemStoreFirstByEntity(t *testing.T) {
 
 func TestMemStoreListByEntity(t *testing.T) {
 	t.Run("should return all components by entity", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c1 := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -335,7 +335,7 @@ func TestMemStoreListByEntity(t *testing.T) {
 	})
 
 	t.Run("should return nil if no components found", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		got := s.ListByEntity(entity.Entity(1))
 		if got != nil {
 			t.Errorf("ListByEntity() should return nil, got %v", got)
@@ -345,7 +345,7 @@ func TestMemStoreListByEntity(t *testing.T) {
 
 func TestMemStoreDeleteByEntity(t *testing.T) {
 	t.Run("should delete all components by entity", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		c1 := &TestComponent{
 			I:   1,
 			E:   entity.Entity(1),
@@ -371,9 +371,9 @@ func TestMemStoreDeleteByEntity(t *testing.T) {
 	})
 
 	t.Run("should return error if entity not found", func(t *testing.T) {
-		s := store.NewMemStore[*TestComponent](false)
+		s := ecsys.NewMemStore[*TestComponent](false)
 		err := s.DeleteByEntity(entity.Entity(1))
-		if !errors.Is(err, store.ErrEntityNotFound) {
+		if !errors.Is(err, ecsys.ErrEntityNotFound) {
 			t.Errorf("DeleteByEntity() should return ErrEntityNotFound, got %v", err)
 		}
 	})

@@ -3,8 +3,8 @@ package gameplay
 import (
 	"fmt"
 	"log/slog"
+	"time"
 
-	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/event/input"
@@ -45,7 +45,9 @@ func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
 
 func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
-	ecs := ecsys.New(eventBus, store.NewStores())
+	stores := ecsys.NewStores()
+	ecs := ecsys.New(eventBus, stores)
+
 	systems := []System{
 		controller.New(logger, ecs),
 		render.New(render.Options{
@@ -57,7 +59,7 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 		skeletons.New(logger, ecs, eventBus),
 	}
 
-	persistence := persistence.New(eventBus, ecs)
+	persistence := persistence.New(eventBus, stores, ecs)
 
 	// check if it is an existing save
 	ok, err := initializedGame(db)
@@ -80,9 +82,15 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 			return nil, fmt.Errorf("failed to save new game: %w", err)
 		}
 	}
-
 	if err != nil {
 		logger.Error("failed to load game", slog.String("error", err.Error()))
+	}
+
+	// init all systems after loading the game to make sure all components are loaded
+	for _, sys := range systems {
+		if err = sys.Init(); err != nil {
+			return nil, fmt.Errorf("failed to init system %T: %w", sys, err)
+		}
 	}
 
 	return &GamePlay{
@@ -98,7 +106,7 @@ func (s *GamePlay) Name() string { return "gameplay" }
 func (s *GamePlay) Draw(screen *ebiten.Image) error {
 	for _, sys := range s.systems {
 		if err := sys.Draw(screen); err != nil {
-			return err
+			return fmt.Errorf("failed to draw system: %w", err)
 		}
 	}
 	return nil
@@ -107,17 +115,17 @@ func (s *GamePlay) Draw(screen *ebiten.Image) error {
 func (s *GamePlay) Update() error {
 	// check if F5 is pressed
 	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
-		s.logger.Info("saving game")
+		started := time.Now()
 		if err := s.persistence.Save(s.db); err != nil {
 			return fmt.Errorf("failed to save game: %w", err)
 		}
-		s.logger.Info("game saved")
+		s.logger.Info("game saved", slog.Duration("duration", time.Since(started)))
 		return nil
 	}
 
 	for _, sys := range s.systems {
 		if err := sys.Update(); err != nil {
-			return err
+			return fmt.Errorf("failed to update system %T: %w", sys, err)
 		}
 	}
 
@@ -145,7 +153,7 @@ func initializeGame(ecs *ecsys.ECS, db *bbolt.DB) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists(sceneKey)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create bucket: %w", err)
 		}
 		return bucket.Put(initializedKey, []byte(""))
 	})

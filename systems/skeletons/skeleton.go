@@ -51,6 +51,16 @@ func New(logger *slog.Logger, ecs *ecsys.ECS, eventBus *event.Bus) *System {
 	return s
 }
 
+// Init initializes the system.
+func (s *System) Init() error {
+	for _, sk := range s.ecs.ListSkeletons() {
+		if err := s.setupSkeleton(sk); err != nil {
+			return fmt.Errorf("could not setup skeleton: %w", err)
+		}
+	}
+	return nil
+}
+
 func (s *System) Close() error {
 	for _, sub := range s.subscriptions {
 		s.eventBus.Unsubscribe(sub)

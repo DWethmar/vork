@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/systems/render"
@@ -17,7 +16,7 @@ func TestNew(t *testing.T) {
 		got := render.New(render.Options{
 			Logger:       slog.Default(),
 			Sprites:      []render.Sprite{},
-			ECS:          ecsys.New(eventBus, store.NewStores()),
+			ECS:          ecsys.New(eventBus, ecsys.NewStores()),
 			ClickHandler: func(_, _ int) {},
 		})
 		if got == nil {
@@ -32,7 +31,7 @@ func TestSystem_Close(t *testing.T) {
 		s := render.New(render.Options{
 			Logger:       slog.Default(),
 			Sprites:      []render.Sprite{},
-			ECS:          ecsys.New(eventBus, store.NewStores()),
+			ECS:          ecsys.New(eventBus, ecsys.NewStores()),
 			ClickHandler: func(_, _ int) {},
 		})
 		if err := s.Close(); err != nil {
@@ -44,7 +43,7 @@ func TestSystem_Close(t *testing.T) {
 func TestSystem_Draw(t *testing.T) {
 	t.Run("Draw", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, store.NewStores())
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		s := render.New(render.Options{
 			Logger:       slog.Default(),
 			Sprites:      []render.Sprite{},
@@ -66,7 +65,7 @@ func TestSystem_Update(t *testing.T) {
 		s := render.New(render.Options{
 			Logger:       slog.Default(),
 			Sprites:      []render.Sprite{},
-			ECS:          ecsys.New(eventBus, store.NewStores()),
+			ECS:          ecsys.New(eventBus, ecsys.NewStores()),
 			ClickHandler: func(_, _ int) {},
 		})
 		if err := s.Update(); err != nil {

@@ -12,7 +12,6 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
-	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 )
@@ -25,7 +24,6 @@ func componentTypes() []component.Type {
 		position.Type,
 		controllable.Type,
 		shape.RectangleType,
-		// shape.CircleType, // not implemented yet
 		sprite.Type,
 		skeleton.Type,
 	}
@@ -40,12 +38,12 @@ type ECS struct {
 	// When adding a component with an entity ID higher than lastEntityID, lastEntityID is updated.
 	lastEntityID entity.Entity
 	eventBus     *event.Bus
-	stores       *store.Stores
+	stores       *Stores
 }
 
 // New creates a new ECS system, initializing it with the provided component stores and event bus.
 // This function ensures that the ECS is ready to manage entities and components from the start.
-func New(eventBus *event.Bus, s *store.Stores) *ECS {
+func New(eventBus *event.Bus, s *Stores) *ECS {
 	return &ECS{
 		lastEntityID: 0,
 		eventBus:     eventBus,
@@ -76,7 +74,7 @@ func (s *ECS) CreateEmptyEntity() entity.Entity {
 func (s *ECS) DeleteEntity(e entity.Entity) error {
 	// Check for errors and return the first one that is not a "not found" error.
 	for _, err := range s.deleteAllComponents(e) {
-		if err != nil && !errors.Is(err, store.ErrEntityNotFound) {
+		if err != nil && !errors.Is(err, ErrEntityNotFound) {
 			return fmt.Errorf("failed to delete entity: %w", err)
 		}
 	}

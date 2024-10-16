@@ -58,6 +58,10 @@ func New(opts Options) *System {
 	}
 }
 
+func (s *System) Init() error {
+	return nil
+}
+
 // Close closes the system.
 func (s *System) Close() error {
 	return nil

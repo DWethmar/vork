@@ -9,14 +9,13 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
-	"github.com/dwethmar/vork/component/store"
 	"github.com/dwethmar/vork/event"
 )
 
 func updateComponent[T any](
 	eventBus *event.Bus,
 	c component.Component,
-	store store.Store[T],
+	store Store[T],
 	eventCreator func(T) event.Event,
 ) error {
 	comp, ok := c.(T)
