@@ -24,17 +24,9 @@ type Persistance struct {
 
 // New creates a new persistence system.
 func New(eventBus *event.Bus, stores *ecsys.Stores, ecs *ecsys.ECS) *Persistance {
-	controllableRepo := boltrepo.NewRepository(func() *controllable.Controllable {
-		return controllable.Empty()
-	})
-
-	positionRepo := boltrepo.NewRepository(func() *position.Position {
-		return position.Empty()
-	})
-
-	skeletonRepo := boltrepo.NewRepository(func() *skeleton.Skeleton {
-		return skeleton.Empty()
-	})
+	controllableRepo := boltrepo.NewRepository(controllable.Empty)
+	positionRepo := boltrepo.NewRepository(position.Empty)
+	skeletonRepo := boltrepo.NewRepository(skeleton.Empty)
 
 	s := &Persistance{
 		eventBus: eventBus,

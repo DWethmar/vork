@@ -10,12 +10,13 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
+	"github.com/dwethmar/vork/hierarchy"
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestNew(t *testing.T) {
 	t.Run("New", func(t *testing.T) {
-		ecs := ecsys.New(event.NewBus(), ecsys.NewStores())
+		ecs := ecsys.New(event.NewBus(), ecsys.NewStores(), hierarchy.New(entity.Entity(0)))
 		if ecs == nil {
 			t.Errorf("New() ecs = %v", ecs)
 		}
@@ -24,7 +25,7 @@ func TestNew(t *testing.T) {
 
 func TestECS_CreateEntity(t *testing.T) {
 	t.Run("should create an entity with a position", func(t *testing.T) {
-		ecs := ecsys.New(event.NewBus(), ecsys.NewStores())
+		ecs := ecsys.New(event.NewBus(), ecsys.NewStores(), hierarchy.New(entity.Entity(0)))
 		entity, err := ecs.CreateEntity(entity.Entity(0), 11, 22)
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)
@@ -54,7 +55,7 @@ func TestECS_CreateEntity(t *testing.T) {
 
 func TestECS_DeleteEntity(t *testing.T) {
 	t.Run("should delete an entity", func(t *testing.T) {
-		ecs := ecsys.New(event.NewBus(), ecsys.NewStores())
+		ecs := ecsys.New(event.NewBus(), ecsys.NewStores(), hierarchy.New(entity.Entity(0)))
 		entity, err := ecs.CreateEntity(entity.Entity(0), 11, 22)
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)

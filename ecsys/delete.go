@@ -34,9 +34,26 @@ func deleteComponent[T any](
 }
 
 func (s *ECS) DeletePosition(c position.Position) error {
-	return deleteComponent(s.eventBus, &c, s.stores.Position, func(p *position.Position) event.Event {
+	err := deleteComponent(s.eventBus, &c, s.stores.Position, func(p *position.Position) event.Event {
 		return position.NewDeletedEvent(*p)
 	})
+	if err != nil {
+		return err
+	}
+	// Remove the entity from the hierarchy.
+	for _, descendant := range s.hierarchy.Delete(c.Entity()) {
+		if descendant == c.Entity() {
+			continue
+		}
+		pos, pErr := s.GetPosition(descendant)
+		if pErr != nil {
+			return fmt.Errorf("could not get position: %w", err)
+		}
+		if pErr = s.DeletePosition(pos); pErr != nil {
+			return fmt.Errorf("could not delete position: %w", err)
+		}
+	}
+	return nil
 }
 
 func (s *ECS) DeleteControllable(c controllable.Controllable) error {

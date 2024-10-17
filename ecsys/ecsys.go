@@ -16,6 +16,15 @@ import (
 	"github.com/dwethmar/vork/event"
 )
 
+type Hierarchy interface {
+	Add(parent entity.Entity, child entity.Entity) error
+	Update(parent entity.Entity, child entity.Entity) error
+	Delete(child entity.Entity) []entity.Entity
+	Parent(child entity.Entity) (entity.Entity, error)
+	Children(parent entity.Entity) []entity.Entity
+	Root() entity.Entity
+}
+
 // componentTypes is a list of all component types used in the ECS.
 // This list is used to initialize the component stores in the ECS.
 // It is also used to ensure that all component types are accounted for when managing entities.
@@ -39,15 +48,17 @@ type ECS struct {
 	lastEntityID entity.Entity
 	eventBus     *event.Bus
 	stores       *Stores
+	hierarchy    Hierarchy
 }
 
 // New creates a new ECS system, initializing it with the provided component stores and event bus.
 // This function ensures that the ECS is ready to manage entities and components from the start.
-func New(eventBus *event.Bus, s *Stores) *ECS {
+func New(eventBus *event.Bus, s *Stores, h Hierarchy) *ECS {
 	return &ECS{
-		lastEntityID: 0,
+		lastEntityID: h.Root(),
 		eventBus:     eventBus,
 		stores:       s,
+		hierarchy:    h,
 	}
 }
 

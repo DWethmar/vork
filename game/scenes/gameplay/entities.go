@@ -9,8 +9,8 @@ import (
 	"github.com/dwethmar/vork/entity"
 )
 
-func addPlayer(ecs *ecsys.ECS, x, y int) error {
-	e, err := ecs.CreateEntity(entity.Entity(0), x, y)
+func addPlayer(parent entity.Entity, ecs *ecsys.ECS, x, y int) error {
+	e, err := ecs.CreateEntity(parent, x, y)
 	if err != nil {
 		return fmt.Errorf("could not create entity: %w", err)
 	}
@@ -23,8 +23,8 @@ func addPlayer(ecs *ecsys.ECS, x, y int) error {
 	return nil
 }
 
-func addEnemy(ecs *ecsys.ECS, x, y int) error {
-	e, err := ecs.CreateEntity(entity.Entity(0), x, y)
+func addEnemy(parent entity.Entity, ecs *ecsys.ECS, x, y int) error {
+	e, err := ecs.CreateEntity(parent, x, y)
 	if err != nil {
 		fmt.Printf("could not create entity: %v\n", err)
 	}

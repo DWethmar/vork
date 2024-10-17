@@ -39,10 +39,19 @@ func addComponent[T any](
 	return id, nil
 }
 
+// AddPositionComponent adds a position component to the ECS.
 func (s *ECS) AddPositionComponent(c position.Position) (uint, error) {
-	return addComponent(s, &c, s.stores.Position, func(p *position.Position) event.Event {
+	id, err := addComponent(s, &c, s.stores.Position, func(p *position.Position) event.Event {
 		return position.NewCreatedEvent(*p)
 	})
+	if err != nil {
+		return 0, fmt.Errorf("could not add position component: %w", err)
+	}
+	// Add the entity to the hierarchy.
+	if err = s.hierarchy.Add(c.Parent, c.Entity()); err != nil {
+		return 0, fmt.Errorf("could not add entity to hierarchy: %w", err)
+	}
+	return id, nil
 }
 
 func (s *ECS) AddControllableComponent(c controllable.Controllable) (uint, error) {

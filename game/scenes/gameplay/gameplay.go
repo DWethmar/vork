@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/dwethmar/vork/ecsys"
+	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/event/input"
 	"github.com/dwethmar/vork/game"
+	"github.com/dwethmar/vork/hierarchy"
 	"github.com/dwethmar/vork/persistence"
 	"github.com/dwethmar/vork/sprites"
 	"github.com/dwethmar/vork/spritesheet"
@@ -18,6 +20,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"go.etcd.io/bbolt"
+)
+
+const (
+	rootEntity = entity.Entity(0)
 )
 
 var (
@@ -31,6 +37,7 @@ type GamePlay struct {
 	logger      *slog.Logger
 	db          *bbolt.DB
 	systems     []System
+	hierarchy   *hierarchy.Hierarchy
 	persistence *persistence.Persistance
 }
 
@@ -46,7 +53,8 @@ func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
 func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
 	stores := ecsys.NewStores()
-	ecs := ecsys.New(eventBus, stores)
+	hierarchy := hierarchy.New(rootEntity)
+	ecs := ecsys.New(eventBus, stores, hierarchy)
 
 	systems := []System{
 		controller.New(logger, ecs),
@@ -75,7 +83,7 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 	} else {
 		// create a new game
 		logger.Info("creating a new game")
-		if err = initializeGame(ecs, db); err != nil {
+		if err = initializeGame(hierarchy, ecs, db); err != nil {
 			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
 		if err = persistence.Save(db); err != nil {
@@ -97,6 +105,7 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 		logger:      logger,
 		db:          db,
 		systems:     systems,
+		hierarchy:   hierarchy,
 		persistence: persistence,
 	}, nil
 }
@@ -122,13 +131,11 @@ func (s *GamePlay) Update() error {
 		s.logger.Info("game saved", slog.Duration("duration", time.Since(started)))
 		return nil
 	}
-
 	for _, sys := range s.systems {
 		if err := sys.Update(); err != nil {
 			return fmt.Errorf("failed to update system %T: %w", sys, err)
 		}
 	}
-
 	return nil
 }
 
@@ -142,11 +149,11 @@ func (s *GamePlay) Close() error {
 	return nil
 }
 
-func initializeGame(ecs *ecsys.ECS, db *bbolt.DB) error {
-	if err := addPlayer(ecs, 10, 10); err != nil {
+func initializeGame(h *hierarchy.Hierarchy, ecs *ecsys.ECS, db *bbolt.DB) error {
+	if err := addPlayer(h.Root(), ecs, 10, 10); err != nil {
 		return fmt.Errorf("failed to add player: %w", err)
 	}
-	if err := addEnemy(ecs, 100, 100); err != nil {
+	if err := addEnemy(h.Root(), ecs, 100, 100); err != nil {
 		return fmt.Errorf("failed to add enemy: %w", err)
 	}
 

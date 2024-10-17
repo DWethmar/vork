@@ -34,9 +34,17 @@ func updateComponent[T any](
 }
 
 func (s *ECS) UpdatePositionComponent(c position.Position) error {
-	return updateComponent(s.eventBus, &c, s.stores.Position, func(p *position.Position) event.Event {
+	err := updateComponent(s.eventBus, &c, s.stores.Position, func(p *position.Position) event.Event {
 		return position.NewUpdatedEvent(*p)
 	})
+	if err != nil {
+		return err
+	}
+	// Add the entity to the hierarchy.
+	if err = s.hierarchy.Update(c.Parent, c.Entity()); err != nil {
+		return fmt.Errorf("could not update entity in hierarchy: %w", err)
+	}
+	return nil
 }
 
 func (s *ECS) UpdateControllableComponent(c controllable.Controllable) error {

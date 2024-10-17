@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/dwethmar/vork/component/controllable"
-	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
+	"github.com/dwethmar/vork/hierarchy"
 	"github.com/dwethmar/vork/persistence"
 	bolt "go.etcd.io/bbolt"
 )
@@ -37,7 +37,7 @@ func TestNew(t *testing.T) {
 	t.Run("New should create a new system", func(t *testing.T) {
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
-		ecs := ecsys.New(eventBus, stores)
+		ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
 		s := persistence.New(eventBus, stores, ecs)
 		if s == nil {
 			t.Error("System should not be nil")
@@ -47,7 +47,7 @@ func TestNew(t *testing.T) {
 	t.Run("New should subscribe to component change events", func(t *testing.T) {
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
-		ecs := ecsys.New(eventBus, stores)
+		ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
 		s := persistence.New(eventBus, stores, ecs)
 		if s == nil {
 			t.Error("System should not be nil")
@@ -60,102 +60,90 @@ func TestNew(t *testing.T) {
 }
 
 func TestSystem_Save(t *testing.T) { //nolint: gocognit
-	tests := []struct {
-		name   string
-		offset int
-		limit  int
-	}{
-		{"Save components from 0 to 100", 0, 100},
-		{"Save components from 100 to 200", 100, 100},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			path := t.TempDir() + "/test.db"
-			db := openTestDB(t, path)
-			t.Cleanup(func() {
-				closeTestDB(t, db, path)
-			})
-
-			eventBus := event.NewBus()
-			stores := ecsys.NewStores()
-			ecs := ecsys.New(eventBus, stores)
-			s := persistence.New(eventBus, stores, ecs)
-
-			// Add components
-			for i := tt.offset; i < tt.offset+tt.limit; i++ {
-				e := entity.Entity(i)
-				x := i * 10
-				y := i * 10
-				if i == 50 {
-					x = -100
-					y = -100
-				}
-
-				// Add position component
-				pos := position.New(entity.Entity(0), e, x, y)
-				if _, err := ecs.AddPositionComponent(*pos); err != nil {
-					t.Fatalf("Failed to add position component: %v", err)
-				}
-
-				// Add controllable component
-				ctrl := controllable.New(e)
-				if _, err := ecs.AddControllableComponent(*ctrl); err != nil {
-					t.Fatalf("Failed to add controllable component: %v", err)
-				}
-
-				// Add skeleton component
-				skel := skeleton.New(e)
-				if _, err := ecs.AddSkeletonComponent(*skel); err != nil {
-					t.Fatalf("Failed to add skeleton component: %v", err)
-				}
-			}
-
-			// Save components
-			if err := s.Save(db); err != nil {
-				t.Fatalf("Failed to save components: %v", err)
-			}
-
-			// Create new ECS and load components
-			eventBus = event.NewBus()
-			stores = ecsys.NewStores()
-			ecs = ecsys.New(eventBus, stores)
-			s = persistence.New(eventBus, stores, ecs)
-			if err := s.Load(db); err != nil {
-				t.Fatalf("Failed to load components: %v", err)
-			}
-
-			// Verify components
-			for i := tt.offset; i < tt.offset+tt.limit; i++ {
-				e := entity.Entity(i)
-				x := i * 10
-				y := i * 10
-				if i == 50 {
-					x = -100
-					y = -100
-				}
-
-				// Verify position component
-				pos, err := ecs.GetPosition(e)
-				if err != nil {
-					t.Fatalf("Failed to get position component: %v", err)
-				}
-				if pos.X != x || pos.Y != y {
-					t.Errorf("Position mismatch for entity %d: expected (%d, %d), got (%d, %d)", e, x, y, pos.X, pos.Y)
-				}
-
-				// Verify controllable component
-				if _, err = ecs.GetControllable(e); err != nil {
-					t.Fatalf("Failed to get controllable component: %v", err)
-				}
-
-				// Verify skeleton component
-				if _, err = ecs.GetSkeleton(e); err != nil {
-					t.Fatalf("Failed to get skeleton component: %v", err)
-				}
-			}
+	t.Run("Save and load components", func(t *testing.T) {
+		path := t.TempDir() + "/test.db"
+		db := openTestDB(t, path)
+		t.Cleanup(func() {
+			closeTestDB(t, db, path)
 		})
-	}
+
+		eventBus := event.NewBus()
+		stores := ecsys.NewStores()
+		ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+		s := persistence.New(eventBus, stores, ecs)
+
+		// Add components
+		for i := 0; i < 100; i++ {
+			x := i * 10
+			y := i * 10
+			if i == 50 {
+				x = -100
+				y = -100
+			}
+
+			// Add position component
+			e, err := ecs.CreateEntity(entity.Entity(0), x, y)
+			if err != nil {
+				t.Fatalf("Failed to create entity: %v", err)
+			}
+
+			// Add controllable component
+			ctrl := controllable.New(e)
+			if _, err = ecs.AddControllableComponent(*ctrl); err != nil {
+				t.Fatalf("Failed to add controllable component: %v", err)
+			}
+
+			// Add skeleton component
+			skel := skeleton.New(e)
+			if _, err = ecs.AddSkeletonComponent(*skel); err != nil {
+				t.Fatalf("Failed to add skeleton component: %v", err)
+			}
+		}
+
+		// Save components
+		if err := s.Save(db); err != nil {
+			t.Fatalf("Failed to save components: %v", err)
+		}
+
+		// Create new ECS and load components
+		eventBus = event.NewBus()
+		stores = ecsys.NewStores()
+		ecs = ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+		s = persistence.New(eventBus, stores, ecs)
+		if err := s.Load(db); err != nil {
+			t.Fatalf("Failed to load components: %v", err)
+		}
+
+		// Verify components
+		for i := 0; i < 100; i++ {
+			e := entity.Entity(i + 1)
+			x := i * 10
+			y := i * 10
+			if i == 50 {
+				x = -100
+				y = -100
+			}
+
+			// Verify position component
+			pos, err := ecs.GetPosition(e)
+			if err != nil {
+				t.Fatalf("Failed to get position component: %v", err)
+			}
+			if pos.X != x || pos.Y != y {
+				t.Errorf("Position mismatch for entity %d: expected (%d, %d), got (%d, %d)", e, x, y, pos.X, pos.Y)
+			}
+
+			// Verify controllable component
+			if _, err = ecs.GetControllable(e); err != nil {
+				t.Fatalf("Failed to get controllable component: %v", err)
+			}
+
+			// Verify skeleton component
+			if _, err = ecs.GetSkeleton(e); err != nil {
+				t.Fatalf("Failed to get skeleton component: %v", err)
+			}
+		}
+	})
 
 	t.Run("Save and delete components", func(t *testing.T) {
 		path := t.TempDir() + "/test.db"
@@ -166,17 +154,17 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
-		ecs := ecsys.New(eventBus, stores)
+		ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
 		s := persistence.New(eventBus, stores, ecs)
 
 		// Add position components
-		for i := 0; i < 100; i++ {
-			e := entity.Entity(i)
+		for i := 1; i <= 100; i++ {
 			x := i * 10
 			y := i * 10
-			pos := position.New(entity.Entity(0), e, x, y)
-			if _, err := ecs.AddPositionComponent(*pos); err != nil {
-				t.Fatalf("Failed to add position component: %v", err)
+
+			_, err := ecs.CreateEntity(entity.Entity(0), x, y)
+			if err != nil {
+				t.Fatalf("Failed to create entity: %v", err)
 			}
 		}
 
@@ -197,14 +185,14 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		// Create new ECS and load components
 		eventBus = event.NewBus()
 		stores = ecsys.NewStores()
-		ecs = ecsys.New(eventBus, stores)
+		ecs = ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
 		s = persistence.New(eventBus, stores, ecs)
 		if err := s.Load(db); err != nil {
 			t.Fatalf("Failed to load components: %v", err)
 		}
 
 		// Verify components
-		for i := 0; i < 100; i++ {
+		for i := 1; i <= 100; i++ {
 			e := entity.Entity(i)
 			pos, err := ecs.GetPosition(e)
 			if i == 50 {
@@ -237,7 +225,7 @@ func TestSystem_Load(t *testing.T) {
 		{
 			eventBus := event.NewBus()
 			stores := ecsys.NewStores()
-			ecs := ecsys.New(eventBus, stores)
+			ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
 			// create system
 			s := persistence.New(eventBus, stores, ecs)
 			var err error
@@ -268,7 +256,7 @@ func TestSystem_Load(t *testing.T) {
 		{
 			eventBus := event.NewBus()
 			stores := ecsys.NewStores()
-			ecs := ecsys.New(eventBus, stores)
+			ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
 			// create system
 			s := persistence.New(eventBus, stores, ecs)
 			if err := s.Load(db); err != nil {
