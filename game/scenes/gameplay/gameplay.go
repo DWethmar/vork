@@ -81,7 +81,6 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 		if err = persistence.Load(db); err != nil {
 			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
-
 		// rebuild hierarchy
 		ep := []hierarchy.EntityPair{}
 		for _, p := range ecs.ListPositions() {
@@ -143,6 +142,9 @@ func (s *GamePlay) Update() error {
 		}
 		s.logger.Info("game saved", slog.Duration("duration", time.Since(started)))
 		return nil
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyF9) {
+		debugHierarchy(s.hierarchy)
 	}
 	for _, sys := range s.systems {
 		if err := sys.Update(); err != nil {
