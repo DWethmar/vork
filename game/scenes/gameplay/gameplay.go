@@ -54,8 +54,8 @@ func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
 func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
 	stores := ecsys.NewStores()
-	hierarchy := hierarchy.New(rootEntity)
-	ecs := ecsys.New(eventBus, stores, hierarchy)
+	h := hierarchy.New(rootEntity)
+	ecs := ecsys.New(eventBus, stores, h)
 
 	systems := []System{
 		keyinput.New(logger, ecs),
@@ -81,10 +81,22 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 		if err = persistence.Load(db); err != nil {
 			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
+
+		// rebuild hierarchy
+		ep := []hierarchy.EntityPair{}
+		for _, p := range ecs.ListPositions() {
+			ep = append(ep, hierarchy.EntityPair{
+				Parent: p.Parent,
+				Child:  p.Entity(),
+			})
+		}
+		if err = h.Build(ep); err != nil {
+			return nil, err
+		}
 	} else {
 		// create a new game
 		logger.Info("creating a new game")
-		if err = initializeGame(hierarchy, ecs, db); err != nil {
+		if err = initializeGame(h, ecs, db); err != nil {
 			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
 		if err = persistence.Save(db); err != nil {
@@ -106,7 +118,7 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 		logger:      logger,
 		db:          db,
 		systems:     systems,
-		hierarchy:   hierarchy,
+		hierarchy:   h,
 		persistence: persistence,
 	}, nil
 }

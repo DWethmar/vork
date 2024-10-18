@@ -28,6 +28,50 @@ func New(root entity.Entity) *Hierarchy {
 	}
 }
 
+type EntityPair struct {
+	Parent entity.Entity
+	Child  entity.Entity
+}
+
+func (h *Hierarchy) Build(pairs []EntityPair) error {
+	// Temporary tree to store relationships before hierarchy is built
+	tree := make(map[entity.Entity][]entity.Entity)
+
+	// Build the tree from the pairs
+	for _, pair := range pairs {
+		if _, exists := tree[pair.Parent]; !exists {
+			tree[pair.Parent] = make([]entity.Entity, 0)
+		}
+		tree[pair.Parent] = append(tree[pair.Parent], pair.Child)
+	}
+
+	return h.addToParent(h.root, tree)
+}
+
+func (h *Hierarchy) addToParent(parent entity.Entity, tree map[entity.Entity][]entity.Entity) error {
+	// Retrieve children of the current parent
+	children, exists := tree[parent]
+	if !exists {
+		// If the parent has no children, nothing to do
+		return nil
+	}
+
+	// Add each child to the hierarchy under the current parent
+	for _, child := range children {
+		// Add the child under the current parent
+		if err := h.Add(parent, child); err != nil {
+			return fmt.Errorf("error adding child %v to parent %v: %w", child, parent, err)
+		}
+
+		// Recursively add the children of this child
+		if err := h.addToParent(child, tree); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (h *Hierarchy) entityExists(e entity.Entity) bool {
 	if e == h.root {
 		return true

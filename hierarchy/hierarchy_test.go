@@ -153,6 +153,46 @@ func TestNew(t *testing.T) {
 	})
 }
 
+func TestHierarchy_Built(t *testing.T) {
+	root := entity.Entity(0)
+	p := []hierarchy.EntityPair{
+		{
+			Parent: root,
+			Child:  entity.Entity(1),
+		},
+		{
+			Parent: root,
+			Child:  entity.Entity(2),
+		},
+		{
+			Parent: entity.Entity(1),
+			Child:  entity.Entity(3),
+		},
+		{
+			Parent: entity.Entity(2),
+			Child:  entity.Entity(4),
+		},
+	}
+
+	h := hierarchy.New(root)
+	if err := h.Build(p); err != nil {
+		t.Error(err)
+	}
+
+	assertChildren(t, h, root, []entity.Entity{
+		entity.Entity(1),
+		entity.Entity(2),
+	})
+
+	assertChildren(t, h, entity.Entity(1), []entity.Entity{
+		entity.Entity(3),
+	})
+
+	assertChildren(t, h, entity.Entity(2), []entity.Entity{
+		entity.Entity(4),
+	})
+}
+
 func TestHierarchy_Children(t *testing.T) {
 	t.Run("should add a child to the hierarchy", func(t *testing.T) {
 		eventBus := event.NewBus()
