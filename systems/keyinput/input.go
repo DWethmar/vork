@@ -1,4 +1,4 @@
-package controller
+package keyinput
 
 import (
 	"log/slog"
@@ -13,7 +13,7 @@ type System struct {
 	ecs    *ecsys.ECS
 }
 
-// New creates a new controller system. It moves all controllable entities in the direction of the direction keys.
+// New creates a new keyinput system. It moves all controllable entities in the direction of the direction keys.
 func New(logger *slog.Logger, ecs *ecsys.ECS) *System {
 	return &System{
 		logger: logger,

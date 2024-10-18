@@ -1,4 +1,4 @@
-package controller
+package keyinput
 
 import "github.com/hajimehoshi/ebiten/v2"
 

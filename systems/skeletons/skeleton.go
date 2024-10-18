@@ -11,7 +11,7 @@ import (
 	"github.com/dwethmar/vork/direction"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
-	"github.com/dwethmar/vork/event/input"
+	"github.com/dwethmar/vork/event/mouse"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -44,7 +44,7 @@ func New(logger *slog.Logger, ecs *ecsys.ECS, eventBus *event.Bus) *System {
 	))
 
 	s.subscriptions = append(s.subscriptions, s.eventBus.Subscribe(
-		event.MatchAny(input.LeftMouseClickedEventType),
+		event.MatchAny(mouse.LeftMouseClickedEventType),
 		s.skeletonCreatedHandler,
 	))
 
@@ -79,7 +79,7 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 		s.logger.Debug("skeleton updated", "skeleton", e.Skeleton)
 	case *skeleton.DeletedEvent:
 		s.logger.Debug("skeleton deleted", "skeleton", e.Skeleton)
-	case *input.LeftMouseClickedEvent:
+	case *mouse.LeftClickedEvent:
 		s.logger.Info("clicked", "x", e.X, "y", e.Y)
 	default:
 		return fmt.Errorf("unhandled event type %T", e)

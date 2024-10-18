@@ -8,14 +8,14 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
-	"github.com/dwethmar/vork/event/input"
+	"github.com/dwethmar/vork/event/mouse"
 	"github.com/dwethmar/vork/game"
 	"github.com/dwethmar/vork/hierarchy"
 	"github.com/dwethmar/vork/persistence"
 	"github.com/dwethmar/vork/point"
 	"github.com/dwethmar/vork/sprites"
 	"github.com/dwethmar/vork/spritesheet"
-	"github.com/dwethmar/vork/systems/controller"
+	"github.com/dwethmar/vork/systems/keyinput"
 	"github.com/dwethmar/vork/systems/render"
 	"github.com/dwethmar/vork/systems/skeletons"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -45,7 +45,7 @@ type GamePlay struct {
 // onClickHandler creates a click handler that publishes a clicked event.
 func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
 	return func(x, y int) {
-		if err := eventBus.Publish(input.NewLeftMouseClickedEvent(x, y)); err != nil {
+		if err := eventBus.Publish(mouse.NewLeftClickedEvent(x, y)); err != nil {
 			logger.Error("failed to publish clicked event", slog.String("error", err.Error()))
 		}
 	}
@@ -58,7 +58,7 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 	ecs := ecsys.New(eventBus, stores, hierarchy)
 
 	systems := []System{
-		controller.New(logger, ecs),
+		keyinput.New(logger, ecs),
 		render.New(render.Options{
 			Logger:       logger,
 			Sprites:      sprites.Sprites(s),
