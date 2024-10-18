@@ -9,6 +9,7 @@ import (
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/hierarchy"
+	"github.com/dwethmar/vork/point"
 	"github.com/dwethmar/vork/systems/skeletons"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -27,7 +28,7 @@ func TestNew(t *testing.T) {
 			t.Errorf("Expected 2 subscriptions, got %d", len(subscriptions))
 		}
 
-		e, err := ecs.CreateEntity(entity.Entity(0), 0, 0)
+		e, err := ecs.CreateEntity(entity.Entity(0), point.Zero())
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)
 		}

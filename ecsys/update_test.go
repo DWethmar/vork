@@ -7,6 +7,7 @@ import (
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/hierarchy"
+	"github.com/dwethmar/vork/point"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -15,12 +16,12 @@ func TestECS_UpdatePositionComponent(t *testing.T) {
 		h := hierarchy.New(0)
 		ecs := ecsys.New(event.NewBus(), ecsys.NewStores(), h)
 
-		parent, err := ecs.CreateEntity(h.Root(), 0, 0)
+		parent, err := ecs.CreateEntity(h.Root(), point.Zero())
 		if err != nil {
 			t.Errorf("Error creating entity: %s", err)
 		}
 
-		child1, err := ecs.CreateEntity(parent, 0, 0)
+		child1, err := ecs.CreateEntity(parent, point.Zero())
 		if err != nil {
 			t.Errorf("Error creating entity: %s", err)
 		}

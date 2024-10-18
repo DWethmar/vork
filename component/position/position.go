@@ -5,6 +5,7 @@ import (
 
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
+	"github.com/dwethmar/vork/point"
 )
 
 const Type = component.Type("position")
@@ -16,18 +17,21 @@ type Position struct {
 	I      uint          // ID
 	E      entity.Entity // Entity
 	Parent entity.Entity
-	X, Y   int
+	Point  point.Point
 }
 
-func New(parent entity.Entity, e entity.Entity, x, y int) *Position {
+func New(parent entity.Entity, e entity.Entity, point point.Point) *Position {
 	return &Position{
 		I:      0,
 		E:      e,
 		Parent: parent,
-		X:      x,
-		Y:      y,
+		Point:  point,
 	}
 }
+
+// Cords returns the x and y coordinates of the position.
+func (p *Position) Cords() (int, int) { return p.Point.X, p.Point.Y }
+func (p *Position) SetCords(x, y int) { p.Point.X, p.Point.Y = x, y }
 
 func Empty() *Position {
 	return &Position{}

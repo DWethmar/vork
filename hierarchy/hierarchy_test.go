@@ -8,6 +8,7 @@ import (
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/hierarchy"
+	"github.com/dwethmar/vork/point"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -161,7 +162,7 @@ func TestHierarchy_Children(t *testing.T) {
 
 		expect := []entity.Entity{}
 		for range 10 {
-			child, err := ecs.CreateEntity(root, 0, 0)
+			child, err := ecs.CreateEntity(root, point.New(0, 0))
 			if err != nil {
 				t.Error("Error creating entity")
 			}

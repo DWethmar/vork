@@ -7,10 +7,11 @@ import (
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
+	"github.com/dwethmar/vork/point"
 )
 
-func addPlayer(parent entity.Entity, ecs *ecsys.ECS, x, y int) error {
-	e, err := ecs.CreateEntity(parent, x, y)
+func addPlayer(parent entity.Entity, ecs *ecsys.ECS, p point.Point) error {
+	e, err := ecs.CreateEntity(parent, p)
 	if err != nil {
 		return fmt.Errorf("could not create entity: %w", err)
 	}
@@ -23,8 +24,8 @@ func addPlayer(parent entity.Entity, ecs *ecsys.ECS, x, y int) error {
 	return nil
 }
 
-func addEnemy(parent entity.Entity, ecs *ecsys.ECS, x, y int) error {
-	e, err := ecs.CreateEntity(parent, x, y)
+func addEnemy(parent entity.Entity, ecs *ecsys.ECS, p point.Point) error {
+	e, err := ecs.CreateEntity(parent, p)
 	if err != nil {
 		fmt.Printf("could not create entity: %v\n", err)
 	}

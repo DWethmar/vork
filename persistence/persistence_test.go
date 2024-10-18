@@ -11,6 +11,7 @@ import (
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/hierarchy"
 	"github.com/dwethmar/vork/persistence"
+	"github.com/dwethmar/vork/point"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -82,7 +83,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 			}
 
 			// Add position component
-			e, err := ecs.CreateEntity(entity.Entity(0), x, y)
+			e, err := ecs.CreateEntity(entity.Entity(0), point.New(x, y))
 			if err != nil {
 				t.Fatalf("Failed to create entity: %v", err)
 			}
@@ -129,8 +130,8 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 			if err != nil {
 				t.Fatalf("Failed to get position component: %v", err)
 			}
-			if pos.X != x || pos.Y != y {
-				t.Errorf("Position mismatch for entity %d: expected (%d, %d), got (%d, %d)", e, x, y, pos.X, pos.Y)
+			if nx, ny := pos.Cords(); x != nx || y != ny {
+				t.Errorf("Position mismatch for entity %d: expected (%d, %d), got (%d, %d)", e, x, y, nx, ny)
 			}
 
 			// Verify controllable component
@@ -162,7 +163,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 			x := i * 10
 			y := i * 10
 
-			_, err := ecs.CreateEntity(entity.Entity(0), x, y)
+			_, err := ecs.CreateEntity(entity.Entity(0), point.New(x, y))
 			if err != nil {
 				t.Fatalf("Failed to create entity: %v", err)
 			}
@@ -205,8 +206,8 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 				}
 				x := i * 10
 				y := i * 10
-				if pos.X != x || pos.Y != y {
-					t.Errorf("position mismatch for entity %d: expected (%d, %d), got (%d, %d)", e, x, y, pos.X, pos.Y)
+				if nx, ny := pos.Cords(); x != nx || y != ny {
+					t.Errorf("position mismatch for entity %d: expected (%d, %d), got (%d, %d)", e, x, y, nx, ny)
 				}
 			}
 		}
@@ -230,21 +231,20 @@ func TestSystem_Load(t *testing.T) {
 			s := persistence.New(eventBus, stores, ecs)
 			var err error
 			// load some data
-			e, err = ecs.CreateEntity(entity.Entity(0), 11, 22)
+			e, err = ecs.CreateEntity(entity.Entity(0), point.New(11, 22))
 			if err != nil {
 				t.Errorf("CreateEntity failed: %v", err)
 			}
 
-			position, err := ecs.GetPosition(e)
+			pos, err := ecs.GetPosition(e)
 			if err != nil {
 				t.Errorf("Position failed: %v", err)
 			}
 
 			// update position
-			position.X = 33
-			position.Y = 44
+			pos.SetCords(33, 44)
 
-			if err = ecs.UpdatePositionComponent(position); err != nil {
+			if err = ecs.UpdatePositionComponent(pos); err != nil {
 				t.Errorf("UpdatePosition failed: %v", err)
 			}
 
@@ -268,8 +268,8 @@ func TestSystem_Load(t *testing.T) {
 			if err != nil {
 				t.Errorf("Position failed: %v", err)
 			}
-			if position.X != 33 || position.Y != 44 {
-				t.Errorf("Position failed: expected (33, 44), got (%d, %d)", position.X, position.Y)
+			if x, y := position.Cords(); x != 33 || y != 44 {
+				t.Errorf("Position failed: expected (33, 44), got (%d, %d)", x, y)
 			}
 		}
 	})

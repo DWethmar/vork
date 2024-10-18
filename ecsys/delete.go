@@ -9,8 +9,51 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 )
+
+func (s *ECS) deletePositionByEntity(e entity.Entity) error {
+	c, err := s.GetPosition(e)
+	if err != nil {
+		return err
+	}
+	return s.DeletePosition(c)
+}
+
+func (s *ECS) deleteControllableByEntity(e entity.Entity) error {
+	c, err := s.GetControllable(e)
+	if err != nil {
+		return err
+	}
+	return s.DeleteControllable(c)
+}
+
+func (s *ECS) deleteRectanglesByEntity(e entity.Entity) error {
+	for _, c := range s.ListRectanglesByEntity(e) {
+		if err := s.DeleteRectangle(c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *ECS) deleteSpritesByEntity(e entity.Entity) error {
+	for _, sprite := range s.ListSpritesByEntity(e) {
+		if err := s.DeleteSprite(sprite); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *ECS) deleteSkeletonByEntity(e entity.Entity) error {
+	c, err := s.GetSkeleton(e)
+	if err != nil {
+		return err
+	}
+	return s.DeleteSkeleton(c)
+}
 
 func deleteComponent[T any](
 	eventBus *event.Bus,

@@ -14,11 +14,13 @@ import (
 	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
+	"github.com/dwethmar/vork/point"
 )
 
 type Hierarchy interface {
 	Add(parent entity.Entity, child entity.Entity) error
 	Update(parent entity.Entity, child entity.Entity) error
+	// Delete removes an entity and all its children from the hierarchy and returns the list the child descendants.
 	Delete(child entity.Entity) []entity.Entity
 	Parent(child entity.Entity) (entity.Entity, error)
 	Children(parent entity.Entity) []entity.Entity
@@ -64,9 +66,9 @@ func New(eventBus *event.Bus, s *Stores, h Hierarchy) *ECS {
 
 // CreateEntity generates a new unique entity by incrementing the lastEntityID.
 // It also creates a position component for the entity and adds it to the ECS.
-func (s *ECS) CreateEntity(parent entity.Entity, x, y int) (entity.Entity, error) {
+func (s *ECS) CreateEntity(parent entity.Entity, p point.Point) (entity.Entity, error) {
 	e := s.CreateEmptyEntity()
-	pos := position.New(parent, e, x, y)
+	pos := position.New(parent, e, p)
 	if _, err := s.AddPositionComponent(*pos); err != nil {
 		return 0, err
 	}
@@ -84,7 +86,7 @@ func (s *ECS) CreateEmptyEntity() entity.Entity {
 // DeleteEntity removes an entity and all its associated components from the ECS.
 func (s *ECS) DeleteEntity(e entity.Entity) error {
 	// Check for errors and return the first one that is not a "not found" error.
-	for _, err := range s.deleteAllComponents(e) {
+	for _, err := range s.deleteAllEntityComponents(e) {
 		if err != nil && !errors.Is(err, ErrEntityNotFound) {
 			return fmt.Errorf("failed to delete entity: %w", err)
 		}
@@ -92,29 +94,29 @@ func (s *ECS) DeleteEntity(e entity.Entity) error {
 	return nil
 }
 
-// deleteAllComponents removes an entity and all its associated components from the ECS.
-func (s *ECS) deleteAllComponents(e entity.Entity) []error {
+// deleteAllEntityComponents removes an entity and all its associated components from the ECS.
+func (s *ECS) deleteAllEntityComponents(e entity.Entity) []error {
 	var errs []error
 	for _, t := range componentTypes() {
 		switch t {
 		case position.Type:
-			if err := s.deletePosition(e); err != nil {
+			if err := s.deletePositionByEntity(e); err != nil {
 				errs = append(errs, err)
 			}
 		case controllable.Type:
-			if err := s.deleteControllable(e); err != nil {
+			if err := s.deleteControllableByEntity(e); err != nil {
 				errs = append(errs, err)
 			}
 		case shape.RectangleType:
-			if err := s.deleteRectangle(e); err != nil {
+			if err := s.deleteRectanglesByEntity(e); err != nil {
 				errs = append(errs, err)
 			}
 		case sprite.Type:
-			if err := s.deleteSprite(e); err != nil {
+			if err := s.deleteSpritesByEntity(e); err != nil {
 				errs = append(errs, err)
 			}
 		case skeleton.Type:
-			if err := s.deleteSkeleton(e); err != nil {
+			if err := s.deleteSkeletonByEntity(e); err != nil {
 				errs = append(errs, err)
 			}
 		default:
@@ -124,44 +126,21 @@ func (s *ECS) deleteAllComponents(e entity.Entity) []error {
 	return errs
 }
 
-func (s *ECS) deletePosition(e entity.Entity) error {
-	c, err := s.GetPosition(e)
+func (s *ECS) GetAbsolutePosition(e entity.Entity) (point.Point, error) {
+	if e == s.hierarchy.Root() {
+		return point.Point{}, nil
+	}
+	parent, err := s.hierarchy.Parent(e)
 	if err != nil {
-		return err
+		return point.Point{}, err
 	}
-	return s.DeletePosition(c)
-}
-
-func (s *ECS) deleteControllable(e entity.Entity) error {
-	c, err := s.GetControllable(e)
+	pos, err := s.GetPosition(e)
 	if err != nil {
-		return err
+		return point.Point{}, err
 	}
-	return s.DeleteControllable(c)
-}
-
-func (s *ECS) deleteRectangle(e entity.Entity) error {
-	for _, c := range s.ListRectanglesByEntity(e) {
-		if err := s.DeleteRectangle(c); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *ECS) deleteSprite(e entity.Entity) error {
-	for _, sprite := range s.ListSpritesByEntity(e) {
-		if err := s.DeleteSprite(sprite); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *ECS) deleteSkeleton(e entity.Entity) error {
-	c, err := s.GetSkeleton(e)
+	p, err := s.GetAbsolutePosition(parent)
 	if err != nil {
-		return err
+		return point.Point{}, err
 	}
-	return s.DeleteSkeleton(c)
+	return p.Add(pos.Cords()), nil
 }

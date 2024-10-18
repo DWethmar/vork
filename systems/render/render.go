@@ -84,7 +84,7 @@ func (s *System) Draw(screen *ebiten.Image) error {
 	for _, r := range s.ecs.ListRectangles() {
 		var x, y int
 		if c, err := s.ecs.GetPosition(r.Entity()); err == nil {
-			x, y = c.X, c.Y
+			x, y = c.Cords()
 		} else {
 			return err
 		}
@@ -107,7 +107,7 @@ func (s *System) Draw(screen *ebiten.Image) error {
 	for _, spc := range s.ecs.ListSprites() {
 		var x, y int
 		if c, err := s.ecs.GetPosition(spc.Entity()); err == nil {
-			x, y = c.X, c.Y
+			x, y = c.Cords()
 		} else {
 			return err
 		}
@@ -184,10 +184,10 @@ func (s *System) Update() error {
 
 		// Get the actual screen dimensions from Ebiten
 		screenWidth, screenHeight := ebiten.WindowSize()
-
+		x, y := pos.Cords()
 		// Calculate the offsets to center the controllable on the screen, accounting for zoom
-		s.offsetX = int(float64(pos.X) - (float64(screenWidth) / (2 * s.zoom)))
-		s.offsetY = int(float64(pos.Y) - (float64(screenHeight) / (2 * s.zoom)))
+		s.offsetX = int(float64(x) - (float64(screenWidth) / (2 * s.zoom)))
+		s.offsetY = int(float64(y) - (float64(screenHeight) / (2 * s.zoom)))
 	}
 
 	// Handle mouse click

@@ -11,6 +11,7 @@ import (
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/hierarchy"
+	"github.com/dwethmar/vork/point"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -26,7 +27,7 @@ func TestNew(t *testing.T) {
 func TestECS_CreateEntity(t *testing.T) {
 	t.Run("should create an entity with a position", func(t *testing.T) {
 		ecs := ecsys.New(event.NewBus(), ecsys.NewStores(), hierarchy.New(entity.Entity(0)))
-		entity, err := ecs.CreateEntity(entity.Entity(0), 11, 22)
+		entity, err := ecs.CreateEntity(entity.Entity(0), point.New(11, 22))
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)
 		}
@@ -41,10 +42,9 @@ func TestECS_CreateEntity(t *testing.T) {
 		}
 
 		expected := position.Position{
-			I: 1,
-			E: entity,
-			X: 11,
-			Y: 22,
+			I:     1,
+			E:     entity,
+			Point: point.New(11, 22),
 		}
 
 		if diff := cmp.Diff(pos, expected); diff != "" {
@@ -56,7 +56,7 @@ func TestECS_CreateEntity(t *testing.T) {
 func TestECS_DeleteEntity(t *testing.T) {
 	t.Run("should delete an entity", func(t *testing.T) {
 		ecs := ecsys.New(event.NewBus(), ecsys.NewStores(), hierarchy.New(entity.Entity(0)))
-		entity, err := ecs.CreateEntity(entity.Entity(0), 11, 22)
+		entity, err := ecs.CreateEntity(entity.Entity(0), point.New(11, 22))
 		if err != nil {
 			t.Errorf("CreateEntity() error = %v", err)
 		}
@@ -88,6 +88,52 @@ func TestECS_DeleteEntity(t *testing.T) {
 		// Check if the sprite has been deleted
 		if l := len(ecs.ListSpritesByEntity(entity)); l != 0 {
 			t.Errorf("SpritesByEntity() sprites = %v", l)
+		}
+	})
+}
+
+func TestECS_CreateEmptyEntity(t *testing.T) {
+	ecs := ecsys.New(event.NewBus(), ecsys.NewStores(), hierarchy.New(entity.Entity(100)))
+	for i := range 100 {
+		if e := ecs.CreateEmptyEntity(); e != entity.Entity(i+101) {
+			t.Errorf("expected entity %d, got %d", i+100, e)
+		}
+	}
+}
+
+func TestECS_GetAbsolutePosition(t *testing.T) {
+	t.Run("should get the absolute position of an entity", func(t *testing.T) {
+		ecs := ecsys.New(event.NewBus(), ecsys.NewStores(), hierarchy.New(entity.Entity(0)))
+
+		child1, err := ecs.CreateEntity(entity.Entity(0), point.New(11, 22))
+		if err != nil {
+			t.Errorf("CreateEntity() error = %v", err)
+		}
+
+		child2, err := ecs.CreateEntity(child1, point.New(1, 2))
+		if err != nil {
+			t.Errorf("CreateEntity() error = %v", err)
+		}
+
+		child3, err := ecs.CreateEntity(child2, point.New(3, 4))
+		if err != nil {
+			t.Errorf("CreateEntity() error = %v", err)
+		}
+
+		p, err := ecs.GetAbsolutePosition(child3)
+		if err != nil {
+			t.Errorf("GetAbsolutePosition() error = %v", err)
+		}
+
+		expectedX := 15
+		expectedY := 28
+
+		if p.X != expectedX {
+			t.Errorf("expected x = %v, got %v", expectedX, p.X)
+		}
+
+		if p.Y != expectedY {
+			t.Errorf("expected y = %v, got %v", expectedY, p.Y)
 		}
 	})
 }

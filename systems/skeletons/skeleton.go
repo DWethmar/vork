@@ -133,10 +133,11 @@ func (s *System) updateSkeleton(e *skeleton.Skeleton) error {
 	}
 
 	isMoving := false
-	if e.PrefX != pos.X || e.PrefY != pos.Y {
+	x, y := pos.Cords()
+	if e.PrefX != x || e.PrefY != y {
 		isMoving = true
 		// Calculate facing direction before updating e.PrefX and e.PrefY
-		facing := direction.Get(e.PrefX, e.PrefY, pos.X, pos.Y)
+		facing := direction.Get(e.PrefX, e.PrefY, x, y)
 		if e.Facing != facing {
 			e.AnimationStep = 0
 		}
@@ -150,9 +151,7 @@ func (s *System) updateSkeleton(e *skeleton.Skeleton) error {
 	}
 
 	// Update e.PrefX and e.PrefY after calculating facing
-	e.PrefX = pos.X
-	e.PrefY = pos.Y
-
+	e.PrefX, e.PrefY = x, y
 	if e.State == skeleton.Moving {
 		e.AnimationStep++
 		if e.AnimationStep >= walkAnimationSteps {

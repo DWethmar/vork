@@ -12,6 +12,7 @@ import (
 	"github.com/dwethmar/vork/game"
 	"github.com/dwethmar/vork/hierarchy"
 	"github.com/dwethmar/vork/persistence"
+	"github.com/dwethmar/vork/point"
 	"github.com/dwethmar/vork/sprites"
 	"github.com/dwethmar/vork/spritesheet"
 	"github.com/dwethmar/vork/systems/controller"
@@ -150,10 +151,11 @@ func (s *GamePlay) Close() error {
 }
 
 func initializeGame(h *hierarchy.Hierarchy, ecs *ecsys.ECS, db *bbolt.DB) error {
-	if err := addPlayer(h.Root(), ecs, 10, 10); err != nil {
+	if err := addPlayer(h.Root(), ecs, point.New(10, 10)); err != nil {
 		return fmt.Errorf("failed to add player: %w", err)
 	}
-	if err := addEnemy(h.Root(), ecs, 100, 100); err != nil {
+
+	if err := addEnemy(h.Root(), ecs, point.New(100, 100)); err != nil {
 		return fmt.Errorf("failed to add enemy: %w", err)
 	}
 

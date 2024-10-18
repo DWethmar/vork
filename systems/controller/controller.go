@@ -40,8 +40,7 @@ func (s *System) Update() error {
 		if err != nil {
 			return err
 		}
-		p.X += x
-		p.Y += y
+		p.Point = p.Point.Add(x, y)
 		if err = s.ecs.UpdatePositionComponent(p); err != nil {
 			return err
 		}

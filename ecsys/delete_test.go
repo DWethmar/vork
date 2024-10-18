@@ -7,6 +7,7 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/hierarchy"
+	"github.com/dwethmar/vork/point"
 )
 
 func TestECS_DeletePosition(t *testing.T) {
@@ -14,12 +15,12 @@ func TestECS_DeletePosition(t *testing.T) {
 		h := hierarchy.New(0)
 		ecs := ecsys.New(event.NewBus(), ecsys.NewStores(), h)
 
-		child1, err := ecs.CreateEntity(h.Root(), 0, 0)
+		child1, err := ecs.CreateEntity(h.Root(), point.Zero())
 		if err != nil {
 			t.Errorf("Error creating entity: %s", err)
 		}
 
-		child2, err := ecs.CreateEntity(child1, 0, 0)
+		child2, err := ecs.CreateEntity(child1, point.Zero())
 		if err != nil {
 			t.Errorf("Error creating entity: %s", err)
 		}
