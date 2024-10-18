@@ -14,18 +14,9 @@ import (
 	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
+	"github.com/dwethmar/vork/hierarchy"
 	"github.com/dwethmar/vork/point"
 )
-
-type Hierarchy interface {
-	Add(parent entity.Entity, child entity.Entity) error
-	Update(parent entity.Entity, child entity.Entity) error
-	// Delete removes an entity and all its children from the hierarchy and returns the list the child descendants.
-	Delete(child entity.Entity) []entity.Entity
-	Parent(child entity.Entity) (entity.Entity, error)
-	Children(parent entity.Entity) []entity.Entity
-	Root() entity.Entity
-}
 
 // componentTypes is a list of all component types used in the ECS.
 // This list is used to initialize the component stores in the ECS.
@@ -50,18 +41,43 @@ type ECS struct {
 	lastEntityID entity.Entity
 	eventBus     *event.Bus
 	stores       *Stores
-	hierarchy    Hierarchy
+	hierarchy    *hierarchy.Hierarchy
 }
 
 // New creates a new ECS system, initializing it with the provided component stores and event bus.
 // This function ensures that the ECS is ready to manage entities and components from the start.
-func New(eventBus *event.Bus, s *Stores, h Hierarchy) *ECS {
+func New(eventBus *event.Bus, s *Stores) *ECS {
+	root := entity.Entity(0)
 	return &ECS{
-		lastEntityID: h.Root(),
+		lastEntityID: root,
 		eventBus:     eventBus,
 		stores:       s,
-		hierarchy:    h,
+		hierarchy:    hierarchy.New(root),
 	}
+}
+
+func (s *ECS) BuildHierarchy() error {
+	// rebuild hierarchy
+	ep := []hierarchy.EntityPair{}
+	for _, p := range s.ListPositions() {
+		ep = append(ep, hierarchy.EntityPair{
+			Parent: p.Parent,
+			Child:  p.Entity(),
+		})
+	}
+	return s.hierarchy.Build(ep)
+}
+
+func (s *ECS) Root() entity.Entity {
+	return s.hierarchy.Root()
+}
+
+func (s *ECS) Parent(e entity.Entity) (entity.Entity, error) {
+	return s.hierarchy.Parent(e)
+}
+
+func (s *ECS) Children(e entity.Entity) []entity.Entity {
+	return s.hierarchy.Children(e)
 }
 
 // CreateEntity generates a new unique entity by incrementing the lastEntityID.

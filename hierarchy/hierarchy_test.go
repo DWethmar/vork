@@ -197,8 +197,7 @@ func TestHierarchy_Children(t *testing.T) {
 	t.Run("should add a child to the hierarchy", func(t *testing.T) {
 		eventBus := event.NewBus()
 		root := entity.Entity(0)
-		h := hierarchy.New(root)
-		ecs := ecsys.New(eventBus, ecsys.NewStores(), h)
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 
 		expect := []entity.Entity{}
 		for range 10 {
@@ -210,7 +209,7 @@ func TestHierarchy_Children(t *testing.T) {
 		}
 
 		// check if the child was added
-		children := h.Children(root)
+		children := ecs.Children(root)
 		if cmp.Diff(children, expect) != "" {
 			t.Error("Children should be equal")
 		}

@@ -9,7 +9,6 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
-	"github.com/dwethmar/vork/hierarchy"
 	"github.com/dwethmar/vork/persistence"
 	"github.com/dwethmar/vork/point"
 	bolt "go.etcd.io/bbolt"
@@ -38,7 +37,7 @@ func TestNew(t *testing.T) {
 	t.Run("New should create a new system", func(t *testing.T) {
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
-		ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+		ecs := ecsys.New(eventBus, stores)
 		s := persistence.New(eventBus, stores, ecs)
 		if s == nil {
 			t.Error("System should not be nil")
@@ -48,7 +47,7 @@ func TestNew(t *testing.T) {
 	t.Run("New should subscribe to component change events", func(t *testing.T) {
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
-		ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+		ecs := ecsys.New(eventBus, stores)
 		s := persistence.New(eventBus, stores, ecs)
 		if s == nil {
 			t.Error("System should not be nil")
@@ -70,7 +69,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
-		ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+		ecs := ecsys.New(eventBus, stores)
 		s := persistence.New(eventBus, stores, ecs)
 
 		// Add components
@@ -109,7 +108,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		// Create new ECS and load components
 		eventBus = event.NewBus()
 		stores = ecsys.NewStores()
-		ecs = ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+		ecs = ecsys.New(eventBus, stores)
 		s = persistence.New(eventBus, stores, ecs)
 		if err := s.Load(db); err != nil {
 			t.Fatalf("Failed to load components: %v", err)
@@ -155,7 +154,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
-		ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+		ecs := ecsys.New(eventBus, stores)
 		s := persistence.New(eventBus, stores, ecs)
 
 		// Add position components
@@ -186,7 +185,7 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		// Create new ECS and load components
 		eventBus = event.NewBus()
 		stores = ecsys.NewStores()
-		ecs = ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+		ecs = ecsys.New(eventBus, stores)
 		s = persistence.New(eventBus, stores, ecs)
 		if err := s.Load(db); err != nil {
 			t.Fatalf("Failed to load components: %v", err)
@@ -226,7 +225,7 @@ func TestSystem_Load(t *testing.T) {
 		{
 			eventBus := event.NewBus()
 			stores := ecsys.NewStores()
-			ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+			ecs := ecsys.New(eventBus, stores)
 			// create system
 			s := persistence.New(eventBus, stores, ecs)
 			var err error
@@ -256,7 +255,7 @@ func TestSystem_Load(t *testing.T) {
 		{
 			eventBus := event.NewBus()
 			stores := ecsys.NewStores()
-			ecs := ecsys.New(eventBus, stores, hierarchy.New(entity.Entity(0)))
+			ecs := ecsys.New(eventBus, stores)
 			// create system
 			s := persistence.New(eventBus, stores, ecs)
 			if err := s.Load(db); err != nil {

@@ -33,7 +33,14 @@ type EntityPair struct {
 	Child  entity.Entity
 }
 
+// Clear removes all entities from the hierarchy.
+func (h *Hierarchy) clear() {
+	h.parents = make(map[entity.Entity]entity.Entity)
+	h.children = make(map[entity.Entity][]entity.Entity)
+}
+
 func (h *Hierarchy) Build(pairs []EntityPair) error {
+	h.clear()
 	// Temporary tree to store relationships before hierarchy is built
 	tree := make(map[entity.Entity][]entity.Entity)
 

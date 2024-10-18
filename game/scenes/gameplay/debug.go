@@ -3,16 +3,16 @@ package gameplay
 import (
 	"fmt"
 
+	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
-	"github.com/dwethmar/vork/hierarchy"
 )
 
-func debugHierarchy(h *hierarchy.Hierarchy) {
+func debugHierarchy(h *ecsys.ECS) {
 	// Start rendering from the root entity
 	renderHierarchy(h, h.Root(), "", true)
 }
 
-func renderHierarchy(h *hierarchy.Hierarchy, e entity.Entity, prefix string, isLast bool) {
+func renderHierarchy(h *ecsys.ECS, e entity.Entity, prefix string, isLast bool) {
 	// Choose the appropriate branch character
 	if isLast {
 		fmt.Printf("%s└── Entity %v\n", prefix, e)

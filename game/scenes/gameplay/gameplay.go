@@ -10,7 +10,6 @@ import (
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/event/mouse"
 	"github.com/dwethmar/vork/game"
-	"github.com/dwethmar/vork/hierarchy"
 	"github.com/dwethmar/vork/persistence"
 	"github.com/dwethmar/vork/point"
 	"github.com/dwethmar/vork/sprites"
@@ -38,7 +37,7 @@ type GamePlay struct {
 	logger      *slog.Logger
 	db          *bbolt.DB
 	systems     []System
-	hierarchy   *hierarchy.Hierarchy
+	ecs         *ecsys.ECS
 	persistence *persistence.Persistance
 }
 
@@ -54,8 +53,7 @@ func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
 func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
 	stores := ecsys.NewStores()
-	h := hierarchy.New(rootEntity)
-	ecs := ecsys.New(eventBus, stores, h)
+	ecs := ecsys.New(eventBus, stores)
 
 	systems := []System{
 		keyinput.New(logger, ecs),
@@ -81,21 +79,13 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 		if err = persistence.Load(db); err != nil {
 			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
-		// rebuild hierarchy
-		ep := []hierarchy.EntityPair{}
-		for _, p := range ecs.ListPositions() {
-			ep = append(ep, hierarchy.EntityPair{
-				Parent: p.Parent,
-				Child:  p.Entity(),
-			})
-		}
-		if err = h.Build(ep); err != nil {
+		if err = ecs.BuildHierarchy(); err != nil {
 			return nil, err
 		}
 	} else {
 		// create a new game
 		logger.Info("creating a new game")
-		if err = initializeGame(h, ecs, db); err != nil {
+		if err = initializeGame(ecs, db); err != nil {
 			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
 		if err = persistence.Save(db); err != nil {
@@ -117,7 +107,7 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 		logger:      logger,
 		db:          db,
 		systems:     systems,
-		hierarchy:   h,
+		ecs:         ecs,
 		persistence: persistence,
 	}, nil
 }
@@ -144,7 +134,7 @@ func (s *GamePlay) Update() error {
 		return nil
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyF9) {
-		debugHierarchy(s.hierarchy)
+		debugHierarchy(s.ecs)
 	}
 	for _, sys := range s.systems {
 		if err := sys.Update(); err != nil {
@@ -164,12 +154,12 @@ func (s *GamePlay) Close() error {
 	return nil
 }
 
-func initializeGame(h *hierarchy.Hierarchy, ecs *ecsys.ECS, db *bbolt.DB) error {
-	if err := addPlayer(h.Root(), ecs, point.New(10, 10)); err != nil {
+func initializeGame(ecs *ecsys.ECS, db *bbolt.DB) error {
+	if err := addPlayer(ecs.Root(), ecs, point.New(10, 10)); err != nil {
 		return fmt.Errorf("failed to add player: %w", err)
 	}
 
-	if err := addEnemy(h.Root(), ecs, point.New(100, 100)); err != nil {
+	if err := addEnemy(ecs.Root(), ecs, point.New(100, 100)); err != nil {
 		return fmt.Errorf("failed to add enemy: %w", err)
 	}
 

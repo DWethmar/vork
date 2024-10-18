@@ -8,7 +8,6 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
-	"github.com/dwethmar/vork/hierarchy"
 	"github.com/dwethmar/vork/point"
 	"github.com/dwethmar/vork/systems/skeletons"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -17,7 +16,7 @@ import (
 func TestNew(t *testing.T) {
 	t.Run("New should create a new system and register event handlers", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, ecsys.NewStores(), hierarchy.New(0))
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 		s := skeletons.New(slog.Default(), ecs, eventBus)
 		if s == nil {
 			t.Error("System should not be nil")
@@ -59,7 +58,7 @@ func TestNew(t *testing.T) {
 
 func TestSystem_Draw(t *testing.T) {
 	t.Run("Draw should not return an error", func(t *testing.T) {
-		s := skeletons.New(slog.Default(), ecsys.New(event.NewBus(), ecsys.NewStores(), hierarchy.New(0)), event.NewBus())
+		s := skeletons.New(slog.Default(), ecsys.New(event.NewBus(), ecsys.NewStores()), event.NewBus())
 		if err := s.Draw(&ebiten.Image{}); err != nil {
 			t.Errorf("Draw() error = %v, wantErr %v", err, false)
 		}
@@ -68,7 +67,7 @@ func TestSystem_Draw(t *testing.T) {
 
 func TestSystem_Update(t *testing.T) {
 	t.Run("Update should not return an error", func(t *testing.T) {
-		s := skeletons.New(slog.Default(), ecsys.New(event.NewBus(), ecsys.NewStores(), hierarchy.New(0)), event.NewBus())
+		s := skeletons.New(slog.Default(), ecsys.New(event.NewBus(), ecsys.NewStores()), event.NewBus())
 		if err := s.Update(); err != nil {
 			t.Errorf("Update() error = %v, wantErr %v", err, false)
 		}
@@ -78,7 +77,7 @@ func TestSystem_Update(t *testing.T) {
 func TestSystem_Close(t *testing.T) {
 	t.Run("Close should not return an error and unsubscribe all event handlers", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, ecsys.NewStores(), hierarchy.New(0))
+		ecs := ecsys.New(eventBus, ecsys.NewStores())
 
 		s := skeletons.New(slog.Default(), ecs, eventBus)
 		if err := s.Close(); err != nil {
