@@ -7,11 +7,13 @@ import (
 	"github.com/dwethmar/vork/entity"
 )
 
+// debugHierarchy prints the hierarchy of entities in the ECS.
 func debugHierarchy(h *ecsys.ECS) {
 	// Start rendering from the root entity
 	renderHierarchy(h, h.Root(), "", true)
 }
 
+// renderHierarchy recursively prints the hierarchy of entities in the ECS.
 func renderHierarchy(h *ecsys.ECS, e entity.Entity, prefix string, isLast bool) {
 	// Choose the appropriate branch character
 	if isLast {

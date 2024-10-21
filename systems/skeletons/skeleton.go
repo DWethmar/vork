@@ -1,6 +1,7 @@
 package skeletons
 
 import (
+	"errors"
 	"fmt"
 	"image/color"
 	"log/slog"
@@ -53,14 +54,22 @@ func New(logger *slog.Logger, ecs *ecsys.ECS, eventBus *event.Bus) *System {
 
 // Init initializes the system.
 func (s *System) Init() error {
+	if s.ecs == nil {
+		return errors.New("ecs is nil")
+	}
+	if s.eventBus == nil {
+		return errors.New("eventBus is nil")
+	}
+	// Setup existing skeletons
 	for _, sk := range s.ecs.ListSkeletons() {
 		if err := s.setupSkeleton(sk); err != nil {
-			return fmt.Errorf("could not setup skeleton: %w", err)
+			return fmt.Errorf("could not setup skeleton for entity %v: %w", sk.Entity(), err)
 		}
 	}
 	return nil
 }
 
+// Close closes the system.
 func (s *System) Close() error {
 	for _, sub := range s.subscriptions {
 		s.eventBus.Unsubscribe(sub)
@@ -73,7 +82,7 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 	case *skeleton.CreatedEvent:
 		s.logger.Debug("skeleton created", "skeleton", e.Skeleton)
 		if err := s.setupSkeleton(*e.Skeleton()); err != nil {
-			return fmt.Errorf("could not setup skeleton: %w", err)
+			return err
 		}
 	case *skeleton.UpdatedEvent:
 		s.logger.Debug("skeleton updated", "skeleton", e.Skeleton)

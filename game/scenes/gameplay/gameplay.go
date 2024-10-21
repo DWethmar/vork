@@ -60,19 +60,6 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 	eventBus := event.NewBus()
 	stores := ecsys.NewStores()
 	ecs := ecsys.New(eventBus, stores)
-
-	systems := []System{
-		keyinput.New(logger, ecs),
-		render.New(render.Options{
-			Logger:       logger,
-			Sprites:      sprites.Sprites(s),
-			ECS:          ecs,
-			ClickHandler: onClickHandler(logger, eventBus),
-			HoverHandler: onHoverHandler(),
-		}),
-		skeletons.New(logger, ecs, eventBus),
-	}
-
 	persistence := persistence.New(eventBus, stores, ecs)
 
 	// check if it is an existing save
@@ -101,6 +88,18 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 	}
 	if err != nil {
 		logger.Error("failed to load game", slog.String("error", err.Error()))
+	}
+
+	systems := []System{
+		keyinput.New(logger, ecs),
+		render.New(render.Options{
+			Logger:       logger,
+			Sprites:      sprites.Sprites(s),
+			ECS:          ecs,
+			ClickHandler: onClickHandler(logger, eventBus),
+			HoverHandler: onHoverHandler(),
+		}),
+		skeletons.New(logger, ecs, eventBus),
 	}
 
 	// init all systems after loading the game to make sure all components are loaded
@@ -162,12 +161,18 @@ func (s *GamePlay) Close() error {
 }
 
 func initializeGame(ecs *ecsys.ECS, db *bbolt.DB) error {
-	if err := addPlayer(ecs.Root(), ecs, point.New(10, 10)); err != nil {
+	e, err := addPlayer(ecs.Root(), ecs, point.New(10, 10))
+	if err != nil {
 		return fmt.Errorf("failed to add player: %w", err)
 	}
 
-	if err := addEnemy(ecs.Root(), ecs, point.New(100, 100)); err != nil {
-		return fmt.Errorf("failed to add enemy: %w", err)
+	// test
+	if e, err = addEnemy(e, ecs, point.New(15, 15)); err != nil {
+		return fmt.Errorf("failed to add enemy %v: %w", e, err)
+	}
+
+	if e, err = addEnemy(ecs.Root(), ecs, point.New(100, 100)); err != nil {
+		return fmt.Errorf("failed to add enemy %v: %w", e, err)
 	}
 
 	return db.Update(func(tx *bbolt.Tx) error {

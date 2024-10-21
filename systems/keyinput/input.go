@@ -1,6 +1,7 @@
 package keyinput
 
 import (
+	"errors"
 	"log/slog"
 
 	"github.com/dwethmar/vork/ecsys"
@@ -21,7 +22,11 @@ func New(logger *slog.Logger, ecs *ecsys.ECS) *System {
 	}
 }
 
+// Init initializes the system.
 func (s *System) Init() error {
+	if s.ecs == nil {
+		return errors.New("ecs is nil")
+	}
 	return nil
 }
 

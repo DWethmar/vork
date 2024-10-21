@@ -99,12 +99,12 @@ func (s *System) Draw(screen *ebiten.Image) error {
 	entitiesToDraw := []entityDraw{}
 	// Collect rectangles to draw
 	for _, r := range s.ecs.ListRectangles() {
-		var x, y int
-		if c, err := s.ecs.GetPosition(r.Entity()); err == nil {
-			x, y = c.Cords()
-		} else {
-			return err
+		pt, err := s.ecs.GetAbsolutePosition(r.Entity())
+		if err != nil {
+			return fmt.Errorf("could not get absolute position for entity %v: %w", r.Entity(), err)
 		}
+
+		x, y := pt.Cords()
 
 		// Add the drawing function for this rectangle
 		entitiesToDraw = append(entitiesToDraw, entityDraw{
@@ -122,11 +122,9 @@ func (s *System) Draw(screen *ebiten.Image) error {
 
 	// Collect sprites to draw
 	for _, spc := range s.ecs.ListSprites() {
-		var x, y int
-		if c, err := s.ecs.GetPosition(spc.Entity()); err == nil {
-			x, y = c.Cords()
-		} else {
-			return err
+		pt, err := s.ecs.GetAbsolutePosition(spc.Entity())
+		if err != nil {
+			return fmt.Errorf("could not get absolute position for entity %v: %w", spc.Entity(), err)
 		}
 		spr, ok := s.sprites[spc.Graphic]
 		if !ok {
@@ -134,8 +132,8 @@ func (s *System) Draw(screen *ebiten.Image) error {
 		}
 
 		// Apply sprite offsets
-		x += spr.OffsetX
-		y += spr.OffsetY
+		x := pt.X + spr.OffsetX
+		y := pt.Y + spr.OffsetY
 
 		// Add the drawing function for this sprite
 		entitiesToDraw = append(entitiesToDraw, entityDraw{
