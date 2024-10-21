@@ -2,9 +2,11 @@ package gameplay
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"time"
 
+	"github.com/dwethmar/vork/config"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
@@ -32,15 +34,6 @@ var (
 	initializedKey            = []byte("initialized")
 )
 
-// GamePlay is a scene where the game is played.
-type GamePlay struct {
-	logger      *slog.Logger
-	db          *bbolt.DB
-	systems     []System
-	ecs         *ecsys.ECS
-	persistence *persistence.Persistance
-}
-
 // onClickHandler creates a click handler that publishes a clicked event.
 func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
 	return func(x, y int) {
@@ -56,11 +49,51 @@ func onHoverHandler() func(x, y int) {
 	}
 }
 
-func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
+// GamePlay is a scene where the game is played.
+type GamePlay struct {
+	logger      *slog.Logger
+	db          *bbolt.DB
+	systems     []System
+	ecs         *ecsys.ECS
+	persistence *persistence.Persistance
+}
+
+// New creates a new game play scene.
+func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*GamePlay, error) {
+	logger = logger.With("scene", "gameplay")
 	eventBus := event.NewBus()
 	stores := ecsys.NewStores()
 	ecs := ecsys.New(eventBus, stores)
 	persistence := persistence.New(eventBus, stores, ecs)
+
+	savesFolder, err := getDefaultSaveFolder()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get default save folder: %w", err)
+	}
+
+	var cfg *config.Config
+	// Check if the save exists
+	if config.Exists(saveName, savesFolder) {
+		// Load the existing config
+		cfg, err = config.Load(saveName, savesFolder)
+		if err != nil {
+			log.Fatalf("Failed to load config: %v", err)
+		}
+		logger.Info("Config loaded successfully.", slog.String("path", cfg.DBPath))
+	} else {
+		// Create a new config
+		cfg = config.New(saveName, savesFolder)
+		if err = cfg.Save(); err != nil {
+			logger.Error("Failed to save config", slog.String("error", err.Error()))
+			return nil, err
+		}
+		logger.Info("Config saved successfully.", slog.String("path", cfg.DBPath))
+	}
+
+	db, err := bbolt.Open(cfg.DBPath, 0600, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open db: %w", err)
+	}
 
 	// check if it is an existing save
 	ok, err := initializedGame(db)
@@ -157,9 +190,13 @@ func (s *GamePlay) Close() error {
 			return fmt.Errorf("failed to close system: %w", err)
 		}
 	}
+	if err := s.db.Close(); err != nil {
+		return fmt.Errorf("failed to close db: %w", err)
+	}
 	return nil
 }
 
+// initializeGame creates a new game.
 func initializeGame(ecs *ecsys.ECS, db *bbolt.DB) error {
 	e, err := addPlayer(ecs.Root(), ecs, point.New(10, 10))
 	if err != nil {

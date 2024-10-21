@@ -10,7 +10,6 @@ import (
 	"github.com/dwethmar/vork/game/scenes/gameplay"
 	"github.com/dwethmar/vork/spritesheet"
 	"github.com/hajimehoshi/ebiten/v2"
-	"go.etcd.io/bbolt"
 )
 
 const (
@@ -36,17 +35,7 @@ func run() error {
 		return fmt.Errorf("failed to ensure folder exists: %w", err)
 	}
 
-	db, err := bbolt.Open(".tmp/vork.db", 0600, nil)
-	if err != nil {
-		return fmt.Errorf("failed to open db: %w", err)
-	}
-	defer func() {
-		if err = db.Close(); err != nil {
-			log.Fatal(fmt.Errorf("failed to close db: %w", err))
-		}
-	}()
-
-	gameplayScene, err := gameplay.New(logger, db, spriteSheet)
+	gameplayScene, err := gameplay.New(logger, "my-first-game", spriteSheet)
 	if err != nil {
 		return fmt.Errorf("failed to create gameplay scene: %w", err)
 	}
