@@ -16,7 +16,7 @@ type System struct {
 // New creates a new keyinput system. It moves all controllable entities in the direction of the direction keys.
 func New(logger *slog.Logger, ecs *ecsys.ECS) *System {
 	return &System{
-		logger: logger,
+		logger: logger.With("system", "keyinput"),
 		ecs:    ecs,
 	}
 }

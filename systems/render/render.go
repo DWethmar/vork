@@ -1,6 +1,7 @@
 package render
 
 import (
+	"errors"
 	"fmt"
 	"image/color"
 	"log/slog"
@@ -68,6 +69,12 @@ func New(opts Options) *System {
 }
 
 func (s *System) Init() error {
+	if s.ecs == nil {
+		return errors.New("ecs is nil")
+	}
+	if s.sprites == nil {
+		return errors.New("sprites is nil")
+	}
 	return nil
 }
 
