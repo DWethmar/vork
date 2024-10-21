@@ -2,11 +2,9 @@ package gameplay
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"time"
 
-	"github.com/dwethmar/vork/config"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
@@ -71,23 +69,9 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 		return nil, fmt.Errorf("failed to get default save folder: %w", err)
 	}
 
-	var cfg *config.Config
-	// Check if the save exists
-	if config.Exists(saveName, savesFolder) {
-		// Load the existing config
-		cfg, err = config.Load(saveName, savesFolder)
-		if err != nil {
-			log.Fatalf("Failed to load config: %v", err)
-		}
-		logger.Info("Config loaded successfully.", slog.String("path", cfg.DBPath))
-	} else {
-		// Create a new config
-		cfg = config.New(saveName, savesFolder)
-		if err = cfg.Save(); err != nil {
-			logger.Error("Failed to save config", slog.String("error", err.Error()))
-			return nil, err
-		}
-		logger.Info("Config saved successfully.", slog.String("path", cfg.DBPath))
+	cfg, err := LoadConfig(saveName, savesFolder)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
 	db, err := bbolt.Open(cfg.DBPath, 0600, nil)
