@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dwethmar/vork/config"
+	"github.com/dwethmar/vork/game/config"
 	"github.com/google/go-cmp/cmp"
 )
 

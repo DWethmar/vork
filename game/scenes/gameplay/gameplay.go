@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dwethmar/vork/ecsys"
-	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/event/mouse"
 	"github.com/dwethmar/vork/game"
@@ -20,10 +19,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"go.etcd.io/bbolt"
-)
-
-const (
-	rootEntity = entity.Entity(0)
 )
 
 var (
@@ -80,31 +75,8 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 	}
 
 	// check if it is an existing save
-	ok, err := initializedGame(db)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check if game is initialized: %w", err)
-	}
-	if ok {
-		// load the game
-		logger.Info("game initialized")
-		if err = persistence.Load(db); err != nil {
-			return nil, fmt.Errorf("failed to load game: %w", err)
-		}
-		if err = ecs.BuildHierarchy(); err != nil {
-			return nil, err
-		}
-	} else {
-		// create a new game
-		logger.Info("creating a new game")
-		if err = initializeGame(ecs, db); err != nil {
-			return nil, fmt.Errorf("failed to load game: %w", err)
-		}
-		if err = persistence.Save(db); err != nil {
-			return nil, fmt.Errorf("failed to save new game: %w", err)
-		}
-	}
-	if err != nil {
-		logger.Error("failed to load game", slog.String("error", err.Error()))
+	if err = setupGame(logger, persistence, ecs, db); err != nil {
+		return nil, fmt.Errorf("failed to setup game: %w", err)
 	}
 
 	systems := []System{
@@ -133,6 +105,37 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 		ecs:         ecs,
 		persistence: persistence,
 	}, nil
+}
+
+func setupGame(logger *slog.Logger, persistence *persistence.Persistance, ecs *ecsys.ECS, db *bbolt.DB) error {
+	// check if it is an existing save
+	ok, err := gameInitialized(db)
+	if err != nil {
+		return fmt.Errorf("failed to check if game is initialized: %w", err)
+	}
+	if ok {
+		// load the game
+		logger.Info("loading existing game")
+		if err = persistence.Load(db); err != nil {
+			return fmt.Errorf("failed to load game: %w", err)
+		}
+		if err = ecs.BuildHierarchy(); err != nil {
+			return err
+		}
+		logger.Info("game loaded")
+		return nil
+	}
+
+	// create a new game
+	logger.Info("creating a new game")
+	if err = initializeGame(ecs, db); err != nil {
+		return fmt.Errorf("failed to load game: %w", err)
+	}
+	if err = persistence.Save(db); err != nil {
+		return fmt.Errorf("failed to save new game: %w", err)
+	}
+	logger.Info("game created")
+	return nil
 }
 
 func (s *GamePlay) Name() string { return "gameplay" }
@@ -197,15 +200,15 @@ func initializeGame(ecs *ecsys.ECS, db *bbolt.DB) error {
 	}
 
 	return db.Update(func(tx *bbolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists(sceneKey)
-		if err != nil {
-			return fmt.Errorf("failed to create bucket: %w", err)
+		bucket, nErr := tx.CreateBucketIfNotExists(sceneKey)
+		if nErr != nil {
+			return fmt.Errorf("failed to create bucket: %w", nErr)
 		}
 		return bucket.Put(initializedKey, []byte(""))
 	})
 }
 
-func initializedGame(db *bbolt.DB) (bool, error) {
+func gameInitialized(db *bbolt.DB) (bool, error) {
 	exists := false
 	err := db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(sceneKey)

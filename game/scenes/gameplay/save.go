@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/dwethmar/vork/config"
+	"github.com/dwethmar/vork/game/config"
 )
 
 func getDefaultSaveFolder() (string, error) {
