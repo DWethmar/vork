@@ -68,6 +68,7 @@ func New(opts Options) *System {
 	}
 }
 
+// Init initializes the system.
 func (s *System) Init() error {
 	if s.ecs == nil {
 		return errors.New("ecs is nil")
