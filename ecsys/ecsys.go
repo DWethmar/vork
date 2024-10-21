@@ -142,6 +142,8 @@ func (s *ECS) deleteAllEntityComponents(e entity.Entity) []error {
 	return errs
 }
 
+// GetAbsolutePosition returns the absolute position of an entity in the ECS.
+// The absolute position is the sum of the entity's position and the position of all its ancestors.
 func (s *ECS) GetAbsolutePosition(e entity.Entity) (point.Point, error) {
 	if e == s.hierarchy.Root() {
 		return point.Point{}, nil

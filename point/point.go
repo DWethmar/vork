@@ -6,6 +6,11 @@ type Point struct {
 	Y int
 }
 
+// Cords returns the x and y coordinates of the point.
+func (p Point) Cords() (int, int) {
+	return p.X, p.Y
+}
+
 func (p Point) Add(x, y int) Point {
 	return Point{X: p.X + x, Y: p.Y + y}
 }

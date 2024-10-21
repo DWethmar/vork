@@ -13,6 +13,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+const (
+	zoomFactor = 1.1
+	minZoom    = 0.5
+	maxZoom    = 5.0
+)
+
 type ClickHandler func(x, y int)
 
 // Sprite is a sprite.
@@ -154,16 +160,12 @@ func (s *System) Update() error {
 	// Handle zoom in/out with mouse wheel
 	_, wheelY := ebiten.Wheel()
 	if wheelY != 0 {
-		zoomFactor := 1.1 // Adjust as needed
 		if wheelY > 0 {
 			s.zoom *= zoomFactor
 		} else if wheelY < 0 {
 			s.zoom /= zoomFactor
 		}
-
 		// Clamp zoom level to prevent extreme zooming
-		minZoom := 0.5
-		maxZoom := 5.0
 		if s.zoom < minZoom {
 			s.zoom = minZoom
 		} else if s.zoom > maxZoom {
@@ -177,14 +179,15 @@ func (s *System) Update() error {
 		firstControllable := controllables[0]
 
 		// Get the position of the controllable
-		pos, err := s.ecs.GetPosition(firstControllable.Entity())
+		pt, err := s.ecs.GetAbsolutePosition(firstControllable.Entity())
 		if err != nil {
 			return err
 		}
 
+		x, y := pt.Cords()
+
 		// Get the actual screen dimensions from Ebiten
 		screenWidth, screenHeight := ebiten.WindowSize()
-		x, y := pos.Cords()
 		// Calculate the offsets to center the controllable on the screen, accounting for zoom
 		s.offsetX = int(float64(x) - (float64(screenWidth) / (2 * s.zoom)))
 		s.offsetY = int(float64(y) - (float64(screenHeight) / (2 * s.zoom)))
