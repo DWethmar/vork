@@ -86,7 +86,7 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 	}
 	if ok {
 		// load the game
-		logger.Info("loading game")
+		logger.Info("game initialized")
 		if err = persistence.Load(db); err != nil {
 			return nil, fmt.Errorf("failed to load game: %w", err)
 		}
