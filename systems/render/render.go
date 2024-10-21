@@ -19,7 +19,7 @@ const (
 	maxZoom    = 5.0
 )
 
-type ClickHandler func(x, y int)
+type MouseHandler func(x, y int)
 
 // Sprite is a sprite.
 type Sprite struct {
@@ -36,7 +36,8 @@ type System struct {
 	offsetX      int
 	offsetY      int
 	zoom         float64
-	clickHandler ClickHandler
+	clickHandler MouseHandler
+	hoverHandler MouseHandler
 }
 
 // Options are the options for the rendering system.
@@ -44,7 +45,8 @@ type Options struct {
 	Logger       *slog.Logger
 	Sprites      []Sprite
 	ECS          *ecsys.ECS
-	ClickHandler ClickHandler
+	ClickHandler MouseHandler
+	HoverHandler MouseHandler
 }
 
 // New creates a new rendering system.
@@ -61,6 +63,7 @@ func New(opts Options) *System {
 		offsetY:      0,
 		zoom:         1.0,
 		clickHandler: opts.ClickHandler,
+		hoverHandler: opts.HoverHandler,
 	}
 }
 
@@ -194,15 +197,26 @@ func (s *System) Update() error {
 	}
 
 	// Handle mouse click
-	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		x, y := ebiten.CursorPosition()
-
+	if s.clickHandler != nil && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		// Apply zoom factor to mouse position
-		x = int(float64(x)/s.zoom) + s.offsetX
-		y = int(float64(y)/s.zoom) + s.offsetY
-
+		x, y := s.applyZoom(ebiten.CursorPosition())
 		s.clickHandler(x, y)
 	}
 
+	// Handle mouse hover
+	if s.hoverHandler != nil {
+		// Apply zoom factor to mouse position
+		x, y := s.applyZoom(ebiten.CursorPosition())
+		s.hoverHandler(x, y)
+	}
+
 	return nil
+}
+
+// applyZoom applies the zoom factor to the given position.
+func (s *System) applyZoom(x, y int) (int, int) {
+	// Apply zoom factor to position
+	x = int(float64(x)/s.zoom) + s.offsetX
+	y = int(float64(y)/s.zoom) + s.offsetY
+	return x, y
 }

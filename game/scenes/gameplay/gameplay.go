@@ -50,6 +50,12 @@ func onClickHandler(logger *slog.Logger, eventBus *event.Bus) func(x, y int) {
 	}
 }
 
+func onHoverHandler() func(x, y int) {
+	return func(x, y int) {
+		ebiten.SetWindowTitle(fmt.Sprintf("vork x: %d, y: %d", x, y))
+	}
+}
+
 func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePlay, error) {
 	eventBus := event.NewBus()
 	stores := ecsys.NewStores()
@@ -62,6 +68,7 @@ func New(logger *slog.Logger, db *bbolt.DB, s *spritesheet.Spritesheet) (*GamePl
 			Sprites:      sprites.Sprites(s),
 			ECS:          ecs,
 			ClickHandler: onClickHandler(logger, eventBus),
+			HoverHandler: onHoverHandler(),
 		}),
 		skeletons.New(logger, ecs, eventBus),
 	}
