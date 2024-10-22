@@ -55,7 +55,7 @@ func (s *ECS) deleteSkeletonByEntity(e entity.Entity) error {
 	return s.DeleteSkeleton(c)
 }
 
-func deleteComponent[T any](
+func deleteComponent[T component.Component](
 	eventBus *event.Bus,
 	c component.Component,
 	store Store[T],

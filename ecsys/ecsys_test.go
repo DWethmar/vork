@@ -94,8 +94,8 @@ func TestECS_DeleteEntity(t *testing.T) {
 func TestECS_CreateEmptyEntity(t *testing.T) {
 	ecs := ecsys.New(event.NewBus(), ecsys.NewStores())
 	for i := range 100 {
-		if e := ecs.CreateEmptyEntity(); e != entity.Entity(i+101) {
-			t.Errorf("expected entity %d, got %d", i+100, e)
+		if e := ecs.CreateEmptyEntity(); e != entity.Entity(i+1) {
+			t.Errorf("expected entity %d, got %d", i+1, e)
 		}
 	}
 }

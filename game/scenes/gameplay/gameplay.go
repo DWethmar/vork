@@ -64,7 +64,7 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 		return nil, fmt.Errorf("failed to get default save folder: %w", err)
 	}
 
-	cfg, err := LoadConfig(saveName, savesFolder)
+	cfg, err := LoadOrCreateConfig(saveName, savesFolder)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}

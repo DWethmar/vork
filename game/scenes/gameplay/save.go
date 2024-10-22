@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/dwethmar/vork/game/config"
+	"github.com/dwethmar/vork/game/scenes/gameplay/config"
 )
 
 func getDefaultSaveFolder() (string, error) {
@@ -17,7 +17,7 @@ func getDefaultSaveFolder() (string, error) {
 }
 
 // Config loads or creates a config.
-func LoadConfig(saveName, savesFolder string) (*config.Config, error) {
+func LoadOrCreateConfig(saveName, savesFolder string) (*config.Config, error) {
 	var cfg *config.Config
 	var err error
 	// Check if the save exists

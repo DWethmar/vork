@@ -13,7 +13,7 @@ import (
 )
 
 // addComponent adds a component to the ECS. It returns the ID of the component.
-func addComponent[T any](
+func addComponent[T component.Component](
 	ecs *ECS,
 	c component.Component,
 	store Store[T],

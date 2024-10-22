@@ -3,6 +3,7 @@ package ecsys
 import (
 	"errors"
 
+	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
@@ -22,7 +23,7 @@ var (
 
 // Store defines a generic interface for managing any component type.
 // T is the component type, such as position, sprite, etc.
-type Store[T any] interface {
+type Store[T component.Component] interface {
 	Add(T) (uint, error)                // Add a new component to the store.
 	Get(uint) (T, error)                // Get a component by its ID.
 	Update(T) error                     // Update an existing component.

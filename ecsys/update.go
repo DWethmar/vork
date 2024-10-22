@@ -12,7 +12,7 @@ import (
 	"github.com/dwethmar/vork/event"
 )
 
-func updateComponent[T any](
+func updateComponent[T component.Component](
 	eventBus *event.Bus,
 	c component.Component,
 	store Store[T],
