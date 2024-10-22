@@ -15,10 +15,10 @@ func addPlayer(parent entity.Entity, ecs *ecsys.ECS, p point.Point) (entity.Enti
 	if err != nil {
 		return e, fmt.Errorf("could not create entity: %w", err)
 	}
-	if _, err = ecs.AddSkeletonComponent(*skeleton.New(e)); err != nil {
+	if _, err = ecs.AddSkeleton(*skeleton.New(e)); err != nil {
 		return e, fmt.Errorf("could not add skeleton: %w", err)
 	}
-	if _, err = ecs.AddControllableComponent(*controllable.New(e)); err != nil {
+	if _, err = ecs.AddControllable(*controllable.New(e)); err != nil {
 		return e, fmt.Errorf("could not add controllable: %w", err)
 	}
 	return e, nil
@@ -29,7 +29,7 @@ func addEnemy(parent entity.Entity, ecs *ecsys.ECS, p point.Point) (entity.Entit
 	if err != nil {
 		return e, fmt.Errorf("could not create entity: %w", err)
 	}
-	if _, err = ecs.AddSkeletonComponent(*skeleton.New(e)); err != nil {
+	if _, err = ecs.AddSkeleton(*skeleton.New(e)); err != nil {
 		return e, fmt.Errorf("could not add skeleton: %w", err)
 	}
 	return e, nil

@@ -100,10 +100,10 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 func (s *System) setupSkeleton(sk skeleton.Skeleton) error {
 	e := sk.Entity()
 	rect := shape.NewRectangle(e, 10, 10, color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff})
-	if _, err := s.ecs.AddRectangleComponent(*rect); err != nil {
+	if _, err := s.ecs.AddRectangle(*rect); err != nil {
 		return fmt.Errorf("could not add rectangle component to entity %v: %w", e, err)
 	}
-	if _, err := s.ecs.AddSpriteComponent(*sprite.New(e, "skeleton", sprite.SkeletonMoveDown1)); err != nil {
+	if _, err := s.ecs.AddSprite(*sprite.New(e, "skeleton", sprite.SkeletonMoveDown1)); err != nil {
 		return fmt.Errorf("could not add sprite component to entity %v: %w", e, err)
 	}
 	return nil

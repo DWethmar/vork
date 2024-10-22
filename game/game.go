@@ -39,7 +39,7 @@ func (g *Game) SwitchScene(name string) error {
 		g.scene = scene
 		return nil
 	}
-	return fmt.Errorf("scene %s not found", name)
+	return fmt.Errorf("scene %q not found", name)
 }
 
 // AddScene adds a scene to the game.

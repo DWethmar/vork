@@ -85,7 +85,7 @@ func (s *ECS) Children(e entity.Entity) []entity.Entity {
 func (s *ECS) CreateEntity(parent entity.Entity, p point.Point) (entity.Entity, error) {
 	e := s.CreateEmptyEntity()
 	pos := position.New(parent, e, p)
-	if _, err := s.AddPositionComponent(*pos); err != nil {
+	if _, err := s.AddPosition(*pos); err != nil {
 		return 0, err
 	}
 	return e, nil

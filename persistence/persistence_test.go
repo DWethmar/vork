@@ -89,13 +89,13 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 
 			// Add controllable component
 			ctrl := controllable.New(e)
-			if _, err = ecs.AddControllableComponent(*ctrl); err != nil {
+			if _, err = ecs.AddControllable(*ctrl); err != nil {
 				t.Fatalf("Failed to add controllable component: %v", err)
 			}
 
 			// Add skeleton component
 			skel := skeleton.New(e)
-			if _, err = ecs.AddSkeletonComponent(*skel); err != nil {
+			if _, err = ecs.AddSkeleton(*skel); err != nil {
 				t.Fatalf("Failed to add skeleton component: %v", err)
 			}
 		}

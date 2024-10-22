@@ -39,8 +39,8 @@ func addComponent[T component.Component](
 	return id, nil
 }
 
-// AddPositionComponent adds a position component to the ECS.
-func (s *ECS) AddPositionComponent(c position.Position) (uint, error) {
+// AddPosition adds a position component to the ECS.
+func (s *ECS) AddPosition(c position.Position) (uint, error) {
 	id, err := addComponent(s, &c, s.stores.Position, func(p *position.Position) event.Event {
 		return position.NewCreatedEvent(*p)
 	})
@@ -54,21 +54,21 @@ func (s *ECS) AddPositionComponent(c position.Position) (uint, error) {
 	return id, nil
 }
 
-func (s *ECS) AddControllableComponent(c controllable.Controllable) (uint, error) {
+func (s *ECS) AddControllable(c controllable.Controllable) (uint, error) {
 	return addComponent(s, &c, s.stores.Controllable, func(ctr *controllable.Controllable) event.Event {
 		return controllable.NewCreatedEvent(*ctr)
 	})
 }
 
-func (s *ECS) AddRectangleComponent(c shape.Rectangle) (uint, error) {
+func (s *ECS) AddRectangle(c shape.Rectangle) (uint, error) {
 	return addComponent(s, &c, s.stores.Rectangle, nil)
 }
 
-func (s *ECS) AddSpriteComponent(c sprite.Sprite) (uint, error) {
+func (s *ECS) AddSprite(c sprite.Sprite) (uint, error) {
 	return addComponent(s, &c, s.stores.Sprite, nil)
 }
 
-func (s *ECS) AddSkeletonComponent(c skeleton.Skeleton) (uint, error) {
+func (s *ECS) AddSkeleton(c skeleton.Skeleton) (uint, error) {
 	return addComponent(s, &c, s.stores.Skeleton, func(sk *skeleton.Skeleton) event.Event {
 		return skeleton.NewCreatedEvent(*sk)
 	})

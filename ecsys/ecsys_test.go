@@ -61,7 +61,7 @@ func TestECS_DeleteEntity(t *testing.T) {
 		}
 
 		// add sprite component
-		if _, err = ecs.AddSpriteComponent(sprite.Sprite{
+		if _, err = ecs.AddSprite(sprite.Sprite{
 			E:       entity,
 			I:       1,
 			Graphic: sprite.SkeletonDeath1,
