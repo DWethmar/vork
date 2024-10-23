@@ -1,6 +1,7 @@
 package gameplay
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -25,13 +26,13 @@ func LoadOrCreateConfig(saveName, savesFolder string) (*config.Config, error) {
 		// Load the existing config
 		cfg, err = config.Load(saveName, savesFolder)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to load config: %w", err)
 		}
 	} else {
 		// Create a new config
 		cfg = config.New(saveName, savesFolder)
 		if err = cfg.Save(); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to save config: %w", err)
 		}
 	}
 	return cfg, nil

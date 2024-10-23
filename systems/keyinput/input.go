@@ -2,6 +2,7 @@ package keyinput
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/dwethmar/vork/ecsys"
@@ -10,15 +11,24 @@ import (
 
 // System is a controller system.
 type System struct {
-	logger *slog.Logger
-	ecs    *ecsys.ECS
+	logger              *slog.Logger
+	ecs                 *ecsys.ECS
+	velocityScaleFactor int
+}
+
+// Options is the options for the system.
+type Options struct {
+	Logger              *slog.Logger
+	ECS                 *ecsys.ECS
+	VelocityScaleFactor int
 }
 
 // New creates a new keyinput system. It moves all controllable entities in the direction of the direction keys.
-func New(logger *slog.Logger, ecs *ecsys.ECS) *System {
+func New(opts Options) *System {
 	return &System{
-		logger: logger.With("system", "keyinput"),
-		ecs:    ecs,
+		logger:              opts.Logger.With("system", "keyinput"),
+		ecs:                 opts.ECS,
+		velocityScaleFactor: opts.VelocityScaleFactor,
 	}
 }
 
@@ -41,13 +51,16 @@ func (s *System) Update() error {
 		return nil
 	}
 	for _, c := range s.ecs.ListControllables() {
-		p, err := s.ecs.GetPosition(c.Entity())
+		v, err := s.ecs.GetVelocity(c.Entity())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get velocity component: %w", err)
 		}
-		p.Point = p.Point.Add(x, y)
-		if err = s.ecs.UpdatePositionComponent(p); err != nil {
-			return err
+
+		v.X = x * s.velocityScaleFactor
+		v.Y = y * s.velocityScaleFactor
+
+		if err = s.ecs.UpdateVelocityComponent(v); err != nil {
+			return fmt.Errorf("failed to update velocity component: %w", err)
 		}
 	}
 	return nil

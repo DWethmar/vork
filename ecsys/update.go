@@ -9,6 +9,7 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/event"
 )
 
@@ -27,7 +28,7 @@ func updateComponent[T component.Component](
 	}
 	if eventCreator != nil {
 		if err := eventBus.Publish(eventCreator(comp)); err != nil {
-			return fmt.Errorf("could not publish event: %w", err)
+			return fmt.Errorf("could not publish update event: %w", err)
 		}
 	}
 	return nil
@@ -45,6 +46,12 @@ func (s *ECS) UpdatePositionComponent(c position.Position) error {
 		return fmt.Errorf("could not update entity in hierarchy: %w", err)
 	}
 	return nil
+}
+
+func (s *ECS) UpdateVelocityComponent(c velocity.Velocity) error {
+	return updateComponent(s.eventBus, &c, s.stores.Velocity, func(p *velocity.Velocity) event.Event {
+		return velocity.NewUpdatedEvent(*p)
+	})
 }
 
 func (s *ECS) UpdateControllableComponent(c controllable.Controllable) error {

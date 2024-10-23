@@ -9,6 +9,7 @@ import (
 
 	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/ecsys"
+	"github.com/dwethmar/vork/point"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -24,9 +25,9 @@ type MouseHandler func(x, y int)
 
 // Sprite is a sprite.
 type Sprite struct {
-	Graphic          sprite.Graphic
-	Img              *ebiten.Image
-	OffsetX, OffsetY int // Offset from the entity's position
+	Graphic sprite.Graphic
+	Img     *ebiten.Image
+	Offset  point.Point
 }
 
 // System is the rendering system.
@@ -132,8 +133,8 @@ func (s *System) Draw(screen *ebiten.Image) error {
 		}
 
 		// Apply sprite offsets
-		x := pt.X + spr.OffsetX
-		y := pt.Y + spr.OffsetY
+		pos := pt.AddPoint(spr.Offset)
+		x, y := pos.Cords()
 
 		// Add the drawing function for this sprite
 		entitiesToDraw = append(entitiesToDraw, entityDraw{

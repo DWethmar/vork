@@ -9,17 +9,22 @@ import (
 
 // Config is the configuration for the game.
 type Config struct {
+	new        bool      // Internal field, not exported or serialized
 	DBPath     string    `json:"db_path"`
 	SaveName   string    `json:"save_name"`
 	CreatedAt  time.Time `json:"created_at"`
 	saveFolder string    // Internal field, not exported or serialized
 }
 
+// New returns true if the Config struct is new.
+func (c *Config) New() bool { return c.new }
+
 // New creates a new Config struct with default values.
 func New(saveName string, parentFolder string) *Config {
 	// Compute the save folder path
 	sf := filepath.Join(parentFolder, saveName)
 	return &Config{
+		new:        true,
 		DBPath:     filepath.Join(sf, "game.db"),
 		SaveName:   saveName,
 		CreatedAt:  time.Now(),

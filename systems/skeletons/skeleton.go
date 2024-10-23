@@ -9,10 +9,12 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/direction"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/event/mouse"
+	"github.com/dwethmar/vork/point"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -63,7 +65,7 @@ func (s *System) Init() error {
 	// Setup existing skeletons
 	for _, sk := range s.ecs.ListSkeletons() {
 		if err := s.setupSkeleton(sk); err != nil {
-			return fmt.Errorf("could not setup skeleton for entity %v: %w", sk.Entity(), err)
+			return fmt.Errorf("could not setup skeleton (%v): %w", sk.Entity(), err)
 		}
 	}
 	return nil
@@ -106,6 +108,19 @@ func (s *System) setupSkeleton(sk skeleton.Skeleton) error {
 	if _, err := s.ecs.AddSprite(*sprite.New(e, "skeleton", sprite.SkeletonMoveDown1)); err != nil {
 		return fmt.Errorf("could not add sprite component to entity %v: %w", e, err)
 	}
+
+	// ensure velocity component is present
+	if _, err := s.ecs.GetVelocity(e); err != nil {
+		if errors.Is(err, ecsys.ErrEntityNotFound) || errors.Is(err, ecsys.ErrComponentNotFound) {
+			vel := velocity.New(e, point.Zero())
+			if _, err = s.ecs.AddVelocity(*vel); err != nil {
+				return fmt.Errorf("could not add velocity component to entity %v: %w", e, err)
+			}
+		} else {
+			return fmt.Errorf("could not get velocity component for entity %v: %w", e, err)
+		}
+	}
+
 	return nil
 }
 

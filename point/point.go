@@ -15,6 +15,18 @@ func (p Point) Add(x, y int) Point {
 	return Point{X: p.X + x, Y: p.Y + y}
 }
 
+func (p Point) Mul(x, y int) Point {
+	return Point{X: p.X * x, Y: p.Y * y}
+}
+
+func (p Point) AddPoint(p2 Point) Point {
+	return p.Add(p2.Cords())
+}
+
+func (p Point) Zero() bool {
+	return p.X == 0 && p.Y == 0
+}
+
 // New creates a new Point.
 func New(x, y int) Point {
 	return Point{X: x, Y: y}

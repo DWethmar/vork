@@ -2,6 +2,7 @@ package sprites
 
 import (
 	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/point"
 	"github.com/dwethmar/vork/spritesheet"
 	"github.com/dwethmar/vork/systems/render"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -22,8 +23,7 @@ func bottomCenteredAlignedSprite(graphic sprite.Graphic, img *ebiten.Image) rend
 	return render.Sprite{
 		Graphic: graphic,
 		Img:     img,
-		OffsetX: centerXOffset(img),
-		OffsetY: bottomYOffset(img),
+		Offset:  point.New(centerXOffset(img), bottomYOffset(img)),
 	}
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/dwethmar/vork/point"
 	"github.com/dwethmar/vork/sprites"
 	"github.com/dwethmar/vork/spritesheet"
+	"github.com/dwethmar/vork/systems/collision"
 	"github.com/dwethmar/vork/systems/keyinput"
 	"github.com/dwethmar/vork/systems/render"
 	"github.com/dwethmar/vork/systems/skeletons"
@@ -69,6 +70,10 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
+	if cfg.New() {
+		logger.Info("creating new game", slog.String("save_name", cfg.SaveName), slog.String("db_path", cfg.DBPath))
+	}
+
 	db, err := bbolt.Open(cfg.DBPath, 0600, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)
@@ -80,7 +85,11 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 	}
 
 	systems := []System{
-		keyinput.New(logger, ecs),
+		keyinput.New(keyinput.Options{
+			Logger:              logger,
+			ECS:                 ecs,
+			VelocityScaleFactor: 8,
+		}),
 		render.New(render.Options{
 			Logger:       logger,
 			Sprites:      sprites.Sprites(s),
@@ -89,15 +98,21 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 			HoverHandler: onHoverHandler(),
 		}),
 		skeletons.New(logger, ecs, eventBus),
+		collision.New(collision.Options{
+			Logger:              logger,
+			ECS:                 ecs,
+			EventBus:            eventBus,
+			VelocityScaleFactor: 16,
+			Friction:            3,
+			VelocityThreshold:   1,
+		}),
 	}
-
 	// init all systems after loading the game to make sure all components are loaded
 	for _, sys := range systems {
 		if err = sys.Init(); err != nil {
 			return nil, fmt.Errorf("failed to init system %T: %w", sys, err)
 		}
 	}
-
 	return &GamePlay{
 		logger:      logger,
 		db:          db,
@@ -120,12 +135,11 @@ func setupGame(logger *slog.Logger, persistence *persistence.Persistance, ecs *e
 			return fmt.Errorf("failed to load game: %w", err)
 		}
 		if err = ecs.BuildHierarchy(); err != nil {
-			return err
+			return fmt.Errorf("failed to rebuild hierarchy: %w", err)
 		}
 		logger.Info("game loaded")
 		return nil
 	}
-
 	// create a new game
 	logger.Info("creating a new game")
 	if err = initializeGame(ecs, db); err != nil {
@@ -138,8 +152,10 @@ func setupGame(logger *slog.Logger, persistence *persistence.Persistance, ecs *e
 	return nil
 }
 
+// Name returns the name of the scene.
 func (s *GamePlay) Name() string { return "gameplay" }
 
+// Draw draws the game.
 func (s *GamePlay) Draw(screen *ebiten.Image) error {
 	for _, sys := range s.systems {
 		if err := sys.Draw(screen); err != nil {
@@ -149,6 +165,7 @@ func (s *GamePlay) Draw(screen *ebiten.Image) error {
 	return nil
 }
 
+// Update updates the game.
 func (s *GamePlay) Update() error {
 	// check if F5 is pressed
 	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
@@ -185,17 +202,13 @@ func (s *GamePlay) Close() error {
 
 // initializeGame creates a new game.
 func initializeGame(ecs *ecsys.ECS, db *bbolt.DB) error {
-	e, err := addPlayer(ecs.Root(), ecs, point.New(10, 10))
+	_, err := addPlayer(ecs.Root(), ecs, point.New(10, 10))
 	if err != nil {
 		return fmt.Errorf("failed to add player: %w", err)
 	}
 
-	// test
-	if e, err = addEnemy(e, ecs, point.New(15, 15)); err != nil {
-		return fmt.Errorf("failed to add enemy %v: %w", e, err)
-	}
-
-	if e, err = addEnemy(ecs.Root(), ecs, point.New(100, 100)); err != nil {
+	e, err := addEnemy(ecs.Root(), ecs, point.New(100, 100))
+	if err != nil {
 		return fmt.Errorf("failed to add enemy %v: %w", e, err)
 	}
 

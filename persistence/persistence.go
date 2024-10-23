@@ -8,6 +8,7 @@ import (
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/skeleton"
+	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	boltrepo "github.com/dwethmar/vork/persistence/bbolt"
@@ -24,17 +25,13 @@ type Persistance struct {
 
 // New creates a new persistence system.
 func New(eventBus *event.Bus, stores *ecsys.Stores, ecs *ecsys.ECS) *Persistance {
-	controllableRepo := boltrepo.NewRepository(controllable.Empty)
-	positionRepo := boltrepo.NewRepository(position.Empty)
-	skeletonRepo := boltrepo.NewRepository(skeleton.Empty)
-
 	s := &Persistance{
 		eventBus: eventBus,
 		ecs:      ecs,
 		stores:   stores,
 		lifecycles: map[component.Type]ComponentLifeCycle{
 			controllable.Type: NewGenericComponentLifeCycle(
-				controllableRepo,
+				boltrepo.NewRepository(controllable.Empty),
 				stores.Controllable,
 				func(c component.Component, m map[uint]*controllable.Controllable) error {
 					cc, ok := c.(*controllable.Controllable)
@@ -46,7 +43,7 @@ func New(eventBus *event.Bus, stores *ecsys.Stores, ecs *ecsys.ECS) *Persistance
 				},
 			),
 			position.Type: NewGenericComponentLifeCycle(
-				positionRepo,
+				boltrepo.NewRepository(position.Empty),
 				stores.Position,
 				func(c component.Component, m map[uint]*position.Position) error {
 					cc, ok := c.(*position.Position)
@@ -57,8 +54,20 @@ func New(eventBus *event.Bus, stores *ecsys.Stores, ecs *ecsys.ECS) *Persistance
 					return nil
 				},
 			),
+			velocity.Type: NewGenericComponentLifeCycle(
+				boltrepo.NewRepository(velocity.Empty),
+				stores.Velocity,
+				func(c component.Component, m map[uint]*velocity.Velocity) error {
+					cc, ok := c.(*velocity.Velocity)
+					if !ok {
+						return fmt.Errorf("expected *velocity.Velocity, got %T", c)
+					}
+					m[c.ID()] = cc
+					return nil
+				},
+			),
 			skeleton.Type: NewGenericComponentLifeCycle(
-				skeletonRepo,
+				boltrepo.NewRepository(skeleton.Empty),
 				stores.Skeleton,
 				func(e component.Component, m map[uint]*skeleton.Skeleton) error {
 					cc, ok := e.(*skeleton.Skeleton)
@@ -99,6 +108,10 @@ func (s *Persistance) componentChangeHandler(e event.Event) error {
 		if err := l.Changed(c.Position(), c.Deleted()); err != nil {
 			return fmt.Errorf("failed to mark position component as changed: %w", err)
 		}
+	case velocity.Event:
+		if err := l.Changed(c.Velocity(), c.Deleted()); err != nil {
+			return fmt.Errorf("failed to mark velocity component as changed: %w", err)
+		}
 	case controllable.Event:
 		if err := l.Changed(c.Controllable(), c.Deleted()); err != nil {
 			return fmt.Errorf("failed to mark controllable component as changed: %w", err)
@@ -108,7 +121,7 @@ func (s *Persistance) componentChangeHandler(e event.Event) error {
 			return fmt.Errorf("failed to mark skeleton component as changed: %w", err)
 		}
 	default:
-		return fmt.Errorf("unsupported component type: %s", ce.ComponentType())
+		return fmt.Errorf("no handler for component type: %T", c)
 	}
 	return nil
 }

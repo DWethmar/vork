@@ -9,6 +9,7 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 )
@@ -70,7 +71,7 @@ func deleteComponent[T component.Component](
 	}
 	if eventCreator != nil {
 		if err := eventBus.Publish(eventCreator(comp)); err != nil {
-			return fmt.Errorf("could not publish event: %w", err)
+			return fmt.Errorf("could not publish delete event: %w", err)
 		}
 	}
 	return nil
@@ -97,6 +98,12 @@ func (s *ECS) DeletePosition(c position.Position) error {
 		}
 	}
 	return nil
+}
+
+func (s *ECS) DeleteVelocity(c velocity.Velocity) error {
+	return deleteComponent(s.eventBus, &c, s.stores.Velocity, func(v *velocity.Velocity) event.Event {
+		return velocity.NewDeletedEvent(*v)
+	})
 }
 
 func (s *ECS) DeleteControllable(c controllable.Controllable) error {

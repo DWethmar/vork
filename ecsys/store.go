@@ -9,6 +9,7 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/entity"
 )
 
@@ -32,35 +33,41 @@ type Store[T component.Component] interface {
 	DeleteByEntity(entity.Entity) error // Delete all components associated with an entity.
 }
 
-// ControllableStore manages Controllable components, extending BaseComponentStore.
+// ControllableStore manages Controllable components
 // Includes an additional method to get the first Controllable by an entity.
 type ControllableStore interface {
 	Store[*controllable.Controllable]
 	First(entity.Entity) (*controllable.Controllable, error)
 }
 
-// PositionStore manages Position components, extending BaseComponentStore.
+// PositionStore manages Position components
 // Includes an additional method to get the first Position by an entity.
 type PositionStore interface {
 	Store[*position.Position]
 	First(entity.Entity) (*position.Position, error)
 }
 
-// RectanglesStore manages Rectangle components (for shapes), extending BaseComponentStore.
+// VelocityStore manages Velocity components.
+type VelocityStore interface {
+	Store[*velocity.Velocity]
+	First(entity.Entity) (*velocity.Velocity, error)
+}
+
+// RectanglesStore manages Rectangle components (for shapes)
 // Includes an additional method to get the first Rectangle by an entity.
 type RectanglesStore interface {
 	Store[*shape.Rectangle]
 	ListByEntity(entity.Entity) []*shape.Rectangle
 }
 
-// SpriteStore manages Sprite components, extending BaseComponentStore.
+// SpriteStore manages Sprite components
 // Includes an additional method to list all sprites associated with an entity.
 type SpriteStore interface {
 	Store[*sprite.Sprite]
 	ListByEntity(entity.Entity) []*sprite.Sprite
 }
 
-// SkeletonStore manages Skeleton components, extending BaseComponentStore.
+// SkeletonStore manages Skeleton components
 // Includes an additional method to get the first Skeleton by an entity.
 type SkeletonStore interface {
 	Store[*skeleton.Skeleton]
@@ -71,6 +78,7 @@ type SkeletonStore interface {
 type Stores struct {
 	Controllable ControllableStore
 	Position     PositionStore
+	Velocity     VelocityStore
 	Rectangle    RectanglesStore
 	Sprite       SpriteStore
 	Skeleton     SkeletonStore
@@ -81,6 +89,7 @@ func NewStores() *Stores {
 	return &Stores{
 		Controllable: NewMemStore[*controllable.Controllable](true),
 		Position:     NewMemStore[*position.Position](true),
+		Velocity:     NewMemStore[*velocity.Velocity](true),
 		Rectangle:    NewMemStore[*shape.Rectangle](true),
 		Sprite:       NewMemStore[*sprite.Sprite](false),
 		Skeleton:     NewMemStore[*skeleton.Skeleton](true),

@@ -9,6 +9,7 @@ import (
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/event"
 )
 
@@ -29,7 +30,7 @@ func addComponent[T component.Component](
 	}
 	if eventCreator != nil {
 		if err = ecs.eventBus.Publish(eventCreator(comp)); err != nil {
-			return 0, fmt.Errorf("could not publish event: %w", err)
+			return 0, fmt.Errorf("could not publish add event: %w", err)
 		}
 	}
 	// Update the lastEntityID if the entity is higher than the current lastEntityID.
@@ -52,6 +53,12 @@ func (s *ECS) AddPosition(c position.Position) (uint, error) {
 		return 0, fmt.Errorf("could not add entity to hierarchy: %w", err)
 	}
 	return id, nil
+}
+
+func (s *ECS) AddVelocity(c velocity.Velocity) (uint, error) {
+	return addComponent(s, &c, s.stores.Velocity, func(v *velocity.Velocity) event.Event {
+		return velocity.NewCreatedEvent(*v)
+	})
 }
 
 func (s *ECS) AddControllable(c controllable.Controllable) (uint, error) {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/skeleton"
+	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/point"
@@ -21,6 +22,9 @@ func addPlayer(parent entity.Entity, ecs *ecsys.ECS, p point.Point) (entity.Enti
 	if _, err = ecs.AddControllable(*controllable.New(e)); err != nil {
 		return e, fmt.Errorf("could not add controllable: %w", err)
 	}
+	if _, err = ecs.AddVelocity(*velocity.New(e, point.Zero())); err != nil {
+		return e, fmt.Errorf("could not add velocity component to entity %v: %w", e, err)
+	}
 	return e, nil
 }
 
@@ -31,6 +35,9 @@ func addEnemy(parent entity.Entity, ecs *ecsys.ECS, p point.Point) (entity.Entit
 	}
 	if _, err = ecs.AddSkeleton(*skeleton.New(e)); err != nil {
 		return e, fmt.Errorf("could not add skeleton: %w", err)
+	}
+	if _, err = ecs.AddVelocity(*velocity.New(e, point.Zero())); err != nil {
+		return e, fmt.Errorf("could not add velocity component to entity %v: %w", e, err)
 	}
 	return e, nil
 }
