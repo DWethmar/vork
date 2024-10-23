@@ -6,8 +6,11 @@ import (
 	"math"
 	"sync"
 
+	"github.com/dwethmar/vork/component/hitbox"
+	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/ecsys"
+	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -91,7 +94,6 @@ func (s *System) Close() error {
 	return nil
 }
 
-// Update checks for collisions and updates the positions based on velocity.
 func (s *System) Update() error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
@@ -133,17 +135,118 @@ func (s *System) Update() error {
 		}
 
 		// Update position based on the normalized velocity (using rounding)
-		pos.X += int(math.Round(x))
-		pos.Y += int(math.Round(y))
-
-		s.logger.Info("Moving entity", slog.Any("entityID", pos.Entity()), slog.Float64("magnitude", magnitude), slog.Float64("x", x), slog.Float64("y", y), slog.Group("velocity", slog.Int("x", vel.X), slog.Int("y", vel.Y)), slog.Group("position", slog.Int("x", pos.X), slog.Int("y", pos.Y)))
-
-		// Update the position component in ECS
-		if err = s.ecs.UpdatePositionComponent(pos); err != nil {
+		if err = s.collide(pos, int(math.Round(x)), int(math.Round(y))); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (s *System) collide(pos position.Position, velX, velY int) error {
+	// Get the hitbox of the moving entity
+	hbList := s.ecs.ListHitboxesByEntity(pos.Entity())
+	if len(hbList) == 0 {
+		return errors.New("no hitbox found for entity")
+	}
+	hb := &hbList[0]
+
+	// Get all hitboxes
+	hbs := s.ecs.ListHitboxes()
+
+	// Store original position
+	origPos := pos
+
+	// Initialize collision flags
+	var collisionX, collisionY bool
+
+	// Check collision along X-axis
+	collisionX, err := s.checkCollision(pos, hb, hbs, velX, 0)
+	if err != nil {
+		return err
+	}
+	if collisionX {
+		pos.X = origPos.X // Rollback X movement
+	} else {
+		pos.X += velX // Apply X movement
+	}
+
+	// Check collision along Y-axis
+	collisionY, err = s.checkCollision(pos, hb, hbs, 0, velY)
+	if err != nil {
+		return err
+	}
+	if collisionY {
+		pos.Y = origPos.Y // Rollback Y movement
+	} else {
+		pos.Y += velY // Apply Y movement
+	}
+
+	// Update velocity after collision
+	if collisionX || collisionY {
+		if err = s.updateVelocityAfterCollision(pos.Entity(), collisionX, collisionY); err != nil {
+			return err
+		}
+	}
+
+	// Update position component
+	return s.ecs.UpdatePositionComponent(pos)
+}
+
+func (s *System) checkCollision(
+	pos position.Position,
+	hb *hitbox.Hitbox,
+	hbs []hitbox.Hitbox,
+	deltaX, deltaY int,
+) (bool, error) {
+	// Move position by delta values
+	pos.X += deltaX
+	pos.Y += deltaY
+
+	// Get moving entity's bounding box
+	movingBox := getBoundingBox(pos, hb)
+
+	// Check for collisions
+	for _, otherHb := range hbs {
+		if otherHb.Entity() == pos.Entity() {
+			continue
+		}
+
+		otherPos, err := s.ecs.GetPosition(otherHb.Entity())
+		if err != nil {
+			if errors.Is(err, ecsys.ErrComponentNotFound) {
+				continue
+			}
+			return false, err
+		}
+
+		otherBox := getBoundingBox(otherPos, &otherHb)
+
+		if boxesOverlap(movingBox, otherBox) {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (s *System) updateVelocityAfterCollision(
+	entityID entity.Entity,
+	collisionX, collisionY bool,
+) error {
+	vel, err := s.ecs.GetVelocity(entityID)
+	if err != nil {
+		return err
+	}
+
+	if collisionX {
+		vel.X = 0
+	}
+	if collisionY {
+		vel.Y = 0
+	}
+
+	// Update the velocity component
+	return s.ecs.UpdateVelocityComponent(vel)
 }
 
 // Utility function for absolute value.

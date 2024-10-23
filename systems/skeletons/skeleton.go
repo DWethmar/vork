@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"log/slog"
 
+	"github.com/dwethmar/vork/component/hitbox"
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
@@ -108,7 +109,9 @@ func (s *System) setupSkeleton(sk skeleton.Skeleton) error {
 	if _, err := s.ecs.AddSprite(*sprite.New(e, "skeleton", sprite.SkeletonMoveDown1)); err != nil {
 		return fmt.Errorf("could not add sprite component to entity %v: %w", e, err)
 	}
-
+	if _, err := s.ecs.AddHitbox(*hitbox.New(e, "main", 16, 16, point.New(-8, -8))); err != nil {
+		return fmt.Errorf("could not add hitbox component to entity %v: %w", e, err)
+	}
 	// ensure velocity component is present
 	if _, err := s.ecs.GetVelocity(e); err != nil {
 		if errors.Is(err, ecsys.ErrEntityNotFound) || errors.Is(err, ecsys.ErrComponentNotFound) {

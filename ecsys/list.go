@@ -30,6 +30,16 @@ func (s *ECS) ListControllables() []controllable.Controllable {
 	return r
 }
 
+// ListPositions returns all positions.
+func (s *ECS) ListHitboxes() []hitbox.Hitbox {
+	c := s.stores.Hitbox.List()
+	r := make([]hitbox.Hitbox, len(c))
+	for i, v := range c {
+		r[i] = *v
+	}
+	return r
+}
+
 // ListPositionsByEntity returns all positions for a given entity.
 func (s *ECS) ListHitboxesByEntity(e entity.Entity) []hitbox.Hitbox {
 	c := s.stores.Hitbox.ListByEntity(e)
