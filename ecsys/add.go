@@ -5,6 +5,7 @@ import (
 
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/component/hitbox"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
@@ -58,6 +59,12 @@ func (s *ECS) AddPosition(c position.Position) (uint, error) {
 func (s *ECS) AddVelocity(c velocity.Velocity) (uint, error) {
 	return addComponent(s, &c, s.stores.Velocity, func(v *velocity.Velocity) event.Event {
 		return velocity.NewCreatedEvent(*v)
+	})
+}
+
+func (s *ECS) AddHitbox(c hitbox.Hitbox) (uint, error) {
+	return addComponent(s, &c, s.stores.Hitbox, func(h *hitbox.Hitbox) event.Event {
+		return hitbox.NewCreatedEvent(*h)
 	})
 }
 

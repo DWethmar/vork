@@ -5,6 +5,7 @@ import (
 
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/component/hitbox"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
@@ -53,6 +54,12 @@ type VelocityStore interface {
 	First(entity.Entity) (*velocity.Velocity, error)
 }
 
+// HitboxStore manages Velocity components.
+type HitboxStore interface {
+	Store[*hitbox.Hitbox]
+	ListByEntity(entity.Entity) []*hitbox.Hitbox
+}
+
 // RectanglesStore manages Rectangle components (for shapes)
 // Includes an additional method to get the first Rectangle by an entity.
 type RectanglesStore interface {
@@ -79,6 +86,7 @@ type Stores struct {
 	Controllable ControllableStore
 	Position     PositionStore
 	Velocity     VelocityStore
+	Hitbox       HitboxStore
 	Rectangle    RectanglesStore
 	Sprite       SpriteStore
 	Skeleton     SkeletonStore
@@ -90,6 +98,7 @@ func NewStores() *Stores {
 		Controllable: NewMemStore[*controllable.Controllable](true),
 		Position:     NewMemStore[*position.Position](true),
 		Velocity:     NewMemStore[*velocity.Velocity](true),
+		Hitbox:       NewMemStore[*hitbox.Hitbox](false),
 		Rectangle:    NewMemStore[*shape.Rectangle](true),
 		Sprite:       NewMemStore[*sprite.Sprite](false),
 		Skeleton:     NewMemStore[*skeleton.Skeleton](true),

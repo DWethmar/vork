@@ -2,6 +2,7 @@ package ecsys
 
 import (
 	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/component/hitbox"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
@@ -23,6 +24,16 @@ func (s *ECS) ListPositions() []position.Position {
 func (s *ECS) ListControllables() []controllable.Controllable {
 	c := s.stores.Controllable.List()
 	r := make([]controllable.Controllable, len(c))
+	for i, v := range c {
+		r[i] = *v
+	}
+	return r
+}
+
+// ListPositionsByEntity returns all positions for a given entity.
+func (s *ECS) ListHitboxesByEntity(e entity.Entity) []hitbox.Hitbox {
+	c := s.stores.Hitbox.ListByEntity(e)
+	r := make([]hitbox.Hitbox, len(c))
 	for i, v := range c {
 		r[i] = *v
 	}

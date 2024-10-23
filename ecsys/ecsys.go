@@ -68,14 +68,17 @@ func (s *ECS) BuildHierarchy() error {
 	return s.hierarchy.Build(ep)
 }
 
+// Root returns the root entity of the ECS hierarchy.
 func (s *ECS) Root() entity.Entity {
 	return s.hierarchy.Root()
 }
 
+// Parent returns the parent entity of the given entity.
 func (s *ECS) Parent(e entity.Entity) (entity.Entity, error) {
 	return s.hierarchy.Parent(e)
 }
 
+// Children returns the child entities of the given entity.
 func (s *ECS) Children(e entity.Entity) []entity.Entity {
 	return s.hierarchy.Children(e)
 }

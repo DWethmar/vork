@@ -5,6 +5,7 @@ import (
 
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/component/hitbox"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
@@ -103,6 +104,12 @@ func (s *ECS) DeletePosition(c position.Position) error {
 func (s *ECS) DeleteVelocity(c velocity.Velocity) error {
 	return deleteComponent(s.eventBus, &c, s.stores.Velocity, func(v *velocity.Velocity) event.Event {
 		return velocity.NewDeletedEvent(*v)
+	})
+}
+
+func (s *ECS) DeleteHitbox(c hitbox.Hitbox) error {
+	return deleteComponent(s.eventBus, &c, s.stores.Hitbox, func(h *hitbox.Hitbox) event.Event {
+		return hitbox.NewDeletedEvent(*h)
 	})
 }
 

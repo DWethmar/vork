@@ -58,7 +58,12 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 	eventBus := event.NewBus()
 	stores := ecsys.NewStores()
 	ecs := ecsys.New(eventBus, stores)
-	persistence := persistence.New(eventBus, stores, ecs)
+	persistence := persistence.New(persistence.Options{
+		Logger:   logger,
+		EventBus: eventBus,
+		Stores:   stores,
+		ECS:      ecs,
+	})
 
 	savesFolder, err := getDefaultSaveFolder()
 	if err != nil {
@@ -88,7 +93,7 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 		keyinput.New(keyinput.Options{
 			Logger:              logger,
 			ECS:                 ecs,
-			VelocityScaleFactor: 8,
+			VelocityScaleFactor: 5,
 		}),
 		render.New(render.Options{
 			Logger:       logger,
@@ -102,8 +107,8 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 			Logger:              logger,
 			ECS:                 ecs,
 			EventBus:            eventBus,
-			VelocityScaleFactor: 16,
-			Friction:            3,
+			VelocityScaleFactor: 5,
+			Friction:            4,
 			VelocityThreshold:   1,
 		}),
 	}

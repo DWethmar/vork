@@ -10,18 +10,22 @@ const (
 	Type = component.Type("hitbox")
 )
 
+// Hitbox is a component that holds the hitbox of an entity.
 type Hitbox struct {
 	I      uint          // ID
 	E      entity.Entity // Entity
+	Tag    string        // Tag is a string that describes the hitbox.
 	Width  int
 	Height int
 	Offset point.Point
 }
 
-func New(e entity.Entity, width, height int, offset point.Point) *Hitbox {
+// New creates a new hitbox component.
+func New(e entity.Entity, tag string, width, height int, offset point.Point) *Hitbox {
 	return &Hitbox{
 		I:      0,
 		E:      e,
+		Tag:    tag,
 		Width:  width,
 		Height: height,
 		Offset: offset,

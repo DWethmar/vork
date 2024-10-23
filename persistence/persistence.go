@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"fmt"
+	"log/slog"
 	"slices"
 
 	"github.com/dwethmar/vork/component"
@@ -17,18 +18,33 @@ import (
 
 // Persistance saves and loads components from the database.
 type Persistance struct {
+	logger     *slog.Logger
 	eventBus   *event.Bus
 	ecs        *ecsys.ECS
 	lifecycles map[component.Type]ComponentLifeCycle
 	stores     *ecsys.Stores
 }
 
+// Options is the configuration for the persistence system.
+type Options struct {
+	// Logger is the logger used by the persistence system.
+	Logger *slog.Logger
+	// EventBus is the event bus used by the persistence system.
+	EventBus *event.Bus
+	// Stores is the component stores used by the persistence system.
+	Stores *ecsys.Stores
+	// ECS is the ECS system used by the persistence system.
+	ECS *ecsys.ECS
+}
+
 // New creates a new persistence system.
-func New(eventBus *event.Bus, stores *ecsys.Stores, ecs *ecsys.ECS) *Persistance {
+func New(opts Options) *Persistance {
+	stores := opts.Stores
 	s := &Persistance{
-		eventBus: eventBus,
-		ecs:      ecs,
-		stores:   stores,
+		logger:   opts.Logger.With("system", "persistence"),
+		eventBus: opts.EventBus,
+		ecs:      opts.ECS,
+		stores:   opts.Stores,
 		lifecycles: map[component.Type]ComponentLifeCycle{
 			controllable.Type: NewGenericComponentLifeCycle(
 				boltrepo.NewRepository(controllable.Empty),
@@ -88,6 +104,8 @@ func New(eventBus *event.Bus, stores *ecsys.Stores, ecs *ecsys.ECS) *Persistance
 		c, ok := e.(component.Event)
 		return ok && slices.Contains(persistentComponentTypes, c.ComponentType())
 	}), s.componentChangeHandler)
+
+	s.logger.Info("persistence system created", "persistent_components", persistentComponentTypes)
 
 	return s
 }

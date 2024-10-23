@@ -124,7 +124,9 @@ func (s *System) setupSkeleton(sk skeleton.Skeleton) error {
 	return nil
 }
 
-func (s *System) Draw(_ *ebiten.Image) error { return nil }
+func (s *System) Draw(_ *ebiten.Image) error {
+	return nil
+}
 
 // Update updates the skeletons in the ECS.
 func (s *System) Update() error {

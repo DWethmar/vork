@@ -1,6 +1,7 @@
 package persistence_test
 
 import (
+	"log/slog"
 	"os"
 	"testing"
 
@@ -38,7 +39,12 @@ func TestNew(t *testing.T) {
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
 		ecs := ecsys.New(eventBus, stores)
-		s := persistence.New(eventBus, stores, ecs)
+		s := persistence.New(persistence.Options{
+			Logger:   slog.Default(),
+			EventBus: eventBus,
+			Stores:   stores,
+			ECS:      ecs,
+		})
 		if s == nil {
 			t.Error("System should not be nil")
 		}
@@ -48,7 +54,12 @@ func TestNew(t *testing.T) {
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
 		ecs := ecsys.New(eventBus, stores)
-		s := persistence.New(eventBus, stores, ecs)
+		s := persistence.New(persistence.Options{
+			Logger:   slog.Default(),
+			EventBus: eventBus,
+			Stores:   stores,
+			ECS:      ecs,
+		})
 		if s == nil {
 			t.Error("System should not be nil")
 		}
@@ -70,7 +81,12 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
 		ecs := ecsys.New(eventBus, stores)
-		s := persistence.New(eventBus, stores, ecs)
+		s := persistence.New(persistence.Options{
+			Logger:   slog.Default(),
+			EventBus: eventBus,
+			Stores:   stores,
+			ECS:      ecs,
+		})
 
 		// Add components
 		for i := 0; i < 100; i++ {
@@ -109,7 +125,12 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		eventBus = event.NewBus()
 		stores = ecsys.NewStores()
 		ecs = ecsys.New(eventBus, stores)
-		s = persistence.New(eventBus, stores, ecs)
+		s = persistence.New(persistence.Options{
+			Logger:   slog.Default(),
+			EventBus: eventBus,
+			Stores:   stores,
+			ECS:      ecs,
+		})
 		if err := s.Load(db); err != nil {
 			t.Fatalf("Failed to load components: %v", err)
 		}
@@ -155,7 +176,12 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		eventBus := event.NewBus()
 		stores := ecsys.NewStores()
 		ecs := ecsys.New(eventBus, stores)
-		s := persistence.New(eventBus, stores, ecs)
+		s := persistence.New(persistence.Options{
+			Logger:   slog.Default(),
+			EventBus: eventBus,
+			Stores:   stores,
+			ECS:      ecs,
+		})
 
 		// Add position components
 		for i := 1; i <= 100; i++ {
@@ -186,7 +212,12 @@ func TestSystem_Save(t *testing.T) { //nolint: gocognit
 		eventBus = event.NewBus()
 		stores = ecsys.NewStores()
 		ecs = ecsys.New(eventBus, stores)
-		s = persistence.New(eventBus, stores, ecs)
+		s = persistence.New(persistence.Options{
+			Logger:   slog.Default(),
+			EventBus: eventBus,
+			Stores:   stores,
+			ECS:      ecs,
+		})
 		if err := s.Load(db); err != nil {
 			t.Fatalf("Failed to load components: %v", err)
 		}
@@ -227,7 +258,12 @@ func TestSystem_Load(t *testing.T) {
 			stores := ecsys.NewStores()
 			ecs := ecsys.New(eventBus, stores)
 			// create system
-			s := persistence.New(eventBus, stores, ecs)
+			s := persistence.New(persistence.Options{
+				Logger:   slog.Default(),
+				EventBus: eventBus,
+				Stores:   stores,
+				ECS:      ecs,
+			})
 			var err error
 			// load some data
 			e, err = ecs.CreateEntity(entity.Entity(0), point.New(11, 22))
@@ -257,7 +293,12 @@ func TestSystem_Load(t *testing.T) {
 			stores := ecsys.NewStores()
 			ecs := ecsys.New(eventBus, stores)
 			// create system
-			s := persistence.New(eventBus, stores, ecs)
+			s := persistence.New(persistence.Options{
+				Logger:   slog.Default(),
+				EventBus: eventBus,
+				Stores:   stores,
+				ECS:      ecs,
+			})
 			if err := s.Load(db); err != nil {
 				t.Errorf("Load failed: %v", err)
 			}

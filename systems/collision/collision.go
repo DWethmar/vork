@@ -3,6 +3,7 @@ package collision
 import (
 	"errors"
 	"log/slog"
+	"math"
 	"sync"
 
 	"github.com/dwethmar/vork/component/velocity"
@@ -115,13 +116,27 @@ func (s *System) Update() error {
 			if err = s.ecs.UpdateVelocityComponent(*vel); err != nil {
 				return err
 			}
+			continue
 		}
 
-		s.logger.Info("Updating position", slog.Any("entityID", pos.ID()), slog.Any("velocity", vel.Point))
+		// Convert to float for normalization
+		x := float64(vel.X)
+		y := float64(vel.Y)
 
-		// Update position based on the velocity
-		pos.X += vel.X
-		pos.Y += vel.Y
+		// Calculate the magnitude of the velocity vector
+		magnitude := math.Sqrt(x*x + y*y)
+
+		// If the magnitude is greater than zero, normalize the velocity
+		if magnitude > 0 {
+			x /= magnitude
+			y /= magnitude
+		}
+
+		// Update position based on the normalized velocity (using rounding)
+		pos.X += int(math.Round(x))
+		pos.Y += int(math.Round(y))
+
+		s.logger.Info("Moving entity", slog.Any("entityID", pos.Entity()), slog.Float64("magnitude", magnitude), slog.Float64("x", x), slog.Float64("y", y), slog.Group("velocity", slog.Int("x", vel.X), slog.Int("y", vel.Y)), slog.Group("position", slog.Int("x", pos.X), slog.Int("y", pos.Y)))
 
 		// Update the position component in ECS
 		if err = s.ecs.UpdatePositionComponent(pos); err != nil {
