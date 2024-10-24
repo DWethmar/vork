@@ -21,12 +21,13 @@ import (
 
 // Persistance saves and loads components from the database.
 type Persistance struct {
-	logger     *slog.Logger
-	eventBus   *event.Bus
-	ecs        *ecsys.ECS
-	lifecycles map[component.Type]ComponentLifeCycle
-	stores     *ecsys.Stores
-	db         *bolt.DB
+	logger        *slog.Logger
+	eventBus      *event.Bus
+	ecs           *ecsys.ECS
+	lifecycles    map[component.Type]ComponentLifeCycle
+	stores        *ecsys.Stores
+	db            *bolt.DB
+	subscriptions []int
 }
 
 // Options is the configuration for the persistence system.
@@ -39,8 +40,7 @@ type Options struct {
 	Stores *ecsys.Stores
 	// ECS is the ECS system used by the persistence system.
 	ECS *ecsys.ECS
-
-	DB *bolt.DB
+	DB  *bolt.DB
 }
 
 // New creates a new persistence system.
@@ -107,10 +107,12 @@ func New(opts Options) *Persistance {
 	persistentComponentTypes := PersistentComponentTypes()
 
 	// subscribe to component change events for all persistent components.
-	s.eventBus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
-		c, ok := e.(component.Event)
-		return ok && slices.Contains(persistentComponentTypes, c.ComponentType())
-	}), s.componentChangeHandler)
+	s.subscriptions = []int{
+		s.eventBus.Subscribe(event.MatcherFunc(func(e event.Event) bool {
+			c, ok := e.(component.Event)
+			return ok && slices.Contains(persistentComponentTypes, c.ComponentType())
+		}), s.componentChangeHandler),
+	}
 
 	s.logger.Info("persistence system created", "persistent_components", persistentComponentTypes)
 
@@ -191,6 +193,9 @@ func (s *Persistance) Load(db *bolt.DB) error {
 }
 
 func (s *Persistance) Close() error {
+	for _, sub := range s.subscriptions {
+		s.eventBus.Unsubscribe(sub)
+	}
 	return nil
 }
 
