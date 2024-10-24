@@ -28,43 +28,43 @@ type Event interface {
 }
 
 type CreatedEvent struct {
-	velocity Velocity
+	velocity *Velocity
 }
 
-func NewCreatedEvent(v Velocity) *CreatedEvent {
-	return &CreatedEvent{velocity: v}
+func NewCreatedEvent(velocity *Velocity) *CreatedEvent {
+	return &CreatedEvent{velocity: velocity}
 }
 
 func (e *CreatedEvent) Event() string                 { return CreatedEventType }
-func (e *CreatedEvent) Velocity() *Velocity           { return &e.velocity }
+func (e *CreatedEvent) Velocity() *Velocity           { return e.velocity }
 func (e *CreatedEvent) ComponentID() uint             { return e.velocity.ID() }
 func (e *CreatedEvent) ComponentType() component.Type { return e.velocity.Type() }
 func (e *CreatedEvent) Deleted() bool                 { return false }
 
 type UpdatedEvent struct {
-	velocity Velocity
+	velocity *Velocity
 }
 
-func NewUpdatedEvent(velocity Velocity) *UpdatedEvent {
+func NewUpdatedEvent(velocity *Velocity) *UpdatedEvent {
 	return &UpdatedEvent{velocity: velocity}
 }
 
 func (e *UpdatedEvent) Event() string                 { return UpdatedEventType }
-func (e *UpdatedEvent) Velocity() *Velocity           { return &e.velocity }
+func (e *UpdatedEvent) Velocity() *Velocity           { return e.velocity }
 func (e *UpdatedEvent) ComponentID() uint             { return e.velocity.ID() }
 func (e *UpdatedEvent) ComponentType() component.Type { return e.velocity.Type() }
 func (e *UpdatedEvent) Deleted() bool                 { return false }
 
 type DeletedEvent struct {
-	velocity Velocity
+	velocity *Velocity
 }
 
-func NewDeletedEvent(velocity Velocity) *DeletedEvent {
+func NewDeletedEvent(velocity *Velocity) *DeletedEvent {
 	return &DeletedEvent{velocity: velocity}
 }
 
 func (e *DeletedEvent) Event() string                 { return DeletedEventType }
-func (e *DeletedEvent) Velocity() *Velocity           { return &e.velocity }
+func (e *DeletedEvent) Velocity() *Velocity           { return e.velocity }
 func (e *DeletedEvent) ComponentID() uint             { return e.velocity.ID() }
 func (e *DeletedEvent) ComponentType() component.Type { return e.velocity.Type() }
 func (e *DeletedEvent) Deleted() bool                 { return true }

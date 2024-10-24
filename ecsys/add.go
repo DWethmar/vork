@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dwethmar/vork/component"
+	"github.com/dwethmar/vork/component/chunk"
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/hitbox"
 	"github.com/dwethmar/vork/component/position"
@@ -44,7 +45,7 @@ func addComponent[T component.Component](
 // AddPosition adds a position component to the ECS.
 func (s *ECS) AddPosition(c position.Position) (uint, error) {
 	id, err := addComponent(s, &c, s.stores.Position, func(p *position.Position) event.Event {
-		return position.NewCreatedEvent(*p)
+		return position.NewCreatedEvent(p)
 	})
 	if err != nil {
 		return 0, fmt.Errorf("could not add position component: %w", err)
@@ -58,19 +59,19 @@ func (s *ECS) AddPosition(c position.Position) (uint, error) {
 
 func (s *ECS) AddVelocity(c velocity.Velocity) (uint, error) {
 	return addComponent(s, &c, s.stores.Velocity, func(v *velocity.Velocity) event.Event {
-		return velocity.NewCreatedEvent(*v)
+		return velocity.NewCreatedEvent(v)
 	})
 }
 
 func (s *ECS) AddHitbox(c hitbox.Hitbox) (uint, error) {
 	return addComponent(s, &c, s.stores.Hitbox, func(h *hitbox.Hitbox) event.Event {
-		return hitbox.NewCreatedEvent(*h)
+		return hitbox.NewCreatedEvent(h)
 	})
 }
 
 func (s *ECS) AddControllable(c controllable.Controllable) (uint, error) {
 	return addComponent(s, &c, s.stores.Controllable, func(ctr *controllable.Controllable) event.Event {
-		return controllable.NewCreatedEvent(*ctr)
+		return controllable.NewCreatedEvent(ctr)
 	})
 }
 
@@ -84,6 +85,12 @@ func (s *ECS) AddSprite(c sprite.Sprite) (uint, error) {
 
 func (s *ECS) AddSkeleton(c skeleton.Skeleton) (uint, error) {
 	return addComponent(s, &c, s.stores.Skeleton, func(sk *skeleton.Skeleton) event.Event {
-		return skeleton.NewCreatedEvent(*sk)
+		return skeleton.NewCreatedEvent(sk)
+	})
+}
+
+func (s *ECS) AddChunk(c chunk.Chunk) (uint, error) {
+	return addComponent(s, &c, s.stores.Chunk, func(c *chunk.Chunk) event.Event {
+		return chunk.NewCreatedEvent(c)
 	})
 }

@@ -80,7 +80,7 @@ func deleteComponent[T component.Component](
 
 func (s *ECS) DeletePosition(c position.Position) error {
 	err := deleteComponent(s.eventBus, &c, s.stores.Position, func(p *position.Position) event.Event {
-		return position.NewDeletedEvent(*p)
+		return position.NewDeletedEvent(p)
 	})
 	if err != nil {
 		return err
@@ -103,19 +103,19 @@ func (s *ECS) DeletePosition(c position.Position) error {
 
 func (s *ECS) DeleteVelocity(c velocity.Velocity) error {
 	return deleteComponent(s.eventBus, &c, s.stores.Velocity, func(v *velocity.Velocity) event.Event {
-		return velocity.NewDeletedEvent(*v)
+		return velocity.NewDeletedEvent(v)
 	})
 }
 
 func (s *ECS) DeleteHitbox(c hitbox.Hitbox) error {
 	return deleteComponent(s.eventBus, &c, s.stores.Hitbox, func(h *hitbox.Hitbox) event.Event {
-		return hitbox.NewDeletedEvent(*h)
+		return hitbox.NewDeletedEvent(h)
 	})
 }
 
 func (s *ECS) DeleteControllable(c controllable.Controllable) error {
 	return deleteComponent(s.eventBus, &c, s.stores.Controllable, func(ctr *controllable.Controllable) event.Event {
-		return controllable.NewDeletedEvent(*ctr)
+		return controllable.NewDeletedEvent(ctr)
 	})
 }
 
@@ -129,6 +129,6 @@ func (s *ECS) DeleteSprite(c sprite.Sprite) error {
 
 func (s *ECS) DeleteSkeleton(c skeleton.Skeleton) error {
 	return deleteComponent(s.eventBus, &c, s.stores.Skeleton, func(sk *skeleton.Skeleton) event.Event {
-		return skeleton.NewDeletedEvent(*sk)
+		return skeleton.NewDeletedEvent(sk)
 	})
 }

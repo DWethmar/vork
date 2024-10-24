@@ -28,43 +28,43 @@ type Event interface {
 }
 
 type CreatedEvent struct {
-	hitbox Hitbox
+	hitbox *Hitbox
 }
 
-func NewCreatedEvent(hitbox Hitbox) *CreatedEvent {
+func NewCreatedEvent(hitbox *Hitbox) *CreatedEvent {
 	return &CreatedEvent{hitbox: hitbox}
 }
 
 func (e *CreatedEvent) Event() string                 { return CreatedEventType }
-func (e *CreatedEvent) Hitbox() *Hitbox               { return &e.hitbox }
+func (e *CreatedEvent) Hitbox() *Hitbox               { return e.hitbox }
 func (e *CreatedEvent) ComponentID() uint             { return e.hitbox.ID() }
 func (e *CreatedEvent) ComponentType() component.Type { return e.hitbox.Type() }
 func (e *CreatedEvent) Deleted() bool                 { return false }
 
 type UpdatedEvent struct {
-	hitbox Hitbox
+	hitbox *Hitbox
 }
 
-func NewUpdatedEvent(hitbox Hitbox) *UpdatedEvent {
+func NewUpdatedEvent(hitbox *Hitbox) *UpdatedEvent {
 	return &UpdatedEvent{hitbox: hitbox}
 }
 
 func (e *UpdatedEvent) Event() string                 { return UpdatedEventType }
-func (e *UpdatedEvent) Hitbox() *Hitbox               { return &e.hitbox }
+func (e *UpdatedEvent) Hitbox() *Hitbox               { return e.hitbox }
 func (e *UpdatedEvent) ComponentID() uint             { return e.hitbox.ID() }
 func (e *UpdatedEvent) ComponentType() component.Type { return e.hitbox.Type() }
 func (e *UpdatedEvent) Deleted() bool                 { return false }
 
 type DeletedEvent struct {
-	hitbox Hitbox
+	hitbox *Hitbox
 }
 
-func NewDeletedEvent(hitbox Hitbox) *DeletedEvent {
+func NewDeletedEvent(hitbox *Hitbox) *DeletedEvent {
 	return &DeletedEvent{hitbox: hitbox}
 }
 
 func (e *DeletedEvent) Event() string                 { return DeletedEventType }
-func (e *DeletedEvent) Hitbox() *Hitbox               { return &e.hitbox }
+func (e *DeletedEvent) Hitbox() *Hitbox               { return e.hitbox }
 func (e *DeletedEvent) ComponentID() uint             { return e.hitbox.ID() }
 func (e *DeletedEvent) ComponentType() component.Type { return e.hitbox.Type() }
 func (e *DeletedEvent) Deleted() bool                 { return true }

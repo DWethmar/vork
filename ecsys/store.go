@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/dwethmar/vork/component"
+	"github.com/dwethmar/vork/component/chunk"
 	"github.com/dwethmar/vork/component/controllable"
 	"github.com/dwethmar/vork/component/hitbox"
 	"github.com/dwethmar/vork/component/position"
@@ -81,6 +82,12 @@ type SkeletonStore interface {
 	First(entity.Entity) (*skeleton.Skeleton, error)
 }
 
+// ChunkStore manages Chunk components
+type ChunkStore interface {
+	Store[*chunk.Chunk]
+	ListByEntity(entity.Entity) []*chunk.Chunk
+}
+
 // Stores is a collection of component stores used in the ECS.
 type Stores struct {
 	Controllable ControllableStore
@@ -90,6 +97,7 @@ type Stores struct {
 	Rectangle    RectanglesStore
 	Sprite       SpriteStore
 	Skeleton     SkeletonStore
+	Chunk        ChunkStore
 }
 
 // NewStores creates a new set of component stores.
@@ -102,5 +110,6 @@ func NewStores() *Stores {
 		Rectangle:    NewMemStore[*shape.Rectangle](true),
 		Sprite:       NewMemStore[*sprite.Sprite](false),
 		Skeleton:     NewMemStore[*skeleton.Skeleton](true),
+		Chunk:        NewMemStore[*chunk.Chunk](false),
 	}
 }

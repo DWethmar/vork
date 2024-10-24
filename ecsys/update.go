@@ -36,7 +36,7 @@ func updateComponent[T component.Component](
 
 func (s *ECS) UpdatePositionComponent(c position.Position) error {
 	err := updateComponent(s.eventBus, &c, s.stores.Position, func(p *position.Position) event.Event {
-		return position.NewUpdatedEvent(*p)
+		return position.NewUpdatedEvent(p)
 	})
 	if err != nil {
 		return err
@@ -50,13 +50,13 @@ func (s *ECS) UpdatePositionComponent(c position.Position) error {
 
 func (s *ECS) UpdateVelocityComponent(c velocity.Velocity) error {
 	return updateComponent(s.eventBus, &c, s.stores.Velocity, func(p *velocity.Velocity) event.Event {
-		return velocity.NewUpdatedEvent(*p)
+		return velocity.NewUpdatedEvent(p)
 	})
 }
 
 func (s *ECS) UpdateControllableComponent(c controllable.Controllable) error {
 	return updateComponent(s.eventBus, &c, s.stores.Controllable, func(ctr *controllable.Controllable) event.Event {
-		return controllable.NewUpdatedEvent(*ctr)
+		return controllable.NewUpdatedEvent(ctr)
 	})
 }
 
@@ -70,6 +70,6 @@ func (s *ECS) UpdateSpriteComponent(c sprite.Sprite) error {
 
 func (s *ECS) UpdateSkeletonComponent(c skeleton.Skeleton) error {
 	return updateComponent(s.eventBus, &c, s.stores.Skeleton, func(sk *skeleton.Skeleton) event.Event {
-		return skeleton.NewUpdatedEvent(*sk)
+		return skeleton.NewUpdatedEvent(sk)
 	})
 }

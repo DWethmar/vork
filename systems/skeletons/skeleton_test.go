@@ -32,7 +32,7 @@ func TestNew(t *testing.T) {
 			t.Errorf("CreateEntity() error = %v", err)
 		}
 		// should setup skeleton
-		if err = eventBus.Publish(skeleton.NewCreatedEvent(skeleton.Skeleton{
+		if err = eventBus.Publish(skeleton.NewCreatedEvent(&skeleton.Skeleton{
 			I: 1,
 			E: e,
 		})); err != nil {

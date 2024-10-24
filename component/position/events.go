@@ -28,43 +28,43 @@ type Event interface {
 }
 
 type CreatedEvent struct {
-	position Position
+	position *Position
 }
 
-func NewCreatedEvent(position Position) *CreatedEvent {
+func NewCreatedEvent(position *Position) *CreatedEvent {
 	return &CreatedEvent{position: position}
 }
 
 func (e *CreatedEvent) Event() string                 { return CreatedEventType }
-func (e *CreatedEvent) Position() *Position           { return &e.position }
+func (e *CreatedEvent) Position() *Position           { return e.position }
 func (e *CreatedEvent) ComponentID() uint             { return e.position.ID() }
 func (e *CreatedEvent) ComponentType() component.Type { return e.position.Type() }
 func (e *CreatedEvent) Deleted() bool                 { return false }
 
 type UpdatedEvent struct {
-	position Position
+	position *Position
 }
 
-func NewUpdatedEvent(position Position) *UpdatedEvent {
+func NewUpdatedEvent(position *Position) *UpdatedEvent {
 	return &UpdatedEvent{position: position}
 }
 
 func (e *UpdatedEvent) Event() string                 { return UpdatedEventType }
-func (e *UpdatedEvent) Position() *Position           { return &e.position }
+func (e *UpdatedEvent) Position() *Position           { return e.position }
 func (e *UpdatedEvent) ComponentID() uint             { return e.position.ID() }
 func (e *UpdatedEvent) ComponentType() component.Type { return e.position.Type() }
 func (e *UpdatedEvent) Deleted() bool                 { return false }
 
 type DeletedEvent struct {
-	position Position
+	position *Position
 }
 
-func NewDeletedEvent(position Position) *DeletedEvent {
+func NewDeletedEvent(position *Position) *DeletedEvent {
 	return &DeletedEvent{position: position}
 }
 
 func (e *DeletedEvent) Event() string                 { return DeletedEventType }
-func (e *DeletedEvent) Position() *Position           { return &e.position }
+func (e *DeletedEvent) Position() *Position           { return e.position }
 func (e *DeletedEvent) ComponentID() uint             { return e.position.ID() }
 func (e *DeletedEvent) ComponentType() component.Type { return e.position.Type() }
 func (e *DeletedEvent) Deleted() bool                 { return true }
