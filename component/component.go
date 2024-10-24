@@ -11,3 +11,8 @@ type Component interface {
 	Type() Type
 	Entity() entity.Entity
 }
+
+type BaseComponent struct {
+	ID     uint
+	Entity entity.Entity
+}
