@@ -192,6 +192,7 @@ func (s *Persistance) Load(db *bolt.DB) error {
 	})
 }
 
+// Close closes the persistence system.
 func (s *Persistance) Close() error {
 	for _, sub := range s.subscriptions {
 		s.eventBus.Unsubscribe(sub)
@@ -199,10 +200,12 @@ func (s *Persistance) Close() error {
 	return nil
 }
 
+// Draw draws the persistence system.
 func (s *Persistance) Draw(*ebiten.Image) error {
 	return nil
 }
 
+// Update updates the persistence system.
 func (s *Persistance) Update() error {
 	// check if F5 is pressed
 	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
