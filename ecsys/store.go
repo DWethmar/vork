@@ -82,7 +82,7 @@ type SkeletonStore interface {
 	First(entity.Entity) (*skeleton.Skeleton, error)
 }
 
-// ChunkStore manages Chunk components
+// ChunkStore manages Chunk components.
 type ChunkStore interface {
 	Store[*chunk.Chunk]
 	ListByEntity(entity.Entity) []*chunk.Chunk

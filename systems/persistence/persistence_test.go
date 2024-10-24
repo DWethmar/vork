@@ -10,8 +10,8 @@ import (
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
-	"github.com/dwethmar/vork/persistence"
 	"github.com/dwethmar/vork/point"
+	"github.com/dwethmar/vork/systems/persistence"
 	bolt "go.etcd.io/bbolt"
 )
 

@@ -3,18 +3,17 @@ package gameplay
 import (
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/event/mouse"
 	"github.com/dwethmar/vork/game"
-	"github.com/dwethmar/vork/persistence"
 	"github.com/dwethmar/vork/point"
 	"github.com/dwethmar/vork/sprites"
 	"github.com/dwethmar/vork/spritesheet"
 	"github.com/dwethmar/vork/systems/collision"
 	"github.com/dwethmar/vork/systems/keyinput"
+	"github.com/dwethmar/vork/systems/persistence"
 	"github.com/dwethmar/vork/systems/render"
 	"github.com/dwethmar/vork/systems/skeletons"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -45,11 +44,10 @@ func onHoverHandler() func(x, y int) {
 
 // GamePlay is a scene where the game is played.
 type GamePlay struct {
-	logger      *slog.Logger
-	db          *bbolt.DB
-	systems     []System
-	ecs         *ecsys.ECS
-	persistence *persistence.Persistance
+	logger  *slog.Logger
+	db      *bbolt.DB
+	systems []System
+	ecs     *ecsys.ECS
 }
 
 // New creates a new game play scene.
@@ -58,12 +56,6 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 	eventBus := event.NewBus()
 	stores := ecsys.NewStores()
 	ecs := ecsys.New(eventBus, stores)
-	persistence := persistence.New(persistence.Options{
-		Logger:   logger,
-		EventBus: eventBus,
-		Stores:   stores,
-		ECS:      ecs,
-	})
 
 	savesFolder, err := getDefaultSaveFolder()
 	if err != nil {
@@ -79,17 +71,25 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 		logger.Info("creating new game", slog.String("save_name", cfg.SaveName), slog.String("db_path", cfg.DBPath))
 	}
 
+	// maybe move this to the persistance system
 	db, err := bbolt.Open(cfg.DBPath, 0600, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)
 	}
 
 	// check if it is an existing save
-	if err = setupGame(logger, persistence, ecs, db); err != nil {
+	if err = setupGame(logger, ecs, db); err != nil {
 		return nil, fmt.Errorf("failed to setup game: %w", err)
 	}
 
 	systems := []System{
+		persistence.New(persistence.Options{
+			Logger:   logger,
+			EventBus: eventBus,
+			Stores:   stores,
+			ECS:      ecs,
+			DB:       db,
+		}),
 		keyinput.New(keyinput.Options{
 			Logger:              logger,
 			ECS:                 ecs,
@@ -119,41 +119,27 @@ func New(logger *slog.Logger, saveName string, s *spritesheet.Spritesheet) (*Gam
 		}
 	}
 	return &GamePlay{
-		logger:      logger,
-		db:          db,
-		systems:     systems,
-		ecs:         ecs,
-		persistence: persistence,
+		logger:  logger,
+		db:      db,
+		systems: systems,
+		ecs:     ecs,
 	}, nil
 }
 
-func setupGame(logger *slog.Logger, persistence *persistence.Persistance, ecs *ecsys.ECS, db *bbolt.DB) error {
+func setupGame(logger *slog.Logger, ecs *ecsys.ECS, db *bbolt.DB) error {
 	// check if it is an existing save
 	ok, err := gameInitialized(db)
 	if err != nil {
 		return fmt.Errorf("failed to check if game is initialized: %w", err)
 	}
-	if ok {
-		// load the game
-		logger.Info("loading existing game")
-		if err = persistence.Load(db); err != nil {
+	if !ok {
+		// create a new game
+		logger.Info("creating a new game")
+		if err = initializeGame(ecs, db); err != nil {
 			return fmt.Errorf("failed to load game: %w", err)
 		}
-		if err = ecs.BuildHierarchy(); err != nil {
-			return fmt.Errorf("failed to rebuild hierarchy: %w", err)
-		}
-		logger.Info("game loaded")
-		return nil
+		logger.Info("game created")
 	}
-	// create a new game
-	logger.Info("creating a new game")
-	if err = initializeGame(ecs, db); err != nil {
-		return fmt.Errorf("failed to load game: %w", err)
-	}
-	if err = persistence.Save(db); err != nil {
-		return fmt.Errorf("failed to save new game: %w", err)
-	}
-	logger.Info("game created")
 	return nil
 }
 
@@ -172,15 +158,6 @@ func (s *GamePlay) Draw(screen *ebiten.Image) error {
 
 // Update updates the game.
 func (s *GamePlay) Update() error {
-	// check if F5 is pressed
-	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
-		started := time.Now()
-		if err := s.persistence.Save(s.db); err != nil {
-			return fmt.Errorf("failed to save game: %w", err)
-		}
-		s.logger.Info("game saved", slog.Duration("duration", time.Since(started)))
-		return nil
-	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyF9) {
 		debugHierarchy(s.ecs)
 	}

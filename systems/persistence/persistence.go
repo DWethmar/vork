@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"time"
 
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/controllable"
@@ -12,7 +13,9 @@ import (
 	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
-	boltrepo "github.com/dwethmar/vork/persistence/bbolt"
+	boltrepo "github.com/dwethmar/vork/systems/persistence/bbolt"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -23,6 +26,7 @@ type Persistance struct {
 	ecs        *ecsys.ECS
 	lifecycles map[component.Type]ComponentLifeCycle
 	stores     *ecsys.Stores
+	db         *bolt.DB
 }
 
 // Options is the configuration for the persistence system.
@@ -35,6 +39,8 @@ type Options struct {
 	Stores *ecsys.Stores
 	// ECS is the ECS system used by the persistence system.
 	ECS *ecsys.ECS
+
+	DB *bolt.DB
 }
 
 // New creates a new persistence system.
@@ -95,6 +101,7 @@ func New(opts Options) *Persistance {
 				},
 			),
 		},
+		db: opts.DB,
 	}
 
 	persistentComponentTypes := PersistentComponentTypes()
@@ -108,6 +115,16 @@ func New(opts Options) *Persistance {
 	s.logger.Info("persistence system created", "persistent_components", persistentComponentTypes)
 
 	return s
+}
+
+func (s *Persistance) Init() error {
+	if err := s.Load(s.db); err != nil {
+		return fmt.Errorf("failed to load game: %w", err)
+	}
+	if err := s.ecs.BuildHierarchy(); err != nil {
+		return fmt.Errorf("failed to rebuild hierarchy: %w", err)
+	}
+	return nil
 }
 
 // componentChangeHandler is called when a component has changed or has been deleted.
@@ -171,4 +188,25 @@ func (s *Persistance) Load(db *bolt.DB) error {
 
 		return nil
 	})
+}
+
+func (s *Persistance) Close() error {
+	return nil
+}
+
+func (s *Persistance) Draw(*ebiten.Image) error {
+	return nil
+}
+
+func (s *Persistance) Update() error {
+	// check if F5 is pressed
+	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
+		started := time.Now()
+		if err := s.Save(s.db); err != nil {
+			return fmt.Errorf("failed to save game: %w", err)
+		}
+		s.logger.Info("game saved", slog.Duration("duration", time.Since(started)))
+		return nil
+	}
+	return nil
 }
