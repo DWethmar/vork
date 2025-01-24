@@ -144,14 +144,14 @@ func (s *System) Update() error {
 
 func (s *System) collide(pos position.Position, velX, velY int) error {
 	// Get the hitbox of the moving entity
-	hbList := s.ecs.ListHitboxesByEntity(pos.Entity())
+	hbList := s.ecs.ListHitboxes(pos.Entity())
 	if len(hbList) == 0 {
 		return errors.New("no hitbox found for entity")
 	}
 	hb := &hbList[0]
 
 	// Get all hitboxes
-	hbs := s.ecs.ListHitboxes()
+	hbs := s.ecs.AllHitboxes()
 
 	// Store original position
 	origPos := pos

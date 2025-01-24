@@ -32,7 +32,7 @@ func (s *ECS) deleteControllableByEntity(e entity.Entity) error {
 }
 
 func (s *ECS) deleteRectanglesByEntity(e entity.Entity) error {
-	for _, c := range s.ListRectanglesByEntity(e) {
+	for _, c := range s.ListRectangles(e) {
 		if err := s.DeleteRectangle(c); err != nil {
 			return err
 		}
@@ -41,7 +41,7 @@ func (s *ECS) deleteRectanglesByEntity(e entity.Entity) error {
 }
 
 func (s *ECS) deleteSpritesByEntity(e entity.Entity) error {
-	for _, sprite := range s.ListSpritesByEntity(e) {
+	for _, sprite := range s.ListSprites(e) {
 		if err := s.DeleteSprite(sprite); err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func deleteComponent[T component.Component](
 ) error {
 	comp, ok := c.(T)
 	if !ok {
-		return fmt.Errorf("expected component of type %T, got %T", *new(T), c)
+		return fmt.Errorf("expected component of type %T, got %T", comp, c)
 	}
 	if err := store.Delete(c.ID()); err != nil {
 		return fmt.Errorf("could not update component: %w", err)

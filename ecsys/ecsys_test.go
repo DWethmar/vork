@@ -70,7 +70,7 @@ func TestECS_DeleteEntity(t *testing.T) {
 		}
 
 		// check if the sprite has been added
-		if l := len(ecs.ListSpritesByEntity(entity)); l != 1 {
+		if l := len(ecs.ListSprites(entity)); l != 1 {
 			t.Errorf("SpritesByEntity() sprites = %v", l)
 		}
 
@@ -85,7 +85,7 @@ func TestECS_DeleteEntity(t *testing.T) {
 		}
 
 		// Check if the sprite has been deleted
-		if l := len(ecs.ListSpritesByEntity(entity)); l != 0 {
+		if l := len(ecs.ListSprites(entity)); l != 0 {
 			t.Errorf("SpritesByEntity() sprites = %v", l)
 		}
 	})

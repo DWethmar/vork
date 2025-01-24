@@ -99,7 +99,7 @@ func (s *System) Draw(screen *ebiten.Image) error {
 
 	entitiesToDraw := []entityDraw{}
 	// Collect rectangles to draw
-	for _, r := range s.ecs.ListRectangles() {
+	for _, r := range s.ecs.AllRectangles() {
 		pt, err := s.ecs.GetAbsolutePosition(r.Entity())
 		if err != nil {
 			return fmt.Errorf("could not get absolute position for entity %v: %w", r.Entity(), err)
@@ -122,7 +122,7 @@ func (s *System) Draw(screen *ebiten.Image) error {
 	}
 
 	// Collect sprites to draw
-	for _, spc := range s.ecs.ListSprites() {
+	for _, spc := range s.ecs.AllSprites() {
 		pt, err := s.ecs.GetAbsolutePosition(spc.Entity())
 		if err != nil {
 			return fmt.Errorf("could not get absolute position for entity %v: %w", spc.Entity(), err)
@@ -184,7 +184,7 @@ func (s *System) Update() error {
 	}
 
 	// get the first controllable entity and center the camera on it
-	if controllables := s.ecs.ListControllables(); len(controllables) > 0 {
+	if controllables := s.ecs.AllControllables(); len(controllables) > 0 {
 		// Get the first controllable entity
 		firstControllable := controllables[0]
 

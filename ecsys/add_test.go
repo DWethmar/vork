@@ -19,7 +19,7 @@ func TestECS_AddPositionComponent(t *testing.T) {
 		}
 
 		// check if entity was added to hierarchy
-		if diff := cmp.Diff(ecs.Children(0), []entity.Entity{e}); diff != "" {
+		if diff := cmp.Diff(ecs.Children(ecs.Root()), []entity.Entity{e}); diff != "" {
 			t.Errorf("Expected 1 child, got %d", len(diff))
 		}
 	})

@@ -64,7 +64,7 @@ func (s *System) Init() error {
 		return errors.New("eventBus is nil")
 	}
 	// Setup existing skeletons
-	for _, sk := range s.ecs.ListSkeletons() {
+	for _, sk := range s.ecs.AllSkeletons() {
 		if err := s.setupSkeleton(sk); err != nil {
 			return fmt.Errorf("could not setup skeleton (%v): %w", sk.Entity(), err)
 		}
@@ -133,7 +133,7 @@ func (s *System) Draw(_ *ebiten.Image) error {
 
 // Update updates the skeletons in the ECS.
 func (s *System) Update() error {
-	skeletons := s.ecs.ListSkeletons()
+	skeletons := s.ecs.AllSkeletons()
 	for i := range skeletons {
 		e := &skeletons[i]
 		if err := s.updateSkeleton(e); err != nil {
@@ -195,7 +195,7 @@ func (s *System) updateSkeleton(e *skeleton.Skeleton) error {
 func (s *System) updateSprite(e *skeleton.Skeleton) error {
 	// Retrieve the sprite component associated with the skeleton
 	var spr *sprite.Sprite
-	sprites := s.ecs.ListSpritesByEntity(e.Entity())
+	sprites := s.ecs.ListSprites(e.Entity())
 	for i := range sprites {
 		sp := &sprites[i]
 		if sp.Tag == "skeleton" {

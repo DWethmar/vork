@@ -50,7 +50,7 @@ func (s *System) Update() error {
 	if x == 0 && y == 0 {
 		return nil
 	}
-	for _, c := range s.ecs.ListControllables() {
+	for _, c := range s.ecs.AllControllables() {
 		v, err := s.ecs.GetVelocity(c.Entity())
 		if err != nil {
 			return fmt.Errorf("failed to get velocity component: %w", err)

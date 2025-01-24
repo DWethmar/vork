@@ -59,7 +59,7 @@ func New(eventBus *event.Bus, s *Stores) *ECS {
 func (s *ECS) BuildHierarchy() error {
 	// rebuild hierarchy
 	ep := []hierarchy.EntityPair{}
-	for _, p := range s.ListPositions() {
+	for _, p := range s.AllPositions() {
 		ep = append(ep, hierarchy.EntityPair{
 			Parent: p.Parent,
 			Child:  p.Entity(),

@@ -23,11 +23,11 @@ func addComponent[T component.Component](
 ) (uint, error) {
 	comp, ok := c.(T)
 	if !ok {
-		return 0, fmt.Errorf("expected component of type %T, got %T", *new(T), c)
+		return 0, fmt.Errorf("expected component of type %T, got %T", comp, c)
 	}
 	id, err := store.Add(comp)
 	if err != nil {
-		return 0, fmt.Errorf("could not add component of type %T: %w", *new(T), err)
+		return 0, fmt.Errorf("could not add component of type %T: %w", comp, err)
 	}
 	if eventCreator != nil {
 		if err = ecs.eventBus.Publish(eventCreator(comp)); err != nil {

@@ -45,12 +45,12 @@ func TestNew(t *testing.T) {
 		}
 
 		// should have rectangle
-		if len(ecs.ListRectanglesByEntity(e)) == 0 {
-			t.Errorf("Expected rectangle component, got %v", ecs.ListRectanglesByEntity(e))
+		if len(ecs.ListRectangles(e)) == 0 {
+			t.Errorf("Expected rectangle component, got %v", ecs.ListRectangles(e))
 		}
 
 		// should have sprite
-		if r := ecs.ListSpritesByEntity(e); len(r) == 0 {
+		if r := ecs.ListSprites(e); len(r) == 0 {
 			t.Errorf("Expected sprite component, got %v", r)
 		}
 	})
