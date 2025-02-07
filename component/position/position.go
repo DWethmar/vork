@@ -5,6 +5,7 @@ import (
 
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
+	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/point"
 )
 
@@ -39,6 +40,22 @@ func (p *Position) Entity() entity.Entity { return p.E }
 
 func Empty() *Position {
 	return &Position{}
+}
+
+// NewStore creates a new store for position components.
+func NewStore(eventBus *event.Bus) *component.Store[*Position] {
+	return component.NewStore[*Position](
+		true,
+		func(c *Position) error {
+			return eventBus.Publish(NewCreatedEvent(*c))
+		},
+		func(c *Position) error {
+			return eventBus.Publish(NewUpdatedEvent(*c))
+		},
+		func(c *Position) error {
+			return eventBus.Publish(NewDeletedEvent(*c))
+		},
+	)
 }
 
 func init() {

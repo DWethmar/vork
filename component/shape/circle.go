@@ -32,3 +32,8 @@ func NewCircle(e entity.Entity, radius int64, color color.RGBA) *Circle {
 		Color:  color,
 	}
 }
+
+// NewStore creates a new store for shape components.
+func NewCircleStore() *component.Store[*Circle] {
+	return component.NewStore[*Circle](true, nil, nil, nil)
+}

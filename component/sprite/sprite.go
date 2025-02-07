@@ -32,3 +32,7 @@ func New(e entity.Entity, tag string, graphic Graphic) *Sprite {
 		Graphic: graphic,
 	}
 }
+
+func NewStore() *component.Store[*Sprite] {
+	return component.NewStore[*Sprite](true, nil, nil, nil)
+}

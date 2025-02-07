@@ -3,6 +3,7 @@ package game
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -21,16 +22,18 @@ type Scene interface {
 
 // Game updates and draws the game.
 type Game struct {
+	logger *slog.Logger
 	scene  Scene            // Current scene
 	scenes map[string]Scene // All scenes
 }
 
 // New creates a new game.
-func New() (*Game, error) {
+func New(logger *slog.Logger) *Game {
 	return &Game{
+		logger: logger,
 		scene:  nil,
 		scenes: make(map[string]Scene),
-	}, nil
+	}
 }
 
 // SwitchScene switches to a scene.
@@ -51,12 +54,18 @@ func (g *Game) AddScene(scene Scene) error {
 	return nil
 }
 
+func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return 400, 400
+}
+
 // Draw draws the game.
-func (g *Game) Draw(screen *ebiten.Image) error {
+func (g *Game) Draw(screen *ebiten.Image) {
 	if g.scene == nil {
-		return nil
+		return
 	}
-	return g.scene.Draw(screen)
+	if err := g.scene.Draw(screen); err != nil {
+		g.logger.Error("failed to draw scene", slog.String("scene", g.scene.Name()), slog.String("error", err.Error()))
+	}
 }
 
 // Update updates the game.

@@ -33,3 +33,8 @@ func NewRectangle(e entity.Entity, width, height int64, color color.RGBA) *Recta
 		Color:  color,
 	}
 }
+
+// NewRectangleStore creates a new store for shape components.
+func NewRectangleStore() *component.Store[*Rectangle] {
+	return component.NewStore[*Rectangle](true, nil, nil, nil)
+}

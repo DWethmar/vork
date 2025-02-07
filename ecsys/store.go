@@ -26,12 +26,12 @@ var (
 // Store defines a generic interface for managing any component type.
 // T is the component type, such as position, sprite, etc.
 type Store[T component.Component] interface {
-	Add(T) (uint, error)                // Add a new component to the store.
-	Get(uint) (T, error)                // Get a component by its ID.
-	Update(T) error                     // Update an existing component.
-	List() []T                          // List all components in the store.
-	Delete(uint) error                  // Delete a component by its ID.
-	DeleteByEntity(entity.Entity) error // Delete all components associated with an entity.
+	Add(T) (uint, error)           // Add a new component to the store.
+	Get(uint) (T, error)           // Get a component by its ID.
+	Update(T) error                // Update an existing component.
+	List() []T                     // List all components in the store.
+	Delete(uint) error             // Delete a component by its ID.
+	DeleteAll(entity.Entity) error // Delete all components associated with an entity.
 }
 
 // ControllableStore manages Controllable components

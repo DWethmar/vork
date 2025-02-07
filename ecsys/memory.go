@@ -186,7 +186,7 @@ func (s *MemStore[C]) ListByEntity(e entity.Entity) []C {
 }
 
 // DeleteByEntity removes all components associated with an entity.
-func (s *MemStore[C]) DeleteByEntity(e entity.Entity) error {
+func (s *MemStore[C]) DeleteAll(e entity.Entity) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

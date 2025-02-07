@@ -5,6 +5,7 @@ import (
 
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
+	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/point"
 )
 
@@ -41,4 +42,19 @@ func Empty() *Velocity {
 
 func init() {
 	gob.Register(Velocity{})
+}
+
+func NewStore(eventBus *event.Bus) *component.Store[*Velocity] {
+	return component.NewStore[*Velocity](
+		true,
+		func(c *Velocity) error {
+			return eventBus.Publish(NewCreatedEvent(*c))
+		},
+		func(c *Velocity) error {
+			return eventBus.Publish(NewUpdatedEvent(*c))
+		},
+		func(c *Velocity) error {
+			return eventBus.Publish(NewDeletedEvent(*c))
+		},
+	)
 }

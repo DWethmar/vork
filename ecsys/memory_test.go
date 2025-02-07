@@ -343,7 +343,7 @@ func TestMemStoreListByEntity(t *testing.T) {
 	})
 }
 
-func TestMemStoreDeleteByEntity(t *testing.T) {
+func TestMemStoreDeleteAll(t *testing.T) {
 	t.Run("should delete all components by entity", func(t *testing.T) {
 		s := ecsys.NewMemStore[*TestComponent](false)
 		c1 := &TestComponent{
@@ -359,9 +359,9 @@ func TestMemStoreDeleteByEntity(t *testing.T) {
 		_, _ = s.Add(c1)
 		_, _ = s.Add(c2)
 
-		err := s.DeleteByEntity(entity.Entity(1))
+		err := s.DeleteAll(entity.Entity(1))
 		if err != nil {
-			t.Error("DeleteByEntity() should not return an error")
+			t.Error("DeleteAll() should not return an error")
 		}
 
 		got := s.ListByEntity(entity.Entity(1))
@@ -372,9 +372,9 @@ func TestMemStoreDeleteByEntity(t *testing.T) {
 
 	t.Run("should return error if entity not found", func(t *testing.T) {
 		s := ecsys.NewMemStore[*TestComponent](false)
-		err := s.DeleteByEntity(entity.Entity(1))
+		err := s.DeleteAll(entity.Entity(1))
 		if !errors.Is(err, ecsys.ErrEntityNotFound) {
-			t.Errorf("DeleteByEntity() should return ErrEntityNotFound, got %v", err)
+			t.Errorf("DeleteAll() should return ErrEntityNotFound, got %v", err)
 		}
 	})
 }

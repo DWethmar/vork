@@ -3,6 +3,7 @@ package hitbox
 import (
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
+	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/point"
 )
 
@@ -36,3 +37,19 @@ func (h *Hitbox) SetID(i uint)          { h.I = i }
 func (h *Hitbox) ID() uint              { return h.I }
 func (h *Hitbox) Type() component.Type  { return Type }
 func (h *Hitbox) Entity() entity.Entity { return h.E }
+
+// NewStore creates a new store for hitbox components.
+func NewStore(eventBus *event.Bus) *component.Store[*Hitbox] {
+	return component.NewStore[*Hitbox](
+		true,
+		func(c *Hitbox) error {
+			return eventBus.Publish(NewCreatedEvent(*c))
+		},
+		func(c *Hitbox) error {
+			return eventBus.Publish(NewUpdatedEvent(*c))
+		},
+		func(c *Hitbox) error {
+			return eventBus.Publish(NewDeletedEvent(*c))
+		},
+	)
+}

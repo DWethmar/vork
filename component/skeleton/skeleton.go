@@ -6,6 +6,7 @@ import (
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/direction"
 	"github.com/dwethmar/vork/entity"
+	"github.com/dwethmar/vork/event"
 )
 
 const Type = component.Type("skeleton")
@@ -45,6 +46,21 @@ func (s *Skeleton) ID() uint              { return s.I }
 func (s *Skeleton) SetID(i uint)          { s.I = i }
 func (s *Skeleton) Type() component.Type  { return Type }
 func (s *Skeleton) Entity() entity.Entity { return s.E }
+
+func NewStore(eventBus *event.Bus) *component.Store[*Skeleton] {
+	return component.NewStore[*Skeleton](
+		true,
+		func(c *Skeleton) error {
+			return eventBus.Publish(NewCreatedEvent(*c))
+		},
+		func(c *Skeleton) error {
+			return eventBus.Publish(NewUpdatedEvent(*c))
+		},
+		func(c *Skeleton) error {
+			return eventBus.Publish(NewDeletedEvent(*c))
+		},
+	)
+}
 
 func init() {
 	gob.Register(Skeleton{})

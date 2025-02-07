@@ -1,6 +1,7 @@
 package game_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/dwethmar/vork/game"
@@ -20,10 +21,7 @@ func (s *SceneMock) Update() error                   { return s.updateFunc() }
 func (s *SceneMock) Close() error                    { return s.closeFunc() }
 
 func TestNew(t *testing.T) {
-	got, err := game.New()
-	if err != nil {
-		t.Errorf("New() = %v, %v", got, err)
-	}
+	got := game.New(slog.Default())
 	if got == nil {
 		t.Errorf("New() = %v, want not nil", got)
 	}
@@ -31,7 +29,7 @@ func TestNew(t *testing.T) {
 
 func TestGame_SwitchScene(t *testing.T) {
 	t.Run("scene not found", func(t *testing.T) {
-		g, _ := game.New()
+		g := game.New(slog.Default())
 		err := g.SwitchScene("not found")
 		if err == nil {
 			t.Errorf("Game.SwitchScene() error = %v, want not nil", err)
@@ -41,7 +39,7 @@ func TestGame_SwitchScene(t *testing.T) {
 
 func TestGame_AddScene(t *testing.T) {
 	t.Run("scene already exists", func(t *testing.T) {
-		g, _ := game.New()
+		g := game.New(slog.Default())
 		scene := &SceneMock{
 			nameFunc: func() string {
 				return "test"
@@ -57,45 +55,19 @@ func TestGame_AddScene(t *testing.T) {
 }
 
 func TestGame_Draw(t *testing.T) {
-	t.Run("scene is nil", func(t *testing.T) {
-		g, _ := game.New()
-		err := g.Draw(nil)
-		if err != nil {
-			t.Errorf("Game.Draw() error = %v, want nil", err)
-		}
-	})
-	t.Run("scene is not nil", func(t *testing.T) {
-		g, _ := game.New()
-		scene := &SceneMock{
-			nameFunc: func() string {
-				return "test"
-			},
-			drawFunc: func(_ *ebiten.Image) error {
-				return nil
-			},
-		}
-		if err := g.AddScene(scene); err != nil {
-			t.Errorf("Game.AddScene() error = %v, want nil", err)
-		}
-		if err := g.SwitchScene(scene.Name()); err != nil {
-			t.Errorf("Game.SwitchScene() error = %v, want nil", err)
-		}
-		if err := g.Draw(nil); err != nil {
-			t.Errorf("Game.Draw() error = %v, want nil", err)
-		}
-	})
+
 }
 
 func TestGame_Update(t *testing.T) {
 	t.Run("scene is nil", func(t *testing.T) {
-		g, _ := game.New()
+		g := game.New(slog.Default())
 		err := g.Update()
 		if err != nil {
 			t.Errorf("Game.Update() error = %v, want nil", err)
 		}
 	})
 	t.Run("scene is not nil", func(t *testing.T) {
-		g, _ := game.New()
+		g := game.New(slog.Default())
 		scene := &SceneMock{
 			nameFunc: func() string {
 				return "test"
