@@ -1,6 +1,7 @@
 package shape
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/dwethmar/vork/component"
@@ -33,7 +34,42 @@ func NewCircle(e entity.Entity, radius int64, color color.RGBA) *Circle {
 	}
 }
 
-// NewStore creates a new store for shape components.
-func NewCircleStore() *component.Store[*Circle] {
-	return component.NewStore[*Circle](true, nil, nil, nil)
+type CircleStore struct {
+	cs     *component.Store[*Circle]
+	nextID uint // Next ID to use
+}
+
+func NewCircleStore() *CircleStore {
+	return &CircleStore{
+		cs: component.NewStore[*Circle](),
+	}
+}
+
+func (s *CircleStore) Add(c Circle) (uint, error) {
+	c.I = s.nextID
+	s.nextID++
+	id, err := s.cs.Add(&c)
+	if err != nil {
+		return 0, fmt.Errorf("failed to add circle component: %w", err)
+	}
+	return id, nil
+}
+
+func (s *CircleStore) Get(id uint) (*Circle, error) {
+	return s.cs.Get(id)
+}
+
+func (s *CircleStore) Update(c Circle) error {
+	if err := s.cs.Update(&c); err != nil {
+		return fmt.Errorf("failed to update circle component: %w", err)
+	}
+	return nil
+}
+
+func (s *CircleStore) Delete(id uint) error {
+	return s.cs.Delete(id)
+}
+
+func (s *CircleStore) All() []*Circle {
+	return s.cs.All()
 }

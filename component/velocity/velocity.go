@@ -44,17 +44,64 @@ func init() {
 	gob.Register(Velocity{})
 }
 
-func NewStore(eventBus *event.Bus) *component.Store[*Velocity] {
-	return component.NewStore[*Velocity](
-		true,
-		func(c *Velocity) error {
-			return eventBus.Publish(NewCreatedEvent(*c))
-		},
-		func(c *Velocity) error {
-			return eventBus.Publish(NewUpdatedEvent(*c))
-		},
-		func(c *Velocity) error {
-			return eventBus.Publish(NewDeletedEvent(*c))
-		},
-	)
+type Store struct {
+	eventBus *event.Bus
+	cs       *component.Store[*Velocity]
+	nextID   uint // nextID is the next ID that will be used.
+}
+
+func NewStore(eventBus *event.Bus) *Store {
+	return &Store{
+		eventBus: eventBus,
+		cs:       component.NewStore[*Velocity](),
+	}
+}
+
+func (s *Store) Add(c Velocity) (uint, error) {
+	c.I = s.nextID
+	s.nextID++
+	id, err := s.cs.Add(&c)
+	if err != nil {
+		return 0, err
+	}
+	if err := s.eventBus.Publish(NewCreatedEvent(c)); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (s *Store) Get(id uint) (*Velocity, error) {
+	return s.cs.Get(id)
+}
+
+func (s *Store) Update(c Velocity) error {
+	if err := s.cs.Update(&c); err != nil {
+		return err
+	}
+	if err := s.eventBus.Publish(NewUpdatedEvent(c)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) Delete(id uint) error {
+	c, err := s.Get(id)
+	if err != nil {
+		return err
+	}
+	if err := s.cs.Delete(id); err != nil {
+		return err
+	}
+	if err := s.eventBus.Publish(NewDeletedEvent(*c)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) List(e entity.Entity) []*Velocity {
+	return s.cs.List(e)
+}
+
+func (s *Store) All() []*Velocity {
+	return s.cs.All()
 }

@@ -1,6 +1,7 @@
 package shape
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/dwethmar/vork/component"
@@ -34,7 +35,38 @@ func NewRectangle(e entity.Entity, width, height int64, color color.RGBA) *Recta
 	}
 }
 
-// NewRectangleStore creates a new store for shape components.
-func NewRectangleStore() *component.Store[*Rectangle] {
-	return component.NewStore[*Rectangle](true, nil, nil, nil)
+type RectangleStore struct {
+	cs *component.Store[*Rectangle]
+}
+
+func NewRectangleStore() *RectangleStore {
+	return &RectangleStore{
+		cs: component.NewStore[*Rectangle](),
+	}
+}
+
+func (s *RectangleStore) Add(c Rectangle) (uint, error) {
+	id, err := s.cs.Add(&c)
+	if err != nil {
+		return 0, fmt.Errorf("failed to add rectangle component: %w", err)
+	}
+	return id, nil
+}
+
+func (s *RectangleStore) Get(id uint) (*Rectangle, error) {
+	return s.cs.Get(id)
+}
+
+func (s *RectangleStore) Update(c Rectangle) error {
+	if err := s.cs.Update(&c); err != nil {
+		return fmt.Errorf("failed to update rectangle component: %w", err)
+	}
+	return nil
+}
+
+func (s *RectangleStore) Delete(id uint) error {
+	if err := s.cs.Delete(id); err != nil {
+		return fmt.Errorf("failed to remove rectangle component: %w", err)
+	}
+	return nil
 }

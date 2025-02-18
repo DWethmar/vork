@@ -33,6 +33,42 @@ func New(e entity.Entity, tag string, graphic Graphic) *Sprite {
 	}
 }
 
-func NewStore() *component.Store[*Sprite] {
-	return component.NewStore[*Sprite](true, nil, nil, nil)
+type Store struct {
+	cs     *component.Store[*Sprite]
+	nextID uint // nextID is the next ID that will be used.
+}
+
+func NewStore() *Store {
+	return &Store{
+		cs: component.NewStore[*Sprite](),
+	}
+}
+
+func (s *Store) Add(c Sprite) (uint, error) {
+	c.I = s.nextID
+	s.nextID++
+	id, err := s.cs.Add(&c)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (s *Store) Get(id uint) (*Sprite, error) {
+	return s.cs.Get(id)
+}
+
+func (s *Store) Update(c Sprite) error {
+	if err := s.cs.Update(&c); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) Delete(id uint) error {
+	return s.cs.Delete(id)
+}
+
+func (s *Store) All() []*Sprite {
+	return s.cs.All()
 }

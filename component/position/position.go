@@ -1,7 +1,7 @@
 package position
 
 import (
-	"encoding/gob"
+	"fmt"
 
 	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/entity"
@@ -10,6 +10,7 @@ import (
 )
 
 const Type = component.Type("position")
+const Root = entity.Entity(0)
 
 var _ component.Component = &Position{}
 
@@ -42,22 +43,100 @@ func Empty() *Position {
 	return &Position{}
 }
 
-// NewStore creates a new store for position components.
-func NewStore(eventBus *event.Bus) *component.Store[*Position] {
-	return component.NewStore[*Position](
-		true,
-		func(c *Position) error {
-			return eventBus.Publish(NewCreatedEvent(*c))
-		},
-		func(c *Position) error {
-			return eventBus.Publish(NewUpdatedEvent(*c))
-		},
-		func(c *Position) error {
-			return eventBus.Publish(NewDeletedEvent(*c))
-		},
-	)
+type Store struct {
+	eventBus  *event.Bus
+	cs        *component.Store[*Position]
+	nextID    uint // nextID is the next ID that will be used.
+	hierarchy *Hierarchy
 }
 
-func init() {
-	gob.Register(Position{})
+func NewStore(eventBus *event.Bus) *Store {
+	return &Store{
+		eventBus:  eventBus,
+		cs:        component.NewStore[*Position](),
+		nextID:    0,
+		hierarchy: NewHierarchy(Root),
+	}
+}
+
+func (s *Store) Add(c Position) (uint, error) {
+	c.I = s.nextID
+	s.nextID++
+	id, err := s.cs.Add(&c)
+	if err != nil {
+		return 0, err
+	}
+	// Add the entity to the hierarchy.
+	if err = s.hierarchy.Add(c.Parent, c.Entity()); err != nil {
+		return 0, fmt.Errorf("could not add entity to hierarchy: %w", err)
+	}
+	if err := s.eventBus.Publish(NewCreatedEvent(c)); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (s *Store) Get(id uint) (*Position, error) {
+	return s.cs.Get(id)
+}
+
+func (s *Store) Update(c Position) error {
+	if err := s.cs.Update(&c); err != nil {
+		return fmt.Errorf("could not update component: %w", err)
+	}
+	if err := s.hierarchy.Update(c.Parent, c.Entity()); err != nil {
+		return fmt.Errorf("could not update entity in hierarchy: %w", err)
+	}
+	if err := s.eventBus.Publish(NewUpdatedEvent(c)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) Delete(id uint) error {
+	c, err := s.Get(id)
+	if err != nil {
+		return err
+	}
+	if err := s.cs.Delete(id); err != nil {
+		return fmt.Errorf("could not delete component: %w", err)
+	}
+
+	// Remove the entity from the hierarchy. // todo: this should be done in the component store.
+	s.hierarchy.Delete(c.Entity())
+
+	if err := s.eventBus.Publish(NewDeletedEvent(*c)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) List(e entity.Entity) []*Position {
+	return s.cs.List(e)
+}
+
+func (s *Store) AbsolutePosition(e entity.Entity) (point.Point, error) {
+	if e == s.hierarchy.Root() {
+		return point.Point{
+			X: 0,
+			Y: 0,
+		}, nil
+	}
+	parent, err := s.hierarchy.Parent(e)
+	if err != nil {
+		return point.Point{}, err
+	}
+	pos, err := s.cs.First(e)
+	if err != nil {
+		return point.Point{}, err
+	}
+	p, err := s.AbsolutePosition(parent)
+	if err != nil {
+		return point.Point{}, err
+	}
+	return p.Add(pos.Cords()), nil
+}
+
+func (s *Store) All() []*Position {
+	return s.cs.All()
 }

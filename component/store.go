@@ -22,33 +22,18 @@ var (
 // Store holds components in memory and provides CRUD operations.
 // It is generic over type C, which must implement the Component interface.
 type Store[C Component] struct {
-	mu              sync.RWMutex
-	components      map[uint]C                          // components by ID
-	entityIndex     map[entity.Entity]map[uint]struct{} // maps an entity to a set of component IDs
-	nextID          uint
-	uniquePerEntity bool
-	onCreate        func(C) error
-	onUpdate        func(C) error
-	onDelete        func(C) error
+	mu          sync.RWMutex
+	components  map[uint]C                          // components by ID
+	entityIndex map[entity.Entity]map[uint]struct{} // maps an entity to a set of component IDs
 }
 
 // NewStore creates a new instance of Store for a specific component type.
 // If uniquePerEntity is true, the store will enforce that only one component
 // per entity can be added.
-func NewStore[C Component](
-	uniquePerEntity bool,
-	onAdd func(C) error,
-	onUpdate func(C) error,
-	onDelete func(C) error,
-) *Store[C] {
+func NewStore[C Component]() *Store[C] {
 	return &Store[C]{
-		components:      make(map[uint]C),
-		entityIndex:     make(map[entity.Entity]map[uint]struct{}),
-		nextID:          1,
-		uniquePerEntity: uniquePerEntity,
-		onCreate:        onAdd,
-		onUpdate:        onUpdate,
-		onDelete:        onDelete,
+		components:  make(map[uint]C),
+		entityIndex: make(map[entity.Entity]map[uint]struct{}),
 	}
 }
 
@@ -59,17 +44,10 @@ func (s *Store[C]) Add(c C) (uint, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	ent := c.Entity()
-	if s.uniquePerEntity {
-		if comps, exists := s.entityIndex[ent]; exists && len(comps) > 0 {
-			return 0, ErrUniqueComponentViolation
-		}
-	}
-
+	e := c.Entity()
 	// Assign a new ID if needed.
 	if c.ID() == 0 {
-		c.SetID(s.nextID)
-		s.nextID++
+		return 0, fmt.Errorf("component ID must be set")
 	} else if _, exists := s.components[c.ID()]; exists {
 		return 0, fmt.Errorf("component with ID %d already exists", c.ID())
 	}
@@ -78,17 +56,10 @@ func (s *Store[C]) Add(c C) (uint, error) {
 	s.components[c.ID()] = c
 
 	// Update the entity index.
-	if _, exists := s.entityIndex[ent]; !exists {
-		s.entityIndex[ent] = make(map[uint]struct{})
+	if _, exists := s.entityIndex[e]; !exists {
+		s.entityIndex[e] = make(map[uint]struct{})
 	}
-	s.entityIndex[ent][c.ID()] = struct{}{}
-
-	// Call the onCreate handler if provided.
-	if s.onCreate != nil {
-		if err := s.onCreate(c); err != nil {
-			return c.ID(), fmt.Errorf("on create handler failed: %w", err)
-		}
-	}
+	s.entityIndex[e][c.ID()] = struct{}{}
 
 	return c.ID(), nil
 }
@@ -127,12 +98,6 @@ func (s *Store[C]) Update(c C) error {
 				delete(s.entityIndex, oldEnt)
 			}
 		}
-		// Enforce unique constraint on the new entity.
-		if s.uniquePerEntity {
-			if comps, exists := s.entityIndex[c.Entity()]; exists && len(comps) > 0 {
-				return ErrUniqueComponentViolation
-			}
-		}
 		if _, exists := s.entityIndex[c.Entity()]; !exists {
 			s.entityIndex[c.Entity()] = make(map[uint]struct{})
 		}
@@ -141,18 +106,11 @@ func (s *Store[C]) Update(c C) error {
 
 	s.components[c.ID()] = c
 
-	// Call the onUpdate handler if provided.
-	if s.onUpdate != nil {
-		if err := s.onUpdate(c); err != nil {
-			return fmt.Errorf("on update handler failed: %w", err)
-		}
-	}
-
 	return nil
 }
 
 // List returns all components in the store, sorted by their ID.
-func (s *Store[C]) List() []C {
+func (s *Store[C]) All() []C {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -168,7 +126,7 @@ func (s *Store[C]) List() []C {
 
 // First retrieves the first component associated with an entity.
 func (s *Store[C]) First(e entity.Entity) (C, error) {
-	comps := s.All(e)
+	comps := s.List(e)
 	if len(comps) == 0 {
 		var zero C
 		return zero, ErrEntityNotFound
@@ -177,7 +135,7 @@ func (s *Store[C]) First(e entity.Entity) (C, error) {
 }
 
 // ListByEntity retrieves all components associated with an entity, sorted by their ID.
-func (s *Store[C]) All(e entity.Entity) []C {
+func (s *Store[C]) List(e entity.Entity) []C {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -218,13 +176,6 @@ func (s *Store[C]) Delete(id uint) error {
 		}
 	}
 
-	// Call the onDelete handler if provided.
-	if s.onDelete != nil {
-		if err := s.onDelete(c); err != nil {
-			return fmt.Errorf("on delete handler failed: %w", err)
-		}
-	}
-
 	return nil
 }
 
@@ -232,20 +183,12 @@ func (s *Store[C]) Delete(id uint) error {
 func (s *Store[C]) DeleteAll(e entity.Entity) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	ids, exists := s.entityIndex[e]
 	if !exists {
 		return ErrEntityNotFound
 	}
-
 	for id := range ids {
-		c := s.components[id]
 		delete(s.components, id)
-		if s.onDelete != nil {
-			if err := s.onDelete(c); err != nil {
-				return fmt.Errorf("on delete handler failed: %w", err)
-			}
-		}
 	}
 	delete(s.entityIndex, e)
 	return nil

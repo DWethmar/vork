@@ -9,6 +9,10 @@ import (
 	"github.com/dwethmar/vork/event"
 )
 
+func init() {
+	gob.Register(Skeleton{})
+}
+
 const Type = component.Type("skeleton")
 
 type State int
@@ -47,21 +51,60 @@ func (s *Skeleton) SetID(i uint)          { s.I = i }
 func (s *Skeleton) Type() component.Type  { return Type }
 func (s *Skeleton) Entity() entity.Entity { return s.E }
 
-func NewStore(eventBus *event.Bus) *component.Store[*Skeleton] {
-	return component.NewStore[*Skeleton](
-		true,
-		func(c *Skeleton) error {
-			return eventBus.Publish(NewCreatedEvent(*c))
-		},
-		func(c *Skeleton) error {
-			return eventBus.Publish(NewUpdatedEvent(*c))
-		},
-		func(c *Skeleton) error {
-			return eventBus.Publish(NewDeletedEvent(*c))
-		},
-	)
+type Store struct {
+	eventBus *event.Bus
+	cs       *component.Store[*Skeleton]
+	nextID   uint // nextID is the next ID that will be used.
 }
 
-func init() {
-	gob.Register(Skeleton{})
+func NewStore(eventBus *event.Bus) *Store {
+	return &Store{
+		eventBus: eventBus,
+		cs:       component.NewStore[*Skeleton](),
+	}
+}
+
+func (s *Store) Add(c Skeleton) (uint, error) {
+	c.I = s.nextID
+	s.nextID++
+	id, err := s.cs.Add(&c)
+	if err != nil {
+		return 0, err
+	}
+	if err := s.eventBus.Publish(NewCreatedEvent(c)); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (s *Store) Get(id uint) (*Skeleton, error) {
+	return s.cs.Get(id)
+}
+
+func (s *Store) Update(c Skeleton) error {
+	if err := s.cs.Update(&c); err != nil {
+		return err
+	}
+	if err := s.eventBus.Publish(NewUpdatedEvent(c)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) Delete(id uint) error {
+	c, err := s.Get(id)
+	if err != nil {
+		return err
+	}
+	if err := s.cs.Delete(id); err != nil {
+		return err
+	}
+	if err := s.eventBus.Publish(NewDeletedEvent(*c)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) All() []*Skeleton {
+	return s.cs.All()
 }
