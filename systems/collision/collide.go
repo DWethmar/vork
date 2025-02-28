@@ -14,7 +14,7 @@ type BoundingBox struct {
 }
 
 // getBoundingBox returns the bounding box of a hitbox.
-func getBoundingBox(pos position.Position, hb *hitbox.Hitbox) BoundingBox {
+func getBoundingBox(pos *position.Position, hb *hitbox.Hitbox) BoundingBox {
 	left := pos.X + hb.Offset.X
 	top := pos.Y + hb.Offset.Y
 	right := left + hb.Width

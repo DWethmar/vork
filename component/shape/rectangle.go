@@ -36,16 +36,20 @@ func NewRectangle(e entity.Entity, width, height int64, color color.RGBA) *Recta
 }
 
 type RectangleStore struct {
-	cs *component.Store[*Rectangle]
+	cs     *component.Store[*Rectangle]
+	nextID uint
 }
 
 func NewRectangleStore() *RectangleStore {
 	return &RectangleStore{
-		cs: component.NewStore[*Rectangle](),
+		cs:     component.NewStore[*Rectangle](),
+		nextID: 1,
 	}
 }
 
 func (s *RectangleStore) Add(c Rectangle) (uint, error) {
+	c.I = s.nextID
+	s.nextID++
 	id, err := s.cs.Add(&c)
 	if err != nil {
 		return 0, fmt.Errorf("failed to add rectangle component: %w", err)
@@ -69,4 +73,8 @@ func (s *RectangleStore) Delete(id uint) error {
 		return fmt.Errorf("failed to remove rectangle component: %w", err)
 	}
 	return nil
+}
+
+func (s *RectangleStore) All() []*Rectangle {
+	return s.cs.All()
 }

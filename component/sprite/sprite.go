@@ -40,7 +40,8 @@ type Store struct {
 
 func NewStore() *Store {
 	return &Store{
-		cs: component.NewStore[*Sprite](),
+		cs:     component.NewStore[*Sprite](),
+		nextID: 1,
 	}
 }
 

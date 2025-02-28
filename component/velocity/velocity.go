@@ -54,6 +54,7 @@ func NewStore(eventBus *event.Bus) *Store {
 	return &Store{
 		eventBus: eventBus,
 		cs:       component.NewStore[*Velocity](),
+		nextID:   1,
 	}
 }
 
@@ -70,8 +71,8 @@ func (s *Store) Add(c Velocity) (uint, error) {
 	return id, nil
 }
 
-func (s *Store) Get(id uint) (*Velocity, error) {
-	return s.cs.Get(id)
+func (s *Store) Get(e entity.Entity) (*Velocity, error) {
+	return s.cs.First(e)
 }
 
 func (s *Store) Update(c Velocity) error {
@@ -85,7 +86,11 @@ func (s *Store) Update(c Velocity) error {
 }
 
 func (s *Store) Delete(id uint) error {
-	c, err := s.Get(id)
+	v, err := s.cs.Get(id)
+	if err != nil {
+		return err
+	}
+	c, err := s.Get(v.Entity())
 	if err != nil {
 		return err
 	}

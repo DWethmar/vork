@@ -61,17 +61,18 @@ func NewStore(eventBus *event.Bus) *Store {
 	return &Store{
 		eventBus: eventBus,
 		cs:       component.NewStore[*Skeleton](),
+		nextID:   1,
 	}
 }
 
-func (s *Store) Add(c Skeleton) (uint, error) {
+func (s *Store) Add(c *Skeleton) (uint, error) {
 	c.I = s.nextID
 	s.nextID++
-	id, err := s.cs.Add(&c)
+	id, err := s.cs.Add(c)
 	if err != nil {
 		return 0, err
 	}
-	if err := s.eventBus.Publish(NewCreatedEvent(c)); err != nil {
+	if err := s.eventBus.Publish(NewCreatedEvent(*c)); err != nil {
 		return 0, err
 	}
 	return id, nil

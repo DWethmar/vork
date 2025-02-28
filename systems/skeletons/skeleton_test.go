@@ -4,11 +4,13 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/dwethmar/vork/component/hitbox"
+	"github.com/dwethmar/vork/component/position"
+	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
-	"github.com/dwethmar/vork/ecsys"
-	"github.com/dwethmar/vork/entity"
+	"github.com/dwethmar/vork/component/sprite"
+	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/event"
-	"github.com/dwethmar/vork/point"
 	"github.com/dwethmar/vork/systems/skeletons"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -16,8 +18,15 @@ import (
 func TestNew(t *testing.T) {
 	t.Run("New should create a new system and register event handlers", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, ecsys.NewStores())
-		s := skeletons.New(slog.Default(), ecs, eventBus)
+
+		positionStore := position.NewStore(eventBus)
+		skeletonStore := skeleton.NewStore(eventBus)
+		rectanleStore := shape.NewRectangleStore()
+		spriteStore := sprite.NewStore()
+		hitboxStore := hitbox.NewStore(eventBus)
+		velocityStore := velocity.NewStore(eventBus)
+
+		s := skeletons.New(slog.Default(), positionStore, skeletonStore, rectanleStore, spriteStore, hitboxStore, velocityStore, eventBus)
 		if s == nil {
 			t.Error("System should not be nil")
 		}
@@ -27,38 +36,44 @@ func TestNew(t *testing.T) {
 			t.Errorf("Expected 2 subscriptions, got %d", len(subscriptions))
 		}
 
-		e, err := ecs.CreateEntity(entity.Entity(0), point.Zero())
-		if err != nil {
-			t.Errorf("CreateEntity() error = %v", err)
-		}
+		sk := skeleton.New(1)
+
 		// should setup skeleton
-		if err = eventBus.Publish(skeleton.NewCreatedEvent(skeleton.Skeleton{
-			I: 1,
-			E: e,
-		})); err != nil {
-			t.Errorf("Publish() error = %v", err)
+		if err := eventBus.Publish(skeleton.NewCreatedEvent(*sk)); err != nil {
+			t.Errorf("Expected no error, got %v", err)
 		}
 
 		// should have position
-		if _, err = ecs.GetPosition(e); err != nil {
+		if _, err := positionStore.Get(1); err != nil {
 			t.Errorf("Expected position component, got %v", err)
 		}
 
 		// should have rectangle
-		if len(ecs.ListRectangles(e)) == 0 {
-			t.Errorf("Expected rectangle component, got %v", ecs.ListRectangles(e))
+		if len(rectanleStore.All()) == 0 {
+			t.Errorf("Expected rectangle component, got 0")
 		}
 
 		// should have sprite
-		if r := ecs.ListSprites(e); len(r) == 0 {
-			t.Errorf("Expected sprite component, got %v", r)
+		if len(spriteStore.All()) == 0 {
+			t.Errorf("Expected sprite component, got 0")
 		}
 	})
 }
 
 func TestSystem_Draw(t *testing.T) {
 	t.Run("Draw should not return an error", func(t *testing.T) {
-		s := skeletons.New(slog.Default(), ecsys.New(event.NewBus(), ecsys.NewStores()), event.NewBus())
+		eventBus := event.NewBus()
+		positionStore := position.NewStore(eventBus)
+		skeletonStore := skeleton.NewStore(eventBus)
+		rectanleStore := shape.NewRectangleStore()
+		spriteStore := sprite.NewStore()
+		hitboxStore := hitbox.NewStore(eventBus)
+		velocityStore := velocity.NewStore(eventBus)
+		s := skeletons.New(slog.Default(), positionStore, skeletonStore, rectanleStore, spriteStore, hitboxStore, velocityStore, eventBus)
+
+		if s == nil {
+			t.Error("System should not be nil")
+		}
 		if err := s.Draw(&ebiten.Image{}); err != nil {
 			t.Errorf("Draw() error = %v, wantErr %v", err, false)
 		}
@@ -67,7 +82,15 @@ func TestSystem_Draw(t *testing.T) {
 
 func TestSystem_Update(t *testing.T) {
 	t.Run("Update should not return an error", func(t *testing.T) {
-		s := skeletons.New(slog.Default(), ecsys.New(event.NewBus(), ecsys.NewStores()), event.NewBus())
+		eventBus := event.NewBus()
+		positionStore := position.NewStore(eventBus)
+		skeletonStore := skeleton.NewStore(eventBus)
+		rectanleStore := shape.NewRectangleStore()
+		spriteStore := sprite.NewStore()
+		hitboxStore := hitbox.NewStore(eventBus)
+		velocityStore := velocity.NewStore(eventBus)
+		s := skeletons.New(slog.Default(), positionStore, skeletonStore, rectanleStore, spriteStore, hitboxStore, velocityStore, eventBus)
+
 		if err := s.Update(); err != nil {
 			t.Errorf("Update() error = %v, wantErr %v", err, false)
 		}
@@ -77,9 +100,13 @@ func TestSystem_Update(t *testing.T) {
 func TestSystem_Close(t *testing.T) {
 	t.Run("Close should not return an error and unsubscribe all event handlers", func(t *testing.T) {
 		eventBus := event.NewBus()
-		ecs := ecsys.New(eventBus, ecsys.NewStores())
-
-		s := skeletons.New(slog.Default(), ecs, eventBus)
+		positionStore := position.NewStore(eventBus)
+		skeletonStore := skeleton.NewStore(eventBus)
+		rectanleStore := shape.NewRectangleStore()
+		spriteStore := sprite.NewStore()
+		hitboxStore := hitbox.NewStore(eventBus)
+		velocityStore := velocity.NewStore(eventBus)
+		s := skeletons.New(slog.Default(), positionStore, skeletonStore, rectanleStore, spriteStore, hitboxStore, velocityStore, eventBus)
 		if err := s.Close(); err != nil {
 			t.Errorf("Close() error = %v, wantErr %v", err, false)
 		}

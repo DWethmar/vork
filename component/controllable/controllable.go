@@ -46,14 +46,22 @@ type Store struct {
 	nextID   uint // Next ID to use
 }
 
-func (s *Store) Add(c *Controllable) (uint, error) {
+// NewStore creates a new store for controllable components.
+func NewStore(eventBus *event.Bus) *Store {
+	return &Store{
+		eventBus: eventBus,
+		cs:       component.NewStore[*Controllable](),
+		nextID:   1,
+	}
+}
+func (s *Store) Add(c Controllable) (uint, error) {
 	c.I = s.nextID
 	s.nextID++
-	id, err := s.cs.Add(c)
+	id, err := s.cs.Add(&c)
 	if err != nil {
 		return 0, fmt.Errorf("failed to add controllable component: %w", err)
 	}
-	if err := s.eventBus.Publish(NewCreatedEvent(*c)); err != nil {
+	if err := s.eventBus.Publish(NewCreatedEvent(c)); err != nil {
 		return 0, fmt.Errorf("failed to publish created event: %w", err)
 	}
 	return id, nil
@@ -93,12 +101,4 @@ func (s *Store) List(e entity.Entity) []*Controllable {
 
 func (s *Store) All() []*Controllable {
 	return s.cs.All()
-}
-
-// NewStore creates a new store for controllable components.
-func NewStore(eventBus *event.Bus) *Store {
-	return &Store{
-		eventBus: eventBus,
-		cs:       component.NewStore[*Controllable](),
-	}
 }

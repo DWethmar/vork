@@ -54,7 +54,7 @@ func NewStore(eventBus *event.Bus) *Store {
 	return &Store{
 		eventBus:  eventBus,
 		cs:        component.NewStore[*Position](),
-		nextID:    0,
+		nextID:    1,
 		hierarchy: NewHierarchy(Root),
 	}
 }
@@ -64,7 +64,7 @@ func (s *Store) Add(c Position) (uint, error) {
 	s.nextID++
 	id, err := s.cs.Add(&c)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("could not add position component: %w", err)
 	}
 	// Add the entity to the hierarchy.
 	if err = s.hierarchy.Add(c.Parent, c.Entity()); err != nil {
@@ -76,8 +76,8 @@ func (s *Store) Add(c Position) (uint, error) {
 	return id, nil
 }
 
-func (s *Store) Get(id uint) (*Position, error) {
-	return s.cs.Get(id)
+func (s *Store) Get(e entity.Entity) (*Position, error) {
+	return s.cs.First(e)
 }
 
 func (s *Store) Update(c Position) error {
@@ -94,7 +94,11 @@ func (s *Store) Update(c Position) error {
 }
 
 func (s *Store) Delete(id uint) error {
-	c, err := s.Get(id)
+	p, err := s.Get(entity.Entity(id))
+	if err != nil {
+		return err
+	}
+	c, err := s.Get(p.Entity())
 	if err != nil {
 		return err
 	}

@@ -6,13 +6,14 @@ import (
 	"image/color"
 	"log/slog"
 
+	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/hitbox"
+	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/skeleton"
 	"github.com/dwethmar/vork/component/sprite"
 	"github.com/dwethmar/vork/component/velocity"
 	"github.com/dwethmar/vork/direction"
-	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/event"
 	"github.com/dwethmar/vork/event/mouse"
 	"github.com/dwethmar/vork/point"
@@ -27,16 +28,26 @@ const (
 // System is a system that manages skeletons in the game.
 type System struct {
 	logger        *slog.Logger
-	ecs           *ecsys.ECS
+	positionStore *position.Store
+	skeletonStore *skeleton.Store
+	rectanleStore *shape.RectangleStore
+	spriteStore   *sprite.Store
+	hitboxStore   *hitbox.Store
+	velocityStore *velocity.Store
 	eventBus      *event.Bus
 	subscriptions []int
 }
 
 // New creates a new skeleton system. It listens to skeleton events and adds the necessary components to the entity to make it a skeleton.
-func New(logger *slog.Logger, ecs *ecsys.ECS, eventBus *event.Bus) *System {
+func New(logger *slog.Logger, positionStore *position.Store, skeletonStore *skeleton.Store, rectanleStore *shape.RectangleStore, spriteStore *sprite.Store, hitboxStore *hitbox.Store, velocityStore *velocity.Store, eventBus *event.Bus) *System {
 	s := &System{
 		logger:        logger.With("system", "skeletons"),
-		ecs:           ecs,
+		positionStore: positionStore,
+		skeletonStore: skeletonStore,
+		rectanleStore: rectanleStore,
+		spriteStore:   spriteStore,
+		hitboxStore:   hitboxStore,
+		velocityStore: velocityStore,
 		eventBus:      eventBus,
 		subscriptions: []int{},
 	}
@@ -57,14 +68,29 @@ func New(logger *slog.Logger, ecs *ecsys.ECS, eventBus *event.Bus) *System {
 
 // Init initializes the system.
 func (s *System) Init() error {
-	if s.ecs == nil {
+	if s.positionStore == nil {
+		return errors.New("positionStore is nil")
+	}
+	if s.skeletonStore == nil {
 		return errors.New("ecs is nil")
+	}
+	if s.rectanleStore == nil {
+		return errors.New("rectanleStore is nil")
+	}
+	if s.spriteStore == nil {
+		return errors.New("spriteStore is nil")
+	}
+	if s.hitboxStore == nil {
+		return errors.New("hitboxStore is nil")
+	}
+	if s.velocityStore == nil {
+		return errors.New("velocityStore is nil")
 	}
 	if s.eventBus == nil {
 		return errors.New("eventBus is nil")
 	}
 	// Setup existing skeletons
-	for _, sk := range s.ecs.AllSkeletons() {
+	for _, sk := range s.skeletonStore.All() {
 		if err := s.setupSkeleton(sk); err != nil {
 			return fmt.Errorf("could not setup skeleton (%v): %w", sk.Entity(), err)
 		}
@@ -84,7 +110,7 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 	switch e := e.(type) {
 	case *skeleton.CreatedEvent:
 		s.logger.Debug("skeleton created", "skeleton", e.Skeleton)
-		if err := s.setupSkeleton(*e.Skeleton()); err != nil {
+		if err := s.setupSkeleton(e.Skeleton()); err != nil {
 			return err
 		}
 	case *skeleton.UpdatedEvent:
@@ -100,30 +126,29 @@ func (s *System) skeletonCreatedHandler(e event.Event) error {
 }
 
 // setupSkeleton adds the necessary components to the entity to make it a skeleton.
-func (s *System) setupSkeleton(sk skeleton.Skeleton) error {
+func (s *System) setupSkeleton(sk *skeleton.Skeleton) error {
 	e := sk.Entity()
 	rect := shape.NewRectangle(e, 10, 10, color.RGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff})
-	if _, err := s.ecs.AddRectangle(*rect); err != nil {
+	if _, err := s.rectanleStore.Add(*rect); err != nil {
 		return fmt.Errorf("could not add rectangle component to entity %v: %w", e, err)
 	}
-	if _, err := s.ecs.AddSprite(*sprite.New(e, "skeleton", sprite.SkeletonMoveDown1)); err != nil {
+	if _, err := s.spriteStore.Add(*sprite.New(e, "skeleton", sprite.SkeletonMoveDown1)); err != nil {
 		return fmt.Errorf("could not add sprite component to entity %v: %w", e, err)
 	}
-	if _, err := s.ecs.AddHitbox(*hitbox.New(e, "main", 16, 16, point.New(-8, -8))); err != nil {
+	if _, err := s.hitboxStore.Add(*hitbox.New(e, "main", 16, 16, point.New(-8, -8))); err != nil {
 		return fmt.Errorf("could not add hitbox component to entity %v: %w", e, err)
 	}
 	// ensure velocity component is present
-	if _, err := s.ecs.GetVelocity(e); err != nil {
-		if errors.Is(err, ecsys.ErrEntityNotFound) || errors.Is(err, ecsys.ErrComponentNotFound) {
+	if _, err := s.velocityStore.Get(e); err != nil {
+		if errors.Is(err, component.ErrEntityNotFound) || errors.Is(err, component.ErrComponentNotFound) {
 			vel := velocity.New(e, point.Zero())
-			if _, err = s.ecs.AddVelocity(*vel); err != nil {
+			if _, err = s.velocityStore.Add(*vel); err != nil {
 				return fmt.Errorf("could not add velocity component to entity %v: %w", e, err)
 			}
 		} else {
 			return fmt.Errorf("could not get velocity component for entity %v: %w", e, err)
 		}
 	}
-
 	return nil
 }
 
@@ -133,15 +158,15 @@ func (s *System) Draw(_ *ebiten.Image) error {
 
 // Update updates the skeletons in the ECS.
 func (s *System) Update() error {
-	skeletons := s.ecs.AllSkeletons()
+	skeletons := s.skeletonStore.All()
 	for i := range skeletons {
-		e := &skeletons[i]
+		e := skeletons[i]
 		if err := s.updateSkeleton(e); err != nil {
 			return err
 		}
 
 		// Update the skeleton component in the ECS
-		if err := s.ecs.UpdateSkeletonComponent(*e); err != nil {
+		if err := s.skeletonStore.Update(*e); err != nil {
 			return fmt.Errorf("could not update skeleton: %w", err)
 		}
 
@@ -156,7 +181,7 @@ func (s *System) Update() error {
 
 // updateSkeleton applies skeleton behavior to the entity.
 func (s *System) updateSkeleton(e *skeleton.Skeleton) error {
-	pos, err := s.ecs.GetPosition(e.Entity())
+	pos, err := s.positionStore.Get(e.Entity())
 	if err != nil {
 		return fmt.Errorf("could not get position: %w", err)
 	}
@@ -195,9 +220,9 @@ func (s *System) updateSkeleton(e *skeleton.Skeleton) error {
 func (s *System) updateSprite(e *skeleton.Skeleton) error {
 	// Retrieve the sprite component associated with the skeleton
 	var spr *sprite.Sprite
-	sprites := s.ecs.ListSprites(e.Entity())
+	sprites := s.spriteStore.All()
 	for i := range sprites {
-		sp := &sprites[i]
+		sp := sprites[i]
 		if sp.Tag == "skeleton" {
 			spr = sp
 			break // Break early once found
@@ -248,7 +273,7 @@ func (s *System) updateSprite(e *skeleton.Skeleton) error {
 	// Update the sprite's graphic if it has changed
 	if spr.Graphic != graphic {
 		spr.Graphic = graphic
-		if err := s.ecs.UpdateSpriteComponent(*spr); err != nil {
+		if err := s.spriteStore.Update(*spr); err != nil {
 			return fmt.Errorf("could not update skeleton sprite: %w", err)
 		}
 	}

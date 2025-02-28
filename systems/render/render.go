@@ -7,8 +7,10 @@ import (
 	"log/slog"
 	"sort"
 
+	"github.com/dwethmar/vork/component/controllable"
+	"github.com/dwethmar/vork/component/position"
+	"github.com/dwethmar/vork/component/shape"
 	"github.com/dwethmar/vork/component/sprite"
-	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/point"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -32,9 +34,15 @@ type Sprite struct {
 
 // System is the rendering system.
 type System struct {
-	logger       *slog.Logger
-	sprites      map[sprite.Graphic]*Sprite
-	ecs          *ecsys.ECS
+	logger  *slog.Logger
+	sprites map[sprite.Graphic]*Sprite
+
+	// ecs             *ecsys.ECS
+	positionsStore    *position.Store
+	rectanglesStore   *shape.RectangleStore
+	spriteStore       *sprite.Store
+	controllableStore *controllable.Store
+
 	offsetX      int
 	offsetY      int
 	zoom         float64
@@ -44,11 +52,14 @@ type System struct {
 
 // Options are the options for the rendering system.
 type Options struct {
-	Logger       *slog.Logger
-	Sprites      []Sprite
-	ECS          *ecsys.ECS
-	ClickHandler MouseHandler
-	HoverHandler MouseHandler
+	Logger            *slog.Logger
+	Sprites           []Sprite
+	PositionsStore    *position.Store
+	RectanglesStore   *shape.RectangleStore
+	SpriteStore       *sprite.Store
+	ControllableStore *controllable.Store
+	ClickHandler      MouseHandler
+	HoverHandler      MouseHandler
 }
 
 // New creates a new rendering system.
@@ -58,22 +69,22 @@ func New(opts Options) *System {
 		spriteMap[s.Graphic] = &s
 	}
 	return &System{
-		logger:       opts.Logger.With("system", "render"),
-		sprites:      spriteMap,
-		ecs:          opts.ECS,
-		offsetX:      0,
-		offsetY:      0,
-		zoom:         1.0,
-		clickHandler: opts.ClickHandler,
-		hoverHandler: opts.HoverHandler,
+		logger:            opts.Logger.With("system", "render"),
+		sprites:           spriteMap,
+		positionsStore:    opts.PositionsStore,
+		rectanglesStore:   opts.RectanglesStore,
+		spriteStore:       opts.SpriteStore,
+		controllableStore: opts.ControllableStore,
+		offsetX:           0,
+		offsetY:           0,
+		zoom:              1.0,
+		clickHandler:      opts.ClickHandler,
+		hoverHandler:      opts.HoverHandler,
 	}
 }
 
 // Init initializes the system.
 func (s *System) Init() error {
-	if s.ecs == nil {
-		return errors.New("ecs is nil")
-	}
 	if s.sprites == nil {
 		return errors.New("sprites is nil")
 	}
@@ -99,8 +110,8 @@ func (s *System) Draw(screen *ebiten.Image) error {
 
 	entitiesToDraw := []entityDraw{}
 	// Collect rectangles to draw
-	for _, r := range s.ecs.AllRectangles() {
-		pt, err := s.ecs.GetAbsolutePosition(r.Entity())
+	for _, r := range s.rectanglesStore.All() {
+		pt, err := s.positionsStore.AbsolutePosition(r.Entity())
 		if err != nil {
 			return fmt.Errorf("could not get absolute position for entity %v: %w", r.Entity(), err)
 		}
@@ -122,8 +133,8 @@ func (s *System) Draw(screen *ebiten.Image) error {
 	}
 
 	// Collect sprites to draw
-	for _, spc := range s.ecs.AllSprites() {
-		pt, err := s.ecs.GetAbsolutePosition(spc.Entity())
+	for _, spc := range s.spriteStore.All() {
+		pt, err := s.positionsStore.AbsolutePosition(spc.Entity())
 		if err != nil {
 			return fmt.Errorf("could not get absolute position for entity %v: %w", spc.Entity(), err)
 		}
@@ -184,12 +195,12 @@ func (s *System) Update() error {
 	}
 
 	// get the first controllable entity and center the camera on it
-	if controllables := s.ecs.AllControllables(); len(controllables) > 0 {
+	if controllables := s.controllableStore.All(); len(controllables) > 0 {
 		// Get the first controllable entity
 		firstControllable := controllables[0]
 
 		// Get the position of the controllable
-		pt, err := s.ecs.GetAbsolutePosition(firstControllable.Entity())
+		pt, err := s.positionsStore.AbsolutePosition(firstControllable.Entity())
 		if err != nil {
 			return err
 		}

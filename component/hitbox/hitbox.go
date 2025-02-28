@@ -48,6 +48,7 @@ func NewStore(eventBus *event.Bus) *Store {
 	return &Store{
 		eventBus: eventBus,
 		cs:       component.NewStore[*Hitbox](),
+		nextID:   1,
 	}
 }
 
@@ -66,6 +67,14 @@ func (s *Store) Add(c Hitbox) (uint, error) {
 
 func (s *Store) Get(id uint) (*Hitbox, error) {
 	return s.cs.Get(id)
+}
+
+func (s *Store) List(e entity.Entity) []*Hitbox {
+	return s.cs.List(e)
+}
+
+func (s *Store) All() []*Hitbox {
+	return s.cs.All()
 }
 
 func (s *Store) Update(c Hitbox) error {

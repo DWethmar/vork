@@ -5,10 +5,7 @@ import (
 	"testing"
 
 	"github.com/dwethmar/vork/component/position"
-	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
-	"github.com/dwethmar/vork/event"
-	"github.com/dwethmar/vork/point"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -195,23 +192,18 @@ func TestHierarchy_Built(t *testing.T) {
 
 func TestHierarchy_Children(t *testing.T) {
 	t.Run("should add a child to the hierarchy", func(t *testing.T) {
-		eventBus := event.NewBus()
 		root := entity.Entity(0)
-		ecs := ecsys.New(eventBus, ecsys.NewStores())
-
-		expect := []entity.Entity{}
-		for range 10 {
-			child, err := ecs.CreateEntity(root, point.New(0, 0))
-			if err != nil {
-				t.Error("Error creating entity")
-			}
-			expect = append(expect, child)
+		h := position.NewHierarchy(root)
+		child := entity.Entity(1)
+		if err := h.Add(root, child); err != nil {
+			t.Errorf("Error adding child: %s", err)
 		}
-
-		// check if the child was added
-		children := ecs.Children(root)
-		if cmp.Diff(children, expect) != "" {
-			t.Error("Children should be equal")
+		children := h.Children(root)
+		if len(children) != 1 {
+			t.Error("Children should have one child")
+		}
+		if children[0] != child {
+			t.Error("Child should be 1")
 		}
 	})
 

@@ -6,10 +6,10 @@ import (
 	"math"
 	"sync"
 
+	"github.com/dwethmar/vork/component"
 	"github.com/dwethmar/vork/component/hitbox"
 	"github.com/dwethmar/vork/component/position"
 	"github.com/dwethmar/vork/component/velocity"
-	"github.com/dwethmar/vork/ecsys"
 	"github.com/dwethmar/vork/entity"
 	"github.com/dwethmar/vork/event"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -18,8 +18,10 @@ import (
 // System is a collision system.
 type System struct {
 	logger              *slog.Logger
-	ecs                 *ecsys.ECS
 	eventBus            *event.Bus
+	positionStore       *position.Store
+	velocityStore       *velocity.Store
+	hitboxStore         *hitbox.Store
 	velocityScaleFactor int // Scale factor for the velocity
 	friction            int // Friction to apply to the velocity
 	velocityThreshold   int // Threshold for velocity to stop movement
@@ -31,7 +33,9 @@ type System struct {
 // Options for the collision system.
 type Options struct {
 	Logger              *slog.Logger
-	ECS                 *ecsys.ECS
+	PositionStore       *position.Store
+	VelocityStore       *velocity.Store
+	hitboxStore         *hitbox.Store
 	EventBus            *event.Bus
 	VelocityScaleFactor int // Scale factor for the velocity
 	Friction            int // Friction to apply to the velocity
@@ -42,8 +46,10 @@ type Options struct {
 func New(opts Options) *System {
 	return &System{
 		logger:              opts.Logger.With("system", "collision"),
-		ecs:                 opts.ECS,
 		eventBus:            opts.EventBus,
+		positionStore:       opts.PositionStore,
+		velocityStore:       opts.VelocityStore,
+		hitboxStore:         opts.hitboxStore,
 		moving:              make(map[uint]*velocity.Velocity),
 		velocityScaleFactor: opts.VelocityScaleFactor,
 		friction:            opts.Friction,
@@ -56,13 +62,18 @@ func (s *System) Init() error {
 	if s.logger == nil {
 		return errors.New("logger is nil")
 	}
-	if s.ecs == nil {
-		return errors.New("ecs is nil")
-	}
 	if s.eventBus == nil {
 		return errors.New("event bus is nil")
 	}
-
+	if s.positionStore == nil {
+		return errors.New("position store is nil")
+	}
+	if s.velocityStore == nil {
+		return errors.New("velocity store is nil")
+	}
+	if s.hitboxStore == nil {
+		return errors.New("hitbox store is nil")
+	}
 	posEventsMatcher := event.MatchAny(velocity.CreatedEventType, velocity.UpdatedEventType)
 	s.subscriptions = []int{
 		s.eventBus.Subscribe(posEventsMatcher, s.onVelocityEvent),
@@ -100,7 +111,7 @@ func (s *System) Update() error {
 
 	for _, vel := range s.moving {
 		// Get position of the entity associated with this velocity
-		pos, err := s.ecs.GetPosition(vel.Entity())
+		pos, err := s.positionStore.Get(vel.Entity())
 		if err != nil {
 			return err
 		}
@@ -115,7 +126,7 @@ func (s *System) Update() error {
 			vel.Y = 0
 
 			// Update the velocity component if it's effectively zero
-			if err = s.ecs.UpdateVelocityComponent(*vel); err != nil {
+			if err = s.velocityStore.Update(*vel); err != nil {
 				return err
 			}
 			continue
@@ -142,16 +153,16 @@ func (s *System) Update() error {
 	return nil
 }
 
-func (s *System) collide(pos position.Position, velX, velY int) error {
+func (s *System) collide(pos *position.Position, velX, velY int) error {
 	// Get the hitbox of the moving entity
-	hbList := s.ecs.ListHitboxes(pos.Entity())
+	hbList := s.hitboxStore.List(pos.Entity())
 	if len(hbList) == 0 {
 		return errors.New("no hitbox found for entity")
 	}
-	hb := &hbList[0]
+	hb := hbList[0]
 
 	// Get all hitboxes
-	hbs := s.ecs.AllHitboxes()
+	hbs := s.hitboxStore.All()
 
 	// Store original position
 	origPos := pos
@@ -189,13 +200,13 @@ func (s *System) collide(pos position.Position, velX, velY int) error {
 	}
 
 	// Update position component
-	return s.ecs.UpdatePositionComponent(pos)
+	return s.positionStore.Update(*pos)
 }
 
 func (s *System) checkCollision(
-	pos position.Position,
+	pos *position.Position,
 	hb *hitbox.Hitbox,
-	hbs []hitbox.Hitbox,
+	hbs []*hitbox.Hitbox,
 	deltaX, deltaY int,
 ) (bool, error) {
 	// Move position by delta values
@@ -211,15 +222,15 @@ func (s *System) checkCollision(
 			continue
 		}
 
-		otherPos, err := s.ecs.GetPosition(otherHb.Entity())
+		otherPos, err := s.positionStore.Get(otherHb.Entity())
 		if err != nil {
-			if errors.Is(err, ecsys.ErrComponentNotFound) {
+			if errors.Is(err, component.ErrComponentNotFound) {
 				continue
 			}
 			return false, err
 		}
 
-		otherBox := getBoundingBox(otherPos, &otherHb)
+		otherBox := getBoundingBox(otherPos, otherHb)
 
 		if boxesOverlap(movingBox, otherBox) {
 			return true, nil
@@ -233,7 +244,7 @@ func (s *System) updateVelocityAfterCollision(
 	entityID entity.Entity,
 	collisionX, collisionY bool,
 ) error {
-	vel, err := s.ecs.GetVelocity(entityID)
+	vel, err := s.velocityStore.Get(entityID)
 	if err != nil {
 		return err
 	}
@@ -246,7 +257,7 @@ func (s *System) updateVelocityAfterCollision(
 	}
 
 	// Update the velocity component
-	return s.ecs.UpdateVelocityComponent(vel)
+	return s.velocityStore.Update(*vel)
 }
 
 // Utility function for absolute value.
